@@ -11,6 +11,8 @@ import functools
 import io
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -31,6 +33,7 @@ def as_stored(docs):
 
 
 RULE = as_stored(ruledir.read(ruledir.FIXTURE))
+PAGE_SRC = (Path(__file__).resolve().parent.parent / "web" / "cadence.html").read_text(encoding="utf-8")
 
 
 PAGE = {("projects", "canondb"): {"id": "canondb", "thread": "the page's"},
@@ -87,8 +90,7 @@ class Compiles(unittest.TestCase):
 
     def test_the_page_takes_every_constant_the_compiler_gives(self):
         # the compiler's names and the page's setters are written by hand, in two files
-        page = (Path(__file__).resolve().parent.parent / "web" / "cadence.html").read_text(encoding="utf-8")
-        table = page.split("var RULE_SET={", 1)[1].split("var ruleSeen", 1)[0]
+        table = PAGE_SRC.split("var RULE_SET={", 1)[1].split("var ruleSeen", 1)[0]
         compiler.errors.clear()
         self.assertEqual(set(re.findall(r"\b([A-Z_]+):function\(v\)", table)),
                          set(compiler.compile(ruledir.assemble(RULE))))
@@ -468,6 +470,211 @@ class Guards(unittest.TestCase):
                  "data": {"rule": {"hypomnemata": {"end": gate.DELETE}}}}]
         w = gate.gate(store(), gone, now=NOW)
         self.assertEqual(w[0], ("update", ("projects", "canondb"), {"rule": {"hypomnemata": {"end": gate.DELETE}}}))
+
+
+# ---- the page ----------------------------------------------------------------
+# The page's script has no test harness of its own. Where its behaviour can be run
+# alone, the functions are lifted out of web/cadence.html by name and run under node
+# (skipped where node is absent: preflight runs without it); where it cannot, these
+# read the source and assert the shape that implements it.
+
+def js_block(name, src=PAGE_SRC):
+    """The text of `function name(...){...}` or `var name=...;` in the page, braces
+    matched past string literals."""
+    m = re.search(r"function " + re.escape(name) + r"\(", src) or re.search(r"var " + re.escape(name) + r"=", src)
+    if not m:
+        raise AssertionError(f"the page has no {name}")
+    i, depth, quote = src.index("{", m.end() - 1) if src[m.start()] == "f" else m.end(), 0, None
+    if src[m.start()] == "v" and src[i] != "{":
+        return src[m.start():src.index(";", i) + 1]
+    while True:
+        ch = src[i]
+        if quote:
+            if ch == "\\":
+                i += 1
+            elif ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                if src[m.start()] == "v":
+                    end = src.index(";", end) + 1
+                return src[m.start():end]
+        i += 1
+
+
+def run_js(names, body, pre=""):
+    """Run `body` under node with the named page functions defined; it prints JSON
+    with out(...). The result, parsed."""
+    node = shutil.which("node")
+    if not node:
+        raise unittest.SkipTest("node is not installed; the page's shape is still checked")
+    script = '"use strict";\nvar out=function(v){ process.stdout.write(JSON.stringify(v)); };\n' + pre + "\n" + \
+        "\n".join(js_block(n) for n in names) + "\n" + body
+    r = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=60, env={"TZ": "UTC"})
+    if r.returncode:
+        raise AssertionError(r.stderr)
+    return json.loads(r.stdout)
+
+
+def page_fn(name):
+    return js_block(name)
+
+
+class Page(unittest.TestCase):
+    """The Cadence page's own code: the clock, the lists, the sync, the cards."""
+
+    CLOCK = ["ymd", "hm", "fmt", "wall", "wallMins", "nowMins", "dayMins", "dayEnd", "logicalDay"]
+
+    def test_the_rule_defaults_name_every_constant(self):
+        # a Rule adopted, or one fallen back to, starts from these: none may be missing
+        table = PAGE_SRC.split("var RULE_SET={", 1)[1].split("var ruleSeen", 1)[0]
+        defaults = PAGE_SRC.split("var RULE_DEFAULT={", 1)[1].split("};", 1)[0]
+        self.assertEqual(set(re.findall(r"\b([A-Z_]+):", defaults)),
+                         set(re.findall(r"\b([A-Z_]+):function\(v\)", table)))
+
+    def test_a_rule_fallen_back_from_leaves_none_of_its_values(self):
+        adopt = page_fn("adoptRule")
+        self.assertLess(adopt.index("resetRule();"), adopt.index("RULE_SET[n](c[n])"))
+        fallback = PAGE_SRC.split('console.error("cadence: the store\'s Rule could not be drawn"', 1)[1].split("drawOrSay();", 1)[0]
+        self.assertLess(fallback.index("resetRule();"), fallback.index("adoptRule("))
+
+    def test_the_compiler_gives_the_rules_timezone(self):
+        compiler.errors.clear()
+        self.assertEqual(compiler.compile(ruledir.assemble(RULE))["TIMEZONE"], "America/New_York")
+        office = copy.deepcopy(RULE[("rule", "office")])
+        office["meta"]["timezone"] = "Mars/Olympus"
+        compiler.errors.clear()
+        compiler.timezone(office)
+        self.assertTrue(any("meta.timezone" in e for e in compiler.errors))
+        compiler.errors.clear()
+
+    def test_the_clock_is_the_rules_timezone(self):
+        # 07:30 UTC is 03:30 in New York, before the day starts at 04:00: still the
+        # 21st there, and 16:30 on the 22nd in Tokyo; with none, the browser's (UTC here)
+        got = run_js(self.CLOCK, """
+            var DAY_START="04:00", TIMEZONE=null, d=new Date("2026-10-22T07:30:00Z"), r={};
+            r.local=[logicalDay(d), wallMins(d)];
+            TIMEZONE="America/New_York"; r.ny=[logicalDay(d), wallMins(d)];
+            TIMEZONE="Asia/Tokyo"; r.tokyo=[logicalDay(d), wallMins(d)];
+            r.invalid=logicalDay(new Date("nonsense"));
+            out(r);""", pre="var zoneFmt=null, zoneFor=null;")
+        self.assertEqual(got["local"], ["2026-10-22", 450])
+        self.assertEqual(got["ny"], ["2026-10-21", 210])
+        self.assertEqual(got["tokyo"], ["2026-10-22", 990])
+        self.assertIn("NaN", got["invalid"])   # an unreadable date does not throw
+
+    def test_the_page_reads_its_clock_through_the_zone(self):
+        self.assertIn("timeZone:TIMEZONE", page_fn("wall"))
+        self.assertIn("wall(d)", page_fn("logicalDay"))
+        self.assertIn("TIMEZONE:function(v)", PAGE_SRC)
+
+    def test_a_fixture_past_midnight_is_shown(self):
+        got = run_js(self.CLOCK + ["fixtureNote"], """
+            var DAY_START="04:00", TIMEZONE=null, now=0;
+            nowMins=function(){ return now; };
+            var r={};
+            now=1500; r.late=fixtureNote({what:"Show",start:"23:00",end:"01:30"});
+            now=1500; r.small=fixtureNote({what:"Call",start:"00:30",end:"02:00"});
+            now=1380; r.ahead=fixtureNote({what:"Call",start:"00:30",end:"02:00",leaveBy:"23:50"});
+            now=1440; r.leave=fixtureNote({what:"Call",start:"00:30",end:"02:00",leaveBy:"23:50"});
+            now=1500; r.over=fixtureNote({what:"Day",start:"10:00",end:"23:00"});
+            out(r);""", pre="var nowMins;")
+        self.assertEqual(got["late"], {"text": "Show until 1:30 AM", "late": True})
+        self.assertEqual(got["small"], {"text": "Call until 2:00 AM", "late": True})
+        self.assertFalse(got["ahead"]["late"])
+        self.assertTrue(got["leave"]["late"])
+        self.assertIsNone(got["over"])
+
+    def test_the_meeting_under_way_is_on_the_days_count(self):
+        self.assertIn("dayMins(c.start)<=now && now<dayEnd(c.start,c.end)", PAGE_SRC)
+
+    def test_an_item_is_listed_under_the_project_it_is_charged_to(self):
+        got = run_js(["seedIn", "projById", "projAny", "defaultProject", "homeProject"], """
+            PROJECTS=[{id:"a"},{id:"b",default:true}]; SHELVED=[{id:"s"}];
+            out([null,{},{project:null},{project:"gone"},{project:"s"},{project:"a"}].map(homeProject));""",
+            pre="var PROJECTS, SHELVED;")
+        self.assertEqual(got, ["b", "b", "b", "b", "s", "a"])
+        for fn in ("todoFor", "periodicFor", "dictationDocs", "followUps"):
+            with self.subTest(fn=fn):
+                self.assertIn("homeProject(x)", page_fn(fn))
+        self.assertIn("return o ? homeProject(o) : defaultProject();", page_fn("workProject"))
+        blocked = page_fn("paintBlocked")
+        self.assertIn("openTodo(homeProject(x),x.id)", blocked)
+        self.assertIn("if(homeProject(x)) acts.appendChild(edit)", blocked)
+
+    def test_other_days_are_read_again(self):
+        # another device's write to a day not on screen reaches the cache: on show, on
+        # the network back, at the turn
+        self.assertIn("pastDays={}", page_fn("syncDays"))
+        self.assertIn("resyncDays(false)", PAGE_SRC.split('document.addEventListener("visibilitychange"', 1)[1].split("\n});", 1)[0])
+        self.assertIn("resyncDays(true)", PAGE_SRC.split('window.addEventListener("online"', 1)[1].split("\n", 1)[0])
+        self.assertIn("resyncDays(true)", page_fn("clockTick"))
+
+    def test_a_refused_patch_loses_only_the_refused_leaf(self):
+        names = ["clone", "isObj", "canon", "applyPatch", "subtract", "stripNulls", "loadQ", "saveQ", "qList",
+                 "clashes", "queue", "writeDoc", "sendDoc", "leavesOf", "leafByLeaf", "flushQ", "blank"]
+        got = run_js(names, """
+            var landed=[], warned=[];
+            console.warn=function(m){ warned.push(m); };
+            function bad(p){ return JSON.stringify(p).indexOf("BAD")>=0; }
+            db={doc:function(path){ return {
+              update:function(p){ if(bad(p)) return Promise.reject({code:"invalid_argument"}); landed.push(p); return Promise.resolve(); },
+              acquire:function(){ return Promise.resolve({acquired:true}); },
+              get:function(){ return Promise.resolve({exists:true,data:function(){ return {date:"2026-10-20"}; }}); },
+              set:function(p){ landed.push(p); return Promise.resolve(); } }; }};
+            queue("cadence:pending","2026-10-20",{items:{a:true,b:"BAD"},bells:{lauds:{at:"6:00 AM"}}});
+            flushQ("cadence:pending","2026-10-20","days/2026-10-20",{date:"2026-10-20"},blank("2026-10-20"),"date").then(function(ok){
+              out({ok:ok,landed:landed,left:loadQ("cadence:pending"),warned:warned});
+            });""", pre="""var db=null, flushing={}, chains={}, retryTimer=null, leaseN=0, TAB="t", memQ={}, memQOnly={};
+                var window={console:console}, localStorage={getItem:function(){ throw 1; }};
+                var setTimeout=function(){ return 0; }, clearTimeout=function(){}, flushAll=function(){};""")
+        self.assertTrue(got["ok"])
+        self.assertEqual(got["landed"], [{"date": "2026-10-20", "items": {"a": True}},
+                                         {"date": "2026-10-20", "bells": {"lauds": {"at": "6:00 AM"}}}])
+        self.assertEqual(got["left"], {})
+        self.assertEqual(len(got["warned"]), 1)
+        self.assertIn('"b":"BAD"', got["warned"][0])
+
+    def test_a_past_day_the_page_makes_is_backfilled(self):
+        got = run_js(["blank", "daySeed"], """
+            logicalToday=function(){ return "2026-10-22"; };
+            out([daySeed("2026-10-20").backfilled, daySeed("2026-10-22").backfilled]);""", pre="var logicalToday;")
+        self.assertEqual(got, [True, None])
+        self.assertIn("daySeed(date)", page_fn("flushDay"))
+
+    def test_done_today_pressed_twice_starts_once(self):
+        done = PAGE_SRC.split('actButton("Done today"', 1)[1].split("putPeriodic(", 1)[0]
+        self.assertIn("again=hs.indexOf(today)>=0", done)
+        self.assertIn("if(x.then && !again && lastDoneDate(x.id)!==today) patch.started=sessionNow();", done)
+
+    def test_a_count_typed_is_a_whole_number(self):
+        got = run_js(["wholeNum"], 'out(["3"," 4 ","2.5","1e1","","-1","0",7,null,"99999999999999999999"].map(wholeNum));')
+        self.assertEqual(got, [3, 4, None, None, None, None, 0, 7, None, None])
+        self.assertNotIn("parseInt(", PAGE_SRC.split("<script>")[2])
+        for said in ("Sessions this week is a whole number of sessions", "Every … days is a whole number of days"):
+            self.assertIn(said, PAGE_SRC)
+
+    def test_the_counts_are_worked_out_once_per_render(self):
+        got = run_js(["memo", "focusCounts", "lastDoneDate"], """
+            var n=0, m=0;
+            focusCount=function(){ n++; return {a:1}; };
+            lastDone=function(id){ m++; return id; };
+            focusCounts(); focusCounts(); lastDoneDate("x"); lastDoneDate("x"); lastDoneDate("y");
+            recRev++; focusCounts(); lastDoneDate("x");
+            out([n,m]);""", pre="""var memoKey=null, memoBox={}, recRev=0, todoRev=0, viewDate="2026-10-22", focusCount, lastDone;
+                function logicalToday(){ return "2026-10-22"; }""")
+        self.assertEqual(got, [2, 3])
+        for fn in ("render", "save", "cacheDay", "saveStore", "repaintCard", "paintCard"):
+            with self.subTest(fn=fn):
+                self.assertIn("recRev++", page_fn(fn))
+        self.assertIn('memo("meetings"', page_fn("meetingCounts"))
+        self.assertIn('memo("sessions"', page_fn("sessionsRecorded"))
 
 
 if __name__ == "__main__":

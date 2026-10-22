@@ -13,6 +13,7 @@ Rule's numbers and steps the page quotes. tools/gate.py runs this on every write
 import re
 import sys
 from urllib.parse import quote_plus
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import items
 import rule
@@ -567,6 +568,21 @@ def day_starts(a):
     return v
 
 
+def timezone(a):
+    """meta.timezone, the IANA zone the Rule's clock reads (rule.clock_now): the page
+    reads its wall clock there too. None where the Rule names none; the page then
+    reads the browser's own, and the tools UTC."""
+    v = a["meta"].get("timezone")
+    if v is None:
+        return None
+    try:
+        ZoneInfo(v)
+    except (ValueError, TypeError, ZoneInfoNotFoundError):
+        errors.append(f"rule/office: meta.timezone is {v!r}; it must be an IANA zone such as \"America/New_York\"")
+        return None
+    return v
+
+
 def compile(r=None):
     """The Rule as the page reads it: each constant by name, in the page's order.
     Every refusal above lands in `errors`; the caller decides what a refusal stops."""
@@ -602,12 +618,13 @@ def compile(r=None):
     clock((a["meta"].get("lights_out") or {}).get("target"), "meta lights_out target")
     w = a["meta"]["winter"]
     ds = day_starts(a)
+    tz = timezone(a)
     bs = blocks(a, gloss)
     return {
         "BLOCKS": bs, "COMMITMENTS": fx, "PROJECTS": ps, "SHELVED": projects(d, active=False),
         "FRONTIER": fr, "BACKLOG": backlog(b),
         "WHOLE_DAYS": whole_days(a, bs), "WINTER": {"start": w["start"], "end": w["end"]},
-        "DAY_START": ds, "EXAMEN": examen(a, gloss), "EXIT_RITE": exit_rite(a, gloss),
+        "DAY_START": ds, "TIMEZONE": tz, "EXAMEN": examen(a, gloss), "EXIT_RITE": exit_rite(a, gloss),
         "RATION": ration(ledger), "TIMEBOX": timebox(u), "TODO_CADENCE": due_after(u),
         "BELL_LEAD": bell_lead(a),
     }
