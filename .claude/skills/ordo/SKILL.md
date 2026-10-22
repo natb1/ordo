@@ -5,9 +5,9 @@ description: "Sync the Cadence page with its sources (the calendar's fixtures an
 
 ## What this is
 
-The operating half of the Rule. The hypomnemata — the notebook at
-https://claude.ai/artifact/1S7zEbZGc8EfLE3d2m5WNy, read where it stands —
-says *why*; this says *what, right now*. Its tabs are cited throughout as
+The operating half of the Rule. The hypomnemata — the notebook that
+`.principal/notebook.json` names (its `artifact`, a Claude Docs document), read where
+it stands — says *why*; this says *what, right now*. Its tabs are cited throughout as
 *hypomnemata › <tab>*.
 
 The Rule is not in this repo. It lives in the Cadence page's store, and every run
@@ -40,7 +40,13 @@ item-by-item in chat when they are standing in a kitchen.
 
 ## The Rule lives in the store
 
-The artifact is `https://claude.ai/artifact/54sxzR169AZiUx8QNJkngJ`, and
+The artifact is the keeper's own Cadence page, published from `web/cadence.html`; its
+link is the `cadence` of `ordo.local.json` at the repository's root, a file git
+ignores (`{"cadence": "https://claude.ai/artifact/<id>"}`), so no one's page is
+named in the repository. Read it first, every run. Where the file is missing, `Artifact`
+`list` the user's artifacts, show the ones titled `Cadence`, and ask which is theirs;
+write the link the user confirms into `ordo.local.json` and go on. Never guess one, and
+never publish a new page to stand in for it: a new page has an empty store.
 `ArtifactData` reads and writes its store as the user. Nothing of the Rule is in
 git, so a change to it is a store write: no commit, no pull request, no republish,
 no reload. An open page repaints when the write lands. The page is republished only
@@ -876,9 +882,16 @@ There is no scoring by leverage and no rule of one in progress.
 dictation, a quick note kept in the page's store (the Docket's dictations card)
 until it is dictated. Its work is to be run through `/principal:dictate <note>` for
 that notebook, and the card offers the exact invocation to copy. It runs in a Claude
-Code session in the project's checkout (its `rule.repo`), because the dictate
-skill finds the notebook from that checkout's `.principal/notebook.json`. Once it
-has run, the note is let go on its card, and what it became is read off the notebook
+Code session in a checkout of the repository whose `.principal/notebook.json` names
+that notebook, because the dictate skill finds the notebook from there and nowhere
+else. For the Rule's own project (the one whose notebook is this skill's
+hypomnemata) that is this repository, `natb1/ordo`, the one this skill runs from,
+whatever the project's `rule.repo` says; for another project it is its `rule.repo`.
+Before sending one there, check that the checkout holds a `.principal/notebook.json`.
+Where the Rule's project's `rule.repo`
+still names a repository that no longer holds it (an older store gives `natb1/private`),
+say so: the fix is the keeper's own change, `rule.repo: "natb1/ordo"` sent through the
+gate, and this skill never makes it unasked. Once it has run, the note is let go on its card, and what it became is read off the notebook
 — as a question on the frontier, if it becomes one — never told here.
 
 **Owned items.** A `todo` item with a `source` {owner, url} (a periodic item

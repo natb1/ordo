@@ -1,7 +1,9 @@
 # Blockers: when something breaks
 
-Procedure for a TODO item that names what it stops (the store's `inbox`). The
-reasoning is hypomnemata › breakdown and › undertaking.
+Procedure for a TODO item that names what it stops: a `todo/<id>` document in the
+store whose `blocks` names it (the skill, "The Rule lives in the store"; `inbox` is the
+list's old collection and is read by nothing). The reasoning is hypomnemata › breakdown
+and › undertaking.
 
 ## Is it even a breakdown?
 
@@ -87,9 +89,12 @@ on a repair a professional resolves in an hour is not thrift.
 
 ## Closing one
 
-Mark it done on the page. Or, told at the desk, close it in the store with
-`ArtifactData`, checked that the write was confirmed. No retrospective, no note about
-how long it took. It is closed.
+Mark it done on the page. Or, told at the desk, close it through the record gate,
+never by hand: a `close` fact to `tools/record.py`, and only the batch it prints is
+sent (the skill, "Writing the record"). That one fact closes the `todo/<id>` item and,
+where a `breakdowns/<id>` entry is still open, that entry too. It is closed when the
+store's result confirms the write, and not before. No retrospective, no note about how
+long it took.
 
 If the same thing breaks a third time, that is not a breakdown any more — it is a
 standing condition, and it belongs in the backlog as "replace the washer," with a
