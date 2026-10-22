@@ -3839,6 +3839,16 @@ function paintTodo(host,p){
   head(host,"Open, in order");
   items.forEach(function(r){ todoItem(host,p,r.o,dr); });
 }
+/* What a TODO card's Save writes: only the fields changed on the card since it
+   opened (e.was), so a field another device changed meanwhile stands. */
+function todoSavePatch(e,x){
+  var w=e.was, patch={};
+  if(e.what!==w.what) patch.what=(e.what||"").trim()||x.what;
+  if(e.by!==w.by) patch.by=e.by||null;
+  if(canon(e.blocks)!==canon(w.blocks)) patch.blocks=e.blocks.slice();
+  if(e.dictation!==w.dictation) patch.dictation=(e.dictation||"").trim()||null;
+  return patch;
+}
 function todoItem(host,p,x,dr){
   var open=dr.open===x.id;
   var hd=el("button","ihead"); hd.type="button"; hd.setAttribute("data-fk","item:"+x.id);
@@ -3854,7 +3864,10 @@ function todoItem(host,p,x,dr){
      card starts that one afresh rather than saving the last one's fields onto it. */
   if(dr.edit && dr.edit.id!==x.id) delete dr.edit;
   if(owner){ ownedItem(host,p,x,dr,owner); return; }
+  /* `was` is what the draft opened on: Save sends only the fields changed here, so a
+     field another device changed meanwhile is not written back over with this one. */
   var e=dr.edit=dr.edit||{id:x.id,what:x.what,dictation:x.dictation||"",next:threadLine(x.id),by:x.by||"",blocks:(x.blocks||[]).slice()};
+  if(!e.was) e.was={what:e.what,dictation:e.dictation,next:e.next,by:e.by,blocks:e.blocks.slice()};
   var wrap=el("div","iopen"); host.appendChild(wrap);
   var h=field(wrap,"Heading",textInput(e.what),"ed:what:"+x.id); h.addEventListener("input",function(){ e.what=h.value; });
   var d=field(wrap,"Details",document.createElement("textarea"),"ed:dictation:"+x.id); d.value=e.dictation; d.placeholder="Your own prose: the details, and why";
@@ -3889,9 +3902,8 @@ function todoItem(host,p,x,dr){
   }
   var acts=el("div","acts");
   acts.appendChild(actButton("Save","go",function(){
-    var patch={what:(e.what||"").trim()||x.what,by:e.by||null,blocks:e.blocks.slice(),dictation:(e.dictation||"").trim()||null};
-    putTodo(x.id,patch);
-    var nx=(e.next||"").trim(); if(nx!==threadLine(x.id)) setThread(x.id,nx);
+    putTodo(x.id,todoSavePatch(e,x));
+    var nx=(e.next||"").trim(); if(e.next!==w.next && nx!==threadLine(x.id)) setThread(x.id,nx);
     delete dr.edit; dr.blocksOpen=false; render();
   }));
   acts.appendChild(actButton("Done","no",function(){ finish("Done: "+x.what+".",donePatch(),{done:false,doneAt:null}); }));
@@ -3912,7 +3924,11 @@ function notesOf(host,x){
    weekly review can count it. */
 function ownedItem(host,p,x,dr,owner){
   var wrap=el("div","iopen"); host.appendChild(wrap);
-  var nl=threadLine(x.id), n=field(wrap,"Next step",textInput(nl,"Where you pick up"),"ed:next:"+x.id);
+  /* The line is a draft, as on any item's card: a repaint from the store (the owner's
+     sync, another device) keeps what was typed rather than redrawing the stored line. */
+  var nl=threadLine(x.id), e=dr.edit=dr.edit||{id:x.id,next:nl,was:nl};
+  var n=field(wrap,"Next step",textInput(e.next,"Where you pick up"),"ed:next:"+x.id);
+  n.addEventListener("input",function(){ e.next=n.value; });
   if(x.dictation) wrap.appendChild(el("div","hist",x.dictation));
   notesOf(wrap,x);
   wrap.appendChild(el("div","hist",x.by ? "Due by "+x.by+"." : "Undated: it waits until "+owner+" dates it."));
@@ -3923,11 +3939,11 @@ function ownedItem(host,p,x,dr,owner){
   para(wrap,"prompt",owner+" closes it when what it tracks is done. If you do not want it, say so here.");
   var acts=el("div","acts");
   acts.appendChild(actButton("Save","go",function(){
-    var nx=(n.value||"").trim(); if(nx!==nl) setThread(x.id,nx); dr.open=null; render();
+    var nx=(e.next||"").trim(); if(e.next!==e.was && nx!==nl) setThread(x.id,nx); delete dr.edit; dr.open=null; render();
   }));
   acts.appendChild(actButton("Not wanted","no rm",function(){
     dr.undo={said:"Not wanted: "+x.what+".",put:putTodo,id:x.id,patch:{done:false,removed:false,doneAt:null}};
-    putTodo(x.id,{done:true,removed:true,doneAt:logicalToday()}); dr.open=null; render();
+    putTodo(x.id,{done:true,removed:true,doneAt:logicalToday()}); delete dr.edit; dr.open=null; render();
   }));
   wrap.appendChild(acts);
 }
@@ -4038,7 +4054,7 @@ function periodicItem(host,p,x,dr){
   if(!open) return;
   /* The date opens on the computed due date; due0 remembers it, so only a date
      changed here becomes one set on the card. */
-  var e=dr.edit=dr.edit||{what:x.what,cadence:x.cadence,due:st.on||"",due0:st.on||""};
+  var e=dr.edit=dr.edit||{what:x.what,cadence:x.cadence,due:st.on||"",due0:st.on||"",what0:x.what,cadence0:x.cadence};
   var wrap=el("div","iopen"); host.appendChild(wrap);
   var h=field(wrap,"Heading",textInput(e.what),"ped:what:"+x.id); h.addEventListener("input",function(){ e.what=h.value; });
   var c=field(wrap,"Every … days",numInput(e.cadence,1),"ped:cadence:"+x.id); c.addEventListener("input",function(){ e.cadence=c.value; });
@@ -4065,7 +4081,10 @@ function periodicItem(host,p,x,dr){
   acts.appendChild(actButton("Save","no",function(){
     var cad=wholeNum(e.cadence);
     if(!(cad>0)){ nudge(acts,"Every … days is a whole number of days, 1 or more. Nothing was saved."); c.focus(); return; }
-    var patch={what:(e.what||"").trim()||x.what,cadence:cad};
+    /* Only what was changed here, as with due, so another device's edit stands. */
+    var patch={};
+    if(e.what!==e.what0) patch.what=(e.what||"").trim()||x.what;
+    if(String(e.cadence)!==String(e.cadence0)) patch.cadence=cad;
     if(e.due!==e.due0) patch.due=e.due||null;
     putPeriodic(x.id,patch);
     delete dr.edit; render();
