@@ -72,7 +72,11 @@ def derive_dark(name, css, errors):
 
 
 def main():
-    check = "--check" in sys.argv[1:]
+    args = sys.argv[1:]
+    if args not in ([], ["--check"]):
+        # an unknown flag must not fall through to the mode that rewrites files
+        sys.exit(f"usage: sync_assets.py [--check]; not {' '.join(args)}")
+    check = args == ["--check"]
     errors, stale, updates, sources, regions = [], [], {}, {}, 0
 
     def source(src):

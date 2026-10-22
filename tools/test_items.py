@@ -35,6 +35,11 @@ class Shape(unittest.TestCase):
         d = check("todo", {"id": "i1", "what": "Call the plumber", "blocks": ["gym", "q:canondb:priority"]})
         self.assertEqual((d["project"], d["captured"], d["blocks"]), ("ordo", TODAY, ["gym", "q:canondb:priority"]))
 
+    def test_a_project_that_is_no_id_is_refused(self):
+        for p in (["ordo"], {"a": 1}, "", 0):
+            with self.subTest(project=p), self.assertRaisesRegex(items.Refused, "a project's id"):
+                check("todo", {"id": "i1", "what": "x", "project": p})
+
     def test_what_it_refuses(self):
         for doc, why in [({"id": "I1", "what": "x"}, "id of lowercase"),
                          ({"id": "i1"}, "needs what"),

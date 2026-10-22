@@ -124,8 +124,12 @@ def item(it, gloss, cs):
         if it.get("nullable"):
             errors.append(f"item {it['id']}: optional (a ledger condition) and nullable both; "
                           "it is one or the other")
-    if w.get("floor_per_week"):
-        out["floor"] = w["floor_per_week"]
+    if "floor_per_week" in w:
+        if type(w["floor_per_week"]) is not int or w["floor_per_week"] < 1:
+            errors.append(f"item {it['id']}: floor_per_week is a whole number of days, at least 1, "
+                          f"not {w['floor_per_week']!r}")
+        else:
+            out["floor"] = w["floor_per_week"]
     for field, c in (("during", w.get("commitment")), ("unless", u.get("commitment"))):
         if not c:
             continue
@@ -325,6 +329,12 @@ def commitments(a, d, gloss):
         for f in ("start", "end", "derived_leave_by", "derived_bell", "derived_anchor_bell"):
             if f == "start" or c.get(f) is not None:
                 clock(c.get(f), f"commitment {c['id']} {f}")
+        start = a["meta"].get("day_starts")
+        if (c.get("derived_anchor_bell") is not None and isinstance(start, str)
+                and str(c["derived_anchor_bell"]) <= start):
+            # a bell past midnight sorts before the day's first and never rings
+            errors.append(f"commitment {c['id']} moves a bell to {c['derived_anchor_bell']}, not after "
+                          f"meta.day_starts {start}; the page's day would ring it first, and never")
         if c.get("sets_anchor_bell") and c["sets_anchor_bell"] not in a["anchors"]:
             errors.append(f"commitment {c['id']} moves bell {c['sets_anchor_bell']!r}, which is not a block; "
                           "one of " + ", ".join(a["anchors"]))
@@ -389,12 +399,14 @@ def projects(d, active=True):
             errors.append(f"project {p['id']} has repo {p.get('repo')!r}; a repo is owner/name on GitHub "
                           "or an absolute path on a named device, device:/path")
             link = None
+        if type(p.get("allocation")) is not int or p["allocation"] < 0:
+            errors.append(f"project {p['id']} has allocation {p.get('allocation')!r}; it is a whole number of slots")
         what = p.get("what")
         if what is None:
             what = r.rstrip("/").split("/")[-1]
         elif not (isinstance(what, str) and what.strip()):
             errors.append(f"project {p['id']} has what {what!r}; a project's name is text, or left out")
-        e = {"id": p["id"], "what": what, "allocation": p["allocation"], "repo": link, "checkout": r,
+        e = {"id": p["id"], "what": what, "allocation": p.get("allocation"), "repo": link, "checkout": r,
              "calendar": p.get("calendar"), "notebook": h.get("notebook")}
         if p.get("default"):
             e["default"] = True
@@ -564,9 +576,22 @@ def compile(r=None):
         if s not in ("anchors", "commitments", "examen", "exit_rite"):
             errors.append(f"{GLOSS}: has a section {s} the page does not read")
     ps = projects(d)
+    # The page charges an item that names no project to the one marked default,
+    # and the record gate files it under the policy's default_project: one project,
+    # active, named the same in both places, or the two would part ways.
+    marked = [p["id"] for p in d["projects"] if p.get("default")]
+    said = ((u or {}).get("policy") or {}).get("default_project")
+    if len(marked) != 1:
+        errors.append(f"{len(marked)} projects are marked default ({', '.join(marked) or 'none'}); the Rule marks one")
+    elif marked[0] not in {p["id"] for p in ps}:
+        errors.append(f"the default project {marked[0]} is not active; an item that names none would go nowhere")
+    if said is None and marked:
+        errors.append(f"the policy names no todo.default_project; the project marked default is {marked[0]}")
+    if said is not None and marked and said not in marked:
+        errors.append(f"the policy's default_project is {said}, but the project marked default is {marked[0]}")
     # The allocations share the realistic supply; more than it leaves some project
     # short however the week is worked, and the review reads that as a wrong number.
-    supply, total = d["policy"].get("realistic_per_week"), sum(p["allocation"] for p in ps)
+    supply, total = d["policy"].get("realistic_per_week"), sum(p["allocation"] for p in ps if type(p["allocation"]) is int)
     if supply and total > supply:
         print(f"WARN   allocations add up to {total}, more than the policy's realistic_per_week of {supply}")
     fx = commitments(a, d, gloss)

@@ -157,6 +157,29 @@ class Projects(unittest.TestCase):
         self.assertTrue(ps["ordo"]["default"])
         self.assertNotIn("default", ps["garden"])
 
+    def test_an_allocation_that_is_no_whole_number_is_refused(self):
+        for v in ("3", True, -1):
+            with self.subTest(allocation=v), self.assertRaisesRegex(gate.Refused, "whole number of slots"):
+                gate.gate(store(), [self.rule("garden", allocation=v)])
+
+    def test_a_bell_moved_past_midnight_is_refused(self):
+        late = {"op": "set", "collection": "commitments", "doc_id": "late", "data": {
+            "id": "late", "what": "A late show", "date": "2026-10-28", "start": "22:00", "end": "23:40",
+            "calendar_event": "x", "seq": 9, "sets_anchor_bell": "evening", "derived_anchor_bell": "00:15",
+            "derived_leave_by": "21:30"}}
+        with self.assertRaisesRegex(gate.Refused, "not after meta.day_starts"):
+            gate.gate(store(), [late])
+
+    def test_one_default_project_named_alike_in_the_policy(self):
+        # two marked default, or the mark on a project the policy does not name, or on a
+        # shelved one: the page and the record gate would file an unnamed item apart
+        for change, why in (([self.rule("garden", default=True)], "2 projects are marked default"),
+                            ([self.rule("ordo", default=False), self.rule("garden", default=True)],
+                             "the policy's default_project is ordo"),
+                            ([self.rule("ordo", active=False)], "is not active")):
+            with self.subTest(why=why), self.assertRaisesRegex(gate.Refused, why):
+                gate.gate(store(), change)
+
     def test_with_no_what_a_project_is_named_after_its_repo(self):
         ps = self.compiled(self.rule("ordo", what=gate.DELETE), self.rule("garden", what=gate.DELETE))
         self.assertEqual(ps["ordo"]["what"], "ordo")

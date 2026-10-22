@@ -125,6 +125,8 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
         raise Refused(f"{what}: a periodic item has no owner yet; its card has no owned view, so only a todo item "
                       "carries a source")
     if held is None or "project" in doc:
+        if doc.get("project") is not None and not (isinstance(doc["project"], str) and doc["project"]):
+            raise Refused(f"{what}: project is a project's id, not {doc['project']!r}")
         pid = doc.get("project") or default_project
         if pid not in set(projects):
             raise Refused(f"{what}: project {pid!r} is not an active project (" + ", ".join(sorted(projects)) + ")")

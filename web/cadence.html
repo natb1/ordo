@@ -1285,7 +1285,8 @@ function adoptRule(c){
   Object.keys(RULE_SET).forEach(function(n){ if(c[n]!==undefined && c[n]!==null) RULE_SET[n](c[n]); });
   ruleSeen=s;
   /* What was worked out from the Rule before is worked out again. */
-  blocksCache={}; openCache={key:null,list:null};
+  blocksCache={}; commitmentsCache={}; openCache={key:null,list:null};
+  if(pendingBreaks && defaultProject()){ var pb=pendingBreaks; pendingBreaks=null; adoptBreakdowns(pb.list,pb.shared); }
   return true;
 }
 try{ adoptRule(JSON.parse(localStorage.getItem("cadence:rule")||"null")); }catch(e){}
@@ -1392,8 +1393,13 @@ function webLink(u){
   try{ return /^https?:$/.test(new URL(String(u)).protocol) ? u : null; }catch(e){ return null; }
 }
 
+/* Read many times a render (each block, each focus item, each day of the week);
+   the events of a date change only with the Rule, so adoptRule clears this. */
+var commitmentsCache={};
 function commitmentsFor(dow,date){
-  return COMMITMENTS.filter(function(c){
+  var k=dow+" "+date;
+  if(commitmentsCache[k]) return commitmentsCache[k];
+  return commitmentsCache[k]=COMMITMENTS.filter(function(c){
     if(c.on) return c.on===date;
     if(c.first) return c.first<=date && date<=c.last;
     if(c.day!==dow) return false;
@@ -3130,7 +3136,10 @@ function commitBell(b){
     if(!state.items[b.breaks]){ state.items[b.breaks]=true; rec.ticked=true; }
     else rec.ticked=!!prev && bellTicked(prev,b);
     state.times=state.times||{};
-    if(!state.times[b.breaks]) state.times[b.breaks]=fmt(at!=null && at<b.at ? at : b.at);
+    /* a past day's first answer with no time remembered stamps no time: the bell's
+       own hour would record an on-time finish nobody gave */
+    if(!state.times[b.breaks] && !(st==="past" && !prev && at==null))
+      state.times[b.breaks]=fmt(at!=null && at<b.at ? at : b.at);
   }
   save();
   shell.close("bell:"+b.key);
@@ -3418,11 +3427,13 @@ function paintBlocked(host){
     btn.type="button";
     btn.addEventListener("click",function(){ closeTodo(x.id,logicalToday()); render(); });
     var edit=el("button","no","Open in the TODO list"); edit.type="button";
-    edit.addEventListener("click",function(){ openTodo(x.project||defaultProject(),x.id); });
+    edit.addEventListener("click",function(){ openTodo(x.project,x.id); });
     /* An owned item is closed by its owner, never here (hypomnemata › undertaking). */
     if(ownerOf(x)) acts.appendChild(el("span","why",ownerOf(x)+" closes it."));
     else acts.appendChild(btn);
-    acts.appendChild(edit); card.appendChild(acts);
+    /* a project's TODO list holds only the items that name it */
+    if(x.project) acts.appendChild(edit);
+    card.appendChild(acts);
     host.appendChild(card);
   });
 }
@@ -4402,6 +4413,7 @@ periodicStore=loadStore("periodic"); projectStore=loadStore("projects"); todoRev
    was — a TODO item that blocks an Office item — and is carried over once; from
    the store it is carried into the store's todo, so every device holds the one
    item and a close reaches them all. One already closed here is not carried over: its old record is closed. */
+var pendingBreaks=null;
 function adoptBreakdowns(list,shared){
   var changed=false;
   (list||[]).forEach(function(b){
@@ -4412,6 +4424,10 @@ function adoptBreakdowns(list,shared){
       return;
     }
     if(had && !(shared && had.at===new Date(0).toISOString())) return;
+    /* Until the Rule that names the default project has loaded, the breakdown waits
+       (adoptRule takes it up again): a project of null would stay in the shared
+       list, in no project's TODO list. */
+    if(!defaultProject()){ pendingBreaks={list:list,shared:shared}; return; }
     var it={project:defaultProject(),what:b.what,blocks:b.blocks||[],captured:b.opened||logicalToday(),sessions:b.sessions_used||0};
     if(shared){ putDoc(todoStore,"todo","todo",b.id,it); return; }
     it.id=b.id; it.at=new Date(0).toISOString();

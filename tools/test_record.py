@@ -107,6 +107,8 @@ class Ticks(unittest.TestCase):
         self.assertIs(w["days/" + TODAY][1]["meds"], True)
         w, _ = gated(export(), {"fact": "tick", "date": TODAY, "item": "weight", "weight": 181.26})
         self.assertEqual(w["days/" + TODAY][1]["weight"], 181.3)
+        w, _ = gated(export(), {"fact": "tick", "date": TODAY, "item": "weight", "weight": 150.25})
+        self.assertEqual(w["days/" + TODAY][1]["weight"], 150.3)   # half up, as the page rounds
         with self.assertRaisesRegex(record.Refused, "needs the number"):
             gated(export(), {"fact": "tick", "date": TODAY, "item": "weight"})
 
@@ -228,6 +230,9 @@ class Items(unittest.TestCase):
                                                     "started": {"date": TODAY, "focus": "focus_2"}})
         w, _ = gated(docs, {"fact": "periodic-done", "id": "laundry", "date": "2026-10-13"})
         self.assertNotIn("started", w["periodic/laundry"][1])
+        older = export(**{"periodic/laundry": dict(laundry, history=["2026-10-01"])})
+        w, _ = gated(older, {"fact": "periodic-done", "id": "laundry", "date": "2026-10-13"})
+        self.assertEqual(w["periodic/laundry"][1]["history"], {"2026-10-01": True, "2026-10-13": True})
 
     def test_close_and_restore(self):
         docs = export(**{"todo/i1": {"id": "i1", "what": "x", "project": "ordo"},

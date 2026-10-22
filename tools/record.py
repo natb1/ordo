@@ -54,6 +54,7 @@ is for, and whether the user said what the fact says.
 import argparse
 import copy
 import json
+import math
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -214,7 +215,8 @@ class Record:
             w = f.get("weight")
             if not isinstance(w, (int, float)) or isinstance(w, bool) or w <= 0:
                 raise Refused("the weigh-in needs the number: weight, in lb, one decimal")
-            p["weight"] = round(float(w), 1)
+            # half up, as the page's Math.round(n*10)/10 rounds it, not to even
+            p["weight"] = math.floor(float(w) * 10 + 0.5) / 10
         self.patch("days", d, p)
 
     def pour(self, f):
@@ -232,7 +234,8 @@ class Record:
                 self.said.append(f"{d}: {leaf} already holds {n}; the same fact is written once")
                 return
             raise Refused(f"{d}: {leaf} already holds {pours[leaf]}, and one fact never takes a second number; a correction is its own key")
-        held = (day.get("drinks") or 0) + sum(v for v in pours.values() if isinstance(v, int))
+        held = (day.get("drinks") or 0) + sum(v for v in pours.values()
+                                                     if isinstance(v, (int, float)) and not isinstance(v, bool))
         if n < 0 and held + n < 0:
             raise Refused(f"{d} holds {held} drink(s); a correction of {n} takes away more than that")
         self.patch("days", d, {"date": d, "pours": {leaf: n}})
@@ -301,6 +304,10 @@ class Record:
             raise Refused(f"periodic/{i} is not in the export; a done needs the document read")
         d = self.date(f.get("date"), "a done's date") if f.get("date") else self.today
         p = {"id": i, "history": {d: True}, "due": None, "at": self.at}
+        if isinstance(x.get("history"), list):
+            # an older page kept a list, which a merge would replace whole: carry
+            # its dates over into the map
+            p["history"] = {**{h: True for h in x["history"] if isinstance(h, str)}, d: True}
         if x.get("then") and d == self.today:
             day = self.doc("days", d) or {}
             if not (day.get("items") or {}).get(i):
