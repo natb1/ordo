@@ -1311,11 +1311,17 @@
    offline. A browser that has never reached the store has no Rule yet, and says so.
    TODO items and periodic items are not here: they are the todo and periodic
    collections, which the page and /ordo both write. */
-var BLOCKS=[], COMMITMENTS=[], PROJECTS=[], SHELVED=[], FRONTIER=[], BACKLOG=[], WHOLE_DAYS=[],
-    EXAMEN=[], EXIT_RITE=[], WINTER={start:"",end:""}, RATION={week:0,day:0},
-    TIMEBOX={minutes:0,sessions:0}, TODO_CADENCE=14, BELL_LEAD=0,
-    /* The clock needs a day before the Rule has arrived; the Rule's own replaces it. */
-    DAY_START="04:00";
+var BLOCKS, COMMITMENTS, PROJECTS, SHELVED, FRONTIER, BACKLOG, WHOLE_DAYS, EXAMEN, EXIT_RITE,
+    WINTER, RATION, TIMEBOX, TODO_CADENCE, BELL_LEAD, DAY_START, TIMEZONE;
+/* Each name's value before any Rule, and again before each Rule is taken: a Rule
+   that leaves a name out leaves it at this, never at the last Rule's (nor at the
+   values of one that could not be drawn). The clock needs a day before the Rule has
+   arrived; the Rule's own replaces it. With no TIMEZONE the clock is this browser's. */
+var RULE_DEFAULT={
+  BLOCKS:[], COMMITMENTS:[], PROJECTS:[], SHELVED:[], FRONTIER:[], BACKLOG:[], WHOLE_DAYS:[],
+  EXAMEN:[], EXIT_RITE:[], WINTER:{start:"",end:""}, RATION:{week:0,day:0},
+  TIMEBOX:{minutes:0,sessions:0}, TODO_CADENCE:14, BELL_LEAD:0, DAY_START:"04:00", TIMEZONE:null
+};
 /* The gate holds every value to its shape, but the store takes a write from anyone
    the page is shared with, gate or no gate. Two values are held to theirs here too:
    the clock reads DAY_START before anything is drawn, and RATION is written into the
@@ -1327,19 +1333,30 @@ var RULE_SET={
   DAY_START:function(v){ if(typeof v==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)) DAY_START=v; },
   EXAMEN:function(v){EXAMEN=v;}, EXIT_RITE:function(v){EXIT_RITE=v;},
   RATION:function(v){ RATION={week:+v.week||0,day:+v.day||0}; },
-  TIMEBOX:function(v){TIMEBOX=v;}, TODO_CADENCE:function(v){TODO_CADENCE=v;}, BELL_LEAD:function(v){BELL_LEAD=v;}
+  TIMEBOX:function(v){TIMEBOX=v;}, TODO_CADENCE:function(v){TODO_CADENCE=v;}, BELL_LEAD:function(v){BELL_LEAD=v;},
+  /* meta.timezone, an IANA name: the wall clock the day is read on, wherever this
+     browser is. One this browser's Intl does not know leaves the clock its own. */
+  TIMEZONE:function(v){ TIMEZONE=null; if(typeof v==="string" && v){ try{ new Intl.DateTimeFormat("en-US",{timeZone:v}); TIMEZONE=v; }catch(e){} } }
 };
+function resetRule(){ Object.keys(RULE_SET).forEach(function(n){ RULE_SET[n](JSON.parse(JSON.stringify(RULE_DEFAULT[n]))); }); }
+resetRule();
+/* The record's revision: bumped whenever a day's record, the stores or the Rule may
+   have changed, and at every render, so what is worked out from them once per
+   render (memo) is worked out again. */
+var recRev=0;
 var ruleSeen=null;
 function adoptRule(c){
   if(!c || typeof c!=="object" || Array.isArray(c) || !Array.isArray(c.BLOCKS) || !c.BLOCKS.length) return false;
   var s=JSON.stringify(c);
   if(s===ruleSeen) return false;
-  /* A copy: what the store hands over is frozen. */
+  /* A copy: what the store hands over is frozen. Every name starts from its default,
+     so nothing of the Rule before survives in a name this one leaves out. */
   c=JSON.parse(s);
+  resetRule();
   Object.keys(RULE_SET).forEach(function(n){ if(c[n]!==undefined && c[n]!==null) RULE_SET[n](c[n]); });
   ruleSeen=s;
   /* What was worked out from the Rule before is worked out again. */
-  blocksCache={}; commitmentsCache={}; openCache={key:null,list:null};
+  blocksCache={}; commitmentsCache={}; openCache={key:null,list:null}; recRev++;
   if(pendingBreaks && defaultProject()){ var pb=pendingBreaks; pendingBreaks=null; adoptBreakdowns(pb.list,pb.shared); }
   return true;
 }
@@ -1375,9 +1392,27 @@ function fmt(m){var h=Math.floor(m/60)%24,mm=m%60,ap=h>=12?"PM":"AM",hh=h%12===0
    fmt() takes the hour mod 24, so a time recorded then still reads 12:20 AM. The
    wall clock, never elapsed time: on the nights the clocks change, the day still
    turns at 04:00 as the clock on the wall reads it. */
-function wallMins(d){d=d||new Date();return d.getHours()*60+d.getMinutes();}
+/* The wall clock is the Rule's (meta.timezone, compiled as TIMEZONE), read through
+   Intl, as tools/rule.py reads it: a phone abroad still keeps the Rule's day. With
+   none, it is this browser's. wall() gives the date and time there. */
+var zoneFmt=null, zoneFor=null;
+function wall(d){
+  d=d||new Date();
+  if(!TIMEZONE || isNaN(d.getTime())) return {y:d.getFullYear(),mo:d.getMonth()+1,d:d.getDate(),h:d.getHours(),mi:d.getMinutes()};
+  if(zoneFor!==TIMEZONE){ zoneFmt=new Intl.DateTimeFormat("en-US",{timeZone:TIMEZONE,hourCycle:"h23",
+    year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric"}); zoneFor=TIMEZONE; }
+  var o={}; zoneFmt.formatToParts(d).forEach(function(p){ if(p.type!=="literal") o[p.type]=+p.value; });
+  return {y:o.year,mo:o.month,d:o.day,h:o.hour%24,mi:o.minute};
+}
+function wallMins(d){var w=wall(d);return w.h*60+w.mi;}
 function nowMins(){var m=wallMins();return m<hm(DAY_START)?m+1440:m;}
-function logicalDay(d){d=new Date(d.getTime()); if(wallMins(d)<hm(DAY_START)) d.setDate(d.getDate()-1); return ymd(d);}
+/* A clock time ("HH:MM") as minutes of the Rule's day: one before DAY_START is after
+   midnight, and runs on past 1440 as nowMins() does. */
+function dayMins(s){var m=hm(s);return m<hm(DAY_START)?m+1440:m;}
+/* A span's end, on the same count: an end that reads before its start is the next
+   morning's. */
+function dayEnd(start,end){var s=dayMins(start),e=end?dayMins(end):s;return e<s?e+1440:e;}
+function logicalDay(d){var w=wall(d), day=new Date(w.y,w.mo-1,w.d); if(w.h*60+w.mi<hm(DAY_START)) day.setDate(day.getDate()-1); return ymd(day);}
 function logicalToday(){ return logicalDay(new Date()); }
 /* The Rule's small numbers, in words, the way the page's prose says them. */
 function words(n){
@@ -1588,8 +1623,25 @@ function lsKey(d){return "cadence:"+d;}
 function loadLocal(d){try{var r=localStorage.getItem(lsKey(d));return r?JSON.parse(r):null;}catch(e){return null;}}
 /* Any day's record. The one on screen is `state`; every other day is read once and
    kept, because the docket and the week look back over up to 90 of them on every
-   repaint and a past day does not change under you. The two ways it can — the day
-   you just left, and a db sync — clear what is kept. */
+   repaint. Only the day on screen is followed live (watchDay); another day changes
+   under you when another device or /ordo writes it, and the page learns of that by
+   reading the 90 days again (syncDays): when the page is shown again (at most once
+   a minute), when the network comes back, and when the day turns. Each such read,
+   like a change this device makes (cacheDay), clears what is kept. */
+/* What is worked out from the records once per render, not once per row: the week's
+   counts (focusCounts, meetingCounts), when an item was last done (lastDoneDate),
+   the sessions a repair has had (sessionsUsed). Kept under the key
+   recRev|todoRev|viewDate|logicalToday(): recRev is bumped by every change to a
+   day's record this device makes or reads (save, adopt, cacheDay, syncDays), by the
+   stores (saveStore), by the Rule (adoptRule), and at the start of every render and
+   card paint, so a change made in place and drawn without a save is still read. */
+var memoKey=null, memoBox={};
+function memo(name,id,fn){
+  var k=recRev+"|"+todoRev+"|"+viewDate+"|"+logicalToday();
+  if(k!==memoKey){ memoKey=k; memoBox={}; }
+  var b=memoBox[name]||(memoBox[name]={});
+  return Object.prototype.hasOwnProperty.call(b,id) ? b[id] : (b[id]=fn());
+}
 function loadDay(k){
   if(state && k===state.date) return state;
   if(!(k in pastDays)) pastDays[k]=loadLocal(k);
@@ -1694,10 +1746,11 @@ function pendingFor(date){ return loadQ("cadence:pending")[date]||null; }
 /* A day as this device shows it: the store's (or the cached) copy, and over it what
    has not reached the store yet. */
 function viewOf(base,date){ return hydrate(overQ(clone(base||{}),pendingFor(date)),date); }
-function cacheDay(rec){ delete pastDays[rec.date]; try{localStorage.setItem(lsKey(rec.date),JSON.stringify(rec));}catch(e){} }
+function cacheDay(rec){ delete pastDays[rec.date]; recRev++; try{localStorage.setItem(lsKey(rec.date),JSON.stringify(rec));}catch(e){} }
 /* Make `rec` the day on screen and the base the next save is measured from. */
 function adopt(rec){ state=rec; shadow=clone(rec); cacheDay(rec); }
 function save(){
+  recRev++;
   if(!shadow || shadow.date!==state.date) shadow=hydrate(loadLocal(state.date)||{},state.date);
   var patch=diffRec(shadow,state);
   shadow=clone(state);
@@ -1741,6 +1794,42 @@ function sendDoc(path,patch,seed,owner,tries){
     });
   });
 }
+/* A patch as its leaves, each a patch of its own: {a:{b:1,c:2}} is {a:{b:1}} and
+   {a:{c:2}}. An array, a null or an empty object is one leaf. */
+function leavesOf(p){
+  var out=[];
+  Object.keys(p||{}).forEach(function(k){
+    if(isObj(p[k]) && Object.keys(p[k]).length) leavesOf(p[k]).forEach(function(l){ var o={}; o[k]=l; out.push(o); });
+    else { var o={}; o[k]=clone(p[k]); out.push(o); }
+  });
+  return out;
+}
+/* Where the store refused a patch outright (invalid_argument, marked drop), one bad
+   leaf would take every leaf folded in beside it. So the patch goes again leaf by
+   leaf, in order, each with `base`, and only a leaf refused on its own is dropped,
+   said in the console with its path. Resolves to what may leave the queue (landed
+   or refused) and whether all of it did: a leaf that failed any other way stops the
+   run, and it and the rest wait for the next flush. */
+function leafByLeaf(full,base,sent,seed,owner,err){
+  var ls=leavesOf(sent).filter(function(l){ return !Object.keys(l).every(function(kk){ return kk in base; }); });
+  if(ls.length<=1){
+    if(window.console) console.warn("cadence: the store refused a change to "+full+"; dropped "+canon(sent),err);
+    return Promise.resolve({gone:sent,ok:true});
+  }
+  var gone=clone(base), i=0;
+  function next(){
+    if(i>=ls.length) return {gone:gone,ok:true};
+    var l=ls[i++];
+    return writeDoc(full,applyPatch(clone(base),l),seed,owner).then(function(){ applyPatch(gone,l); return next(); },function(e){
+      if(e && e.drop){
+        if(window.console) console.warn("cadence: the store refused one change to "+full+"; dropped "+canon(l)+", sent the rest",e);
+        applyPatch(gone,l); return next();
+      }
+      return {gone:gone,ok:false};
+    });
+  }
+  return next();
+}
 /* Send what waits for one path. What landed leaves the queue; what changed while it
    was on its way is sent next. A failure waits 30 s, or the next chance (a save, the
    page hidden or shown, the network back), whichever is first. */
@@ -1749,25 +1838,31 @@ function flushQ(k,path,full,base,seed,owner){
   if(flushing[k+path]) return flushing[k+path];
   var p=qList(loadQ(k)[path])[0]; if(!p) return Promise.resolve(true);
   var sent=applyPatch(clone(base),p);
-  var pr=writeDoc(full,sent,seed,owner).then(function(){ return true; },function(err){
-    if(err && err.drop){ if(window.console) console.warn("cadence: the store refused a change to "+full,err); return true; }
-    clearTimeout(retryTimer); retryTimer=setTimeout(flushAll,30000);
-    return false;
-  }).then(function(ok){
+  var pr=writeDoc(full,sent,seed,owner).then(function(){ return {gone:sent,ok:true}; },function(err){
+    if(err && err.drop) return leafByLeaf(full,base,sent,seed,owner,err);
+    return {gone:null,ok:false};
+  }).then(function(r){
     delete flushing[k+path];
-    if(!ok) return false;
+    if(!r.ok){ clearTimeout(retryTimer); retryTimer=setTimeout(flushAll,30000); }
+    if(!r.gone) return false;
     var q=loadQ(k), l=qList(q[path]);
-    if(l.length){ subtract(l[0],sent); if(!Object.keys(l[0]).length) l.shift();
+    if(l.length){ subtract(l[0],r.gone); if(!Object.keys(l[0]).length) l.shift();
       if(l.length) q[path]= l.length===1 ? l[0] : l; else delete q[path];
       saveQ(k,q); }
+    if(!r.ok) return false;
     return q[path] ? flushQ(k,path,full,base,seed,owner) : true;
   });
   flushing[k+path]=pr;
   return pr;
 }
 /* Every day's patch carries its date, so a day the store makes is never one the
-   review's orderBy("date") cannot see. */
-function flushDay(date){ return flushQ("cadence:pending",date,"days/"+date,{date:date},blank(date),"date"); }
+   review's orderBy("date") cannot see. A past day the page is the first to make is
+   made backfilled, as record.py makes one: it holds only what was told afterwards,
+   and the week and the counts read the bells it lacks as gaps, not as missed. The
+   seed is used only where the store has no such day, so a day kept on another
+   device is never marked. */
+function daySeed(date){ var s=blank(date); if(date<logicalToday()) s.backfilled=true; return s; }
+function flushDay(date){ return flushQ("cadence:pending",date,"days/"+date,{date:date},daySeed(date),"date"); }
 function flushAll(){
   clearTimeout(saveTimer); saveTimer=null;
   if(!db) return Promise.resolve();
@@ -1816,10 +1911,11 @@ document.addEventListener("visibilitychange",function(){
   if(document.visibilityState==="visible" && db && daysSynced){
     if(!dayUnsub) watchDay(viewDate);
     reloadDay(viewDate).catch(function(){});
+    resyncDays(false);
   }
 });
 window.addEventListener("pagehide",function(){ flushAll(); });
-window.addEventListener("online",function(){ flushAll(); if(db && !daysSynced) syncDays(); });
+window.addEventListener("online",function(){ flushAll(); if(db && !daysSynced) syncDays(); else resyncDays(true); });
 /* The first run of this way of syncing, once per part ("days", "todo", ...). */
 function migrated(part){ try{ return !!JSON.parse(localStorage.getItem("cadence:migrated")||"{}")[part]; }catch(e){ return false; } }
 function markMigrated(part){ try{ var m=JSON.parse(localStorage.getItem("cadence:migrated")||"{}"); m[part]=1;
@@ -1855,9 +1951,12 @@ function localDates(){
    this runs on a device, what an older page kept here and the store never got —
    ticks, times, bells, text, drinks — is queued first, beneath anything already
    waiting, so an upgrade loses nothing; where the store has a value, it stands. */
+var daysSyncing=null, daysSyncedAt=0;
 function syncDays(){
-  var since=addDays(logicalToday(),-90);
-  return db.collection("days").where("date",">=",since).get().then(function(snap){
+  if(daysSyncing) return daysSyncing;
+  var since=addDays(logicalToday(),-90), again=daysSynced;
+  daysSyncing=db.collection("days").where("date",">=",since).get().then(function(snap){
+    daysSyncing=null; daysSyncedAt=Date.now();
     var by={};
     snap.docs.forEach(function(doc){ var v=doc.data(); if(v && v.date) by[v.date]=v; });
     if(!migrated("days") && !(snap.metadata&&snap.metadata.fromCache)){
@@ -1868,15 +1967,30 @@ function syncDays(){
       });
       markMigrated("days");
     }
-    Object.keys(by).forEach(function(date){ if(date!==viewDate) cacheDay(viewOf(by[date],date)); });
+    var changed=false;
+    Object.keys(by).forEach(function(date){
+      if(date===viewDate) return;
+      var rec=viewOf(by[date],date);
+      if(canon(rec)!==canon(loadLocal(date))){ cacheDay(rec); changed=true; }
+    });
     daysSynced=true;
     /* Other days feed only the cards and the week; the day on screen is watched. */
-    pastDays={};
-    watchDay(viewDate);
+    pastDays={}; recRev++;
+    if(!again || !dayUnsub) watchDay(viewDate);
     flushAll();
-    refreshCards();
-    if(view==="week") renderWeek();
-  }).catch(function(){ if(!daysSynced) setTimeout(function(){ if(!daysSynced) syncDays(); },30000); });
+    /* A read again that changed another day: the docket, the cards and the week all
+       look back over it. */
+    if(again && changed && ruleSeen) render();
+    else { refreshCards(); if(view==="week") renderWeek(); }
+  }).catch(function(){ daysSyncing=null; if(!daysSynced) setTimeout(function(){ if(!daysSynced) syncDays(); },30000); });
+  return daysSyncing;
+}
+/* The other days read again, once the first read has been: forced by the network
+   coming back or the day turning, and otherwise not within a minute of the last. */
+function resyncDays(force){
+  if(!db || !daysSynced) return;
+  if(!force && Date.now()-daysSyncedAt<60000) return;
+  syncDays();
 }
 /* Now, in minutes of the day on screen; none on another day. A card holding the
    turn is still recording the day just left, where now is past its midnight. */
@@ -1972,7 +2086,8 @@ function weekDays(anchor){
    else. A slot is one slot of supply, so one shared by n projects charges each 1/n
    and the counts never add up to more than was worked. A follow-up rides along and
    charges nothing. */
-function focusCounts(){
+function focusCounts(){ return memo("focus","",focusCount); }
+function focusCount(){
   var c={}, m=meetingCounts(); PROJECTS.forEach(function(p){c[p.id]=m[p.id]||0;});
   weekDays().forEach(function(rec){
     Object.keys(rec.bells||{}).forEach(function(k){
@@ -2018,11 +2133,21 @@ function workProject(id){
   if(id.indexOf("canon:")===0) return id.slice(6);
   if(id.indexOf("q:")===0) return id.split(":")[1];
   var o=anyWork(id);
-  return (o && o.project) || defaultProject();
+  return o ? homeProject(o) : defaultProject();
+}
+/* The project an item is filed and charged under: the one it names, active or
+   shelved; one that names none, or a project the Rule no longer carries, the
+   default. Every list (todoFor, periodicFor, followUps, the dictations) and every
+   count (workProject) reads it here, so an item shows under the project its
+   sessions are charged to and can be picked there. */
+function homeProject(x){
+  var pid=x && x.project;
+  return pid && projAny(pid) ? pid : defaultProject();
 }
 /* The project an item that names none belongs to: the one the Rule marks default. */
 function defaultProject(){ for(var i=0;i<PROJECTS.length;i++) if(PROJECTS[i].default) return PROJECTS[i].id; return null; }
-function meetingCounts(){
+function meetingCounts(){ return memo("meetings","",meetingCount); }
+function meetingCount(){
   var sun=parseYmd(logicalToday());
   sun.setDate(sun.getDate()-sun.getDay());
   var c={};
@@ -2086,7 +2211,7 @@ function bellNotExpected(key,date){
 function notExpectedText(x){ return "Not expected — "+x.what+". Not a miss."; }
 function notNeededText(naVal){ return typeof naVal==="string"&&naVal ? "Not needed — "+naVal+". Not a miss." : "Not needed today. Not a miss."; }
 function allWork(){ return PROJECTS.concat(SHELVED).concat(periodicAll()).concat(todoAll()).concat(frontierItems()).concat(dictationsAll()); }
-function dictationsAll(){ return dictationDocs(null).filter(function(x){ return !isDictated(x) && !!projById(x.project); }); }
+function dictationsAll(){ return dictationDocs(null).filter(function(x){ return !isDictated(x) && !!projById(homeProject(x)); }); }
 /* What a recorded id is called. A finished or removed item is no longer work, but
    the sessions that recorded it still name it. */
 function projName(id){
@@ -2145,7 +2270,7 @@ function loadStore(k){try{return JSON.parse(localStorage.getItem("cadence:"+k)||
 /* Every change to the todo store goes through saveStore, so its count is what the
    open-blockers list is keyed by. */
 var todoRev=0;
-function saveStore(k,v){if(k==="todo") todoRev++; try{localStorage.setItem("cadence:"+k,JSON.stringify(v));}catch(e){}}
+function saveStore(k,v){if(k==="todo") todoRev++; recRev++; try{localStorage.setItem("cadence:"+k,JSON.stringify(v));}catch(e){}}
 /* Only the fields changed are sent, as a patch that waits in cadence:pendingDocs
    until the store takes it, so a next step saved on the desk cannot erase an
    allocation set on the phone. */
@@ -2270,7 +2395,7 @@ function todoAll(){
 function todoEvery(){
   return Object.keys(todoStore).map(function(id){ return tidy(Object.assign({},todoStore[id])); });
 }
-function todoFor(pid){ return todoAll().filter(function(x){ return x.project===pid; }); }
+function todoFor(pid){ return todoAll().filter(function(x){ return homeProject(x)===pid; }); }
 function periodicAll(){
   var out=[];
   Object.keys(periodicStore).forEach(function(id){
@@ -2280,7 +2405,7 @@ function periodicAll(){
   });
   return out;
 }
-function periodicFor(pid){ return periodicAll().filter(function(x){ return x.project===pid; }); }
+function periodicFor(pid){ return periodicAll().filter(function(x){ return homeProject(x)===pid; }); }
 /* The frontier hypomnemata of a project with a notebook: its questions whose lineage
    is in canon and which are not canon themselves, as /ordo last read them off the
    notebook (the docket › frontier). Each is a work item, answered at the notebook. */
@@ -2300,7 +2425,7 @@ function dictationDocs(pid){
     var o=todoStore[id];
     if(!isDictation(o) || o.done || o.removed) return;
     var x=tidy(Object.assign({id:id},o));
-    if(!pid || x.project===pid) out.push(x);
+    if(!pid || homeProject(x)===pid) out.push(x);
   });
   return out;
 }
@@ -2347,6 +2472,9 @@ function addDays(s,n){ var d=parseYmd(s); d.setDate(d.getDate()+n); return ymd(d
 /* Today included: a periodic item done this morning is not still due this afternoon.
    Done is ticked, or recorded at a bell as what a session worked on. */
 function lastDoneDate(itemId){
+  return memo("done",String(itemId),function(){ return lastDone(itemId); });
+}
+function lastDone(itemId){
   return lookBack(90,function(rec){
     if((rec.items||{})[itemId]) return true;
     var f=rec.focus||{};
@@ -2419,11 +2547,20 @@ function isRepair(x){
 function sessionsUsed(x){
   var seen={}, today=logicalToday(), from=String(x.captured||addDays(today,-90)).slice(0,10);
   Object.keys(x.diagnosed||{}).forEach(function(k){ if(x.diagnosed[k]) seen[k]=true; });
-  for(var d=today, g=0; d>=from && g<=90; d=addDays(d,-1), g++){
-    var rec=loadDay(d), f=(rec&&rec.focus)||{};
-    Object.keys(f).forEach(function(k){ if(((f[k]||{}).undertakings||[]).indexOf(x.id)>=0) seen[d+":"+k]=true; });
-  }
+  sessionsRecorded(x.id,from).forEach(function(k){ seen[k]=true; });
   return (typeof x.sessions==="number"?x.sessions:0)+Object.keys(seen).length;
+}
+/* The day:slot keys of the sessions the days record for an item, from `from` to
+   today: the walk back over up to 90 days, once per render. */
+function sessionsRecorded(id,from){
+  return memo("sessions",id+"|"+from,function(){
+    var out=[];
+    for(var d=logicalToday(), g=0; d>=from && g<=90; d=addDays(d,-1), g++){
+      var rec=loadDay(d), f=(rec&&rec.focus)||{};
+      Object.keys(f).forEach(function(k){ if(((f[k]||{}).undertakings||[]).indexOf(id)>=0) out.push(d+":"+k); });
+    }
+    return out;
+  });
 }
 function repairSpent(x){ return isRepair(x) && (x.escalated==="money" || sessionsUsed(x)>=TIMEBOX.sessions); }
 /* Past the timebox the work is the call, and the sort says so where it names it. */
@@ -2505,14 +2642,14 @@ function followUps(focusId,pid){
   /* Every TODO item a follow-up can come from: finished ones too, since finishing
      the item is exactly when what it commits is due. Only a removed one is gone. */
   periodicAll().concat(todoEvery().filter(function(x){ return !x.removed && x.what; })).forEach(function(x){
-    if(!x.then || (pid && x.project!==pid)) return;
+    if(!x.then || (pid && homeProject(x)!==pid)) return;
     var back=sessionsBefore(focusId,x.then.sessions), st=x.started||{};
     for(var i=0;i<back.length;i++){
       var f=((back[i].rec||{}).focus||{})[back[i].it.id]||{};
       /* Recorded at a bell, or started from its card ("Done today"), which says
          which session it went in. */
       if((f.undertakings||[]).indexOf(x.id)>=0 || (st.date===back[i].date && st.focus===back[i].it.id)){
-        out.push({id:"then:"+x.id,what:x.then.what,project:x.project,follow:true,
+        out.push({id:"then:"+x.id,what:x.then.what,project:homeProject(x),follow:true,
                   why:"Follows "+x.what+", recorded for "+back[i].it.do+(back[i].date!==viewDate?" on "+back[i].date:"")+
                       ". Due in each of the "+plural(x.then.sessions,"session")+" after it; it rides along and does not spend this one."});
         return;
@@ -2725,7 +2862,7 @@ function defineCard(id,title,painter,background){
   shell.setTitle(id,title);
   return id;
 }
-function paintCard(id){ if(cards[id]) cards[id].paint(shell.body(id)); }
+function paintCard(id){ if(cards[id]){ recRev++; cards[id].paint(shell.body(id)); } }
 /* The shell paints a card on 'open'; one already open is repainted here, since it
    was opened for something that may have changed since it was last drawn. */
 function openCard(id){
@@ -2780,6 +2917,7 @@ function focusRestore(host,m){
 function repaintCard(id){
   var body=shell.body(id);
   if(!body || !cards[id]) return;
+  recRev++;
   var m=focusMark(body), top=body.scrollTop;
   cards[id].paint(body);
   body.scrollTop=top;
@@ -3272,8 +3410,8 @@ function paintTime(host,it,label){
   var ti=document.createElement("input");
   ti.type="time"; ti.id="at-"+it.id; ti.setAttribute("aria-labelledby",th.id);
   var cur=dr.time!=null ? dr.time : to24((state.times||{})[it.id]);
-  if(!cur && dr.time==null){ var d=new Date();
-    cur=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  if(!cur && dr.time==null){ var w=wall();
+    cur=String(w.h).padStart(2,"0")+":"+String(w.mi).padStart(2,"0"); }
   ti.value=cur;
   ti.addEventListener("input",function(){ dr.time=ti.value; });
   host.appendChild(ti);
@@ -3481,12 +3619,13 @@ function paintBlocked(host){
     btn.type="button";
     btn.addEventListener("click",function(){ closeTodo(x.id,logicalToday()); render(); });
     var edit=el("button","no","Open in the TODO list"); edit.type="button";
-    edit.addEventListener("click",function(){ openTodo(x.project,x.id); });
+    edit.addEventListener("click",function(){ openTodo(homeProject(x),x.id); });
     /* An owned item is closed by its owner, never here (hypomnemata › undertaking). */
     if(ownerOf(x)) acts.appendChild(el("span","why",ownerOf(x)+" closes it."));
     else acts.appendChild(btn);
-    /* a project's TODO list holds only the items that name it */
-    if(x.project) acts.appendChild(edit);
+    /* the item is in the TODO list of the project it is filed under (homeProject):
+       the one it names, or the default; with no default yet, in none */
+    if(homeProject(x)) acts.appendChild(edit);
     card.appendChild(acts);
     host.appendChild(card);
   });
@@ -3516,6 +3655,15 @@ function field(host,label,node,fk){
 }
 function textInput(v,ph){ var i=document.createElement("input"); i.type="text"; i.value=v||""; if(ph) i.placeholder=ph; return i; }
 function dateInput(v){ var i=document.createElement("input"); i.type="date"; i.value=v||""; return i; }
+/* A count typed into a field, held to a whole number as the gate holds the Rule's:
+   "2.5" or "1e1" is refused, never read as 2 or 1 (parseInt would). null if it is not
+   one. */
+function wholeNum(v){
+  var s=String(v==null?"":v).trim();
+  if(!/^\d+$/.test(s)) return null;
+  var n=Number(s);
+  return Number.isInteger(n) && Number.isSafeInteger(n) ? n : null;
+}
 function numInput(v,min){ var i=document.createElement("input"); i.type="number"; i.min=min||0; i.value=v==null?"":v; return i; }
 function actButton(label,cls,fn){ var b=el("button",cls,label); b.type="button"; b.addEventListener("click",fn); return b; }
 function linksFor(host,p){
@@ -3595,8 +3743,9 @@ function paintProject(host,p){
   host.appendChild(ta);
   var acts=el("div","acts");
   acts.appendChild(actButton("Save","go",function(){
-    var a=parseInt(dr.alloc,10);
-    if(!isNaN(a) && a>=0 && a!==alloc) putProject(p.id,{allocation:a,allocWeek:sundayOf(logicalToday())});
+    var a=dr.alloc==null ? alloc : wholeNum(dr.alloc);
+    if(a===null){ nudge(acts,"Sessions this week is a whole number of sessions; "+String(dr.alloc).trim()+" is not one. Nothing was saved."); num.focus(); return; }
+    if(a!==alloc) putProject(p.id,{allocation:a,allocWeek:sundayOf(logicalToday())});
     if(dr.next!=null && dr.next.trim()!==threadLine(p.id)) setThread(p.id,dr.next.trim());
     delete drafts["proj:"+p.id]; render();
   }));
@@ -3844,8 +3993,9 @@ function paintPeriodic(host,p){
     var d=field(host,"Next due",dateInput(a.due),"padd:due"); d.addEventListener("change",function(){ a.due=d.value; });
     var acts=el("div","acts");
     acts.appendChild(actButton("Add","go",function(){
-      var what=(a.what||"").trim(), cad=parseInt(a.cadence,10);
-      if(!what || !(cad>0)) return;
+      var what=(a.what||"").trim(), cad=wholeNum(a.cadence);
+      if(!what){ nudge(acts,"Name it first."); h.focus(); return; }
+      if(!(cad>0)){ nudge(acts,"Every … days is a whole number of days, 1 or more."); c.focus(); return; }
       putPeriodic(newId("p"),{project:p.id,what:what,cadence:cad,due:a.due||null,history:[],outranks:false});
       delete dr.add; dr.adding=false; render();
     }));
@@ -3882,17 +4032,19 @@ function periodicItem(host,p,x,dr){
   wrap.appendChild(el("div","hist",hist.length ? hist.join(" · ") : "No record yet."));
   var acts=el("div","acts");
   acts.appendChild(actButton("Done today","go",function(){
-    var hs=(x.history||[]).slice(), today=logicalToday(); if(hs.indexOf(today)<0) hs.push(today);
+    var hs=(x.history||[]).slice(), today=logicalToday(), again=hs.indexOf(today)>=0; if(!again) hs.push(today);
     /* The doing restarts the cadence, so a date set on the card is spent. One with
        a follow-up is also started, in the session it went in — unless a bell
-       already recorded it today, which said so itself. */
+       already recorded it today, which said so itself, or this button already did
+       (its own history holds today): pressed twice, it was started once. */
     var patch={history:hs,due:null};
-    if(x.then && lastDoneDate(x.id)!==today) patch.started=sessionNow();
+    if(x.then && !again && lastDoneDate(x.id)!==today) patch.started=sessionNow();
     putPeriodic(x.id,patch); delete dr.edit; render();
   }));
   acts.appendChild(actButton("Save","no",function(){
-    var cad=parseInt(e.cadence,10);
-    var patch={what:(e.what||"").trim()||x.what,cadence:cad>0?cad:x.cadence};
+    var cad=wholeNum(e.cadence);
+    if(!(cad>0)){ nudge(acts,"Every … days is a whole number of days, 1 or more. Nothing was saved."); c.focus(); return; }
+    var patch={what:(e.what||"").trim()||x.what,cadence:cad};
     if(e.due!==e.due0) patch.due=e.due||null;
     putPeriodic(x.id,patch);
     delete dr.edit; render();
@@ -3909,6 +4061,7 @@ function periodicItem(host,p,x,dr){
    would otherwise leave focus on nothing. Each control carries a data-fk to be found
    again by. */
 function render(){
+  recRev++;
   if(!ruleSeen){
     var none=document.getElementById("blocks"); none.textContent="";
     para(none,"note","The Rule has not reached this browser yet. It arrives from the page's store the first time the page is opened online.");
@@ -4146,10 +4299,10 @@ function renderToolbar(){
      a day the week can spare, one a whole-day fixture does not keep not at all. */
   var next=null, now=nowMins();
   commitmentsFor(DAYS[d.getDay()],viewDate).forEach(function(c){
-    if(!next && c.meeting && !cancelledOn(c.id,viewDate) && c.end && hm(c.start)<=now && now<hm(c.end)) next={do:c.what};
+    if(!next && c.meeting && !cancelledOn(c.id,viewDate) && c.end && dayMins(c.start)<=now && now<dayEnd(c.start,c.end)) next={do:c.what};
   });
   bs.forEach(function(b){ b.items.forEach(function(it){
-    if(!next && it.window && it.window[0] && it.window[1] && hm(it.window[0])<=now && now<hm(it.window[1]) &&
+    if(!next && it.window && it.window[0] && it.window[1] && dayMins(it.window[0])<=now && now<dayEnd(it.window[0],it.window[1]) &&
        !state.items[it.id] && !blockedBy(it,viewDate) && !(state.na||{})[it.id] && !notExpectedOn(it,viewDate)) next=it;
   }); });
   if(curB && !next) for(var i=0;i<curB.items.length;i++){
@@ -4210,13 +4363,18 @@ function askNextBell(){
    The notice lives in the content footer rather than the toolbar. The toolbar is
    where you are; a departure is what you have to DO, it has to survive scrolling
    the whole day, and the bottom edge is the half of a phone a thumb reaches. */
+/* Every time on the Rule's day count (dayMins): nowMins() runs past 1440 after
+   midnight, so a fixture that ends after midnight, or falls between midnight and
+   DAY_START, is compared on the same count. */
 function fixtureNote(c){
-  var now=nowMins(), start=hm(c.start), end=c.end?hm(c.end):start;
+  var now=nowMins(), start=dayMins(c.start), end=dayEnd(c.start,c.end);
   if(now>=end) return null;
   if(now>=start) return {text:c.what+" until "+fmt(end), late:true};
+  var leave=c.leaveBy ? dayMins(c.leaveBy) : null;
+  if(leave!=null && leave>start) leave-=1440;
   return {text:(c.leaveBy ? "Leave by "+fmt(hm(c.leaveBy))+" — " : "")+
                c.what+" at "+fmt(start)+(c.varies ? " — where: see the calendar" : ""),
-          late:!!(c.leaveBy && now>=hm(c.leaveBy))};
+          late:!!(c.leaveBy && now>=leave)};
 }
 /* Always today's, whichever day is on screen: a departure does not wait for the page
    to be brought back to today. */
@@ -4577,7 +4735,7 @@ function dayCardOpen(){
 function clockTick(){
   if(!ruleSeen) return;
   var t=logicalToday();
-  if(t!==today){ today=t; turned=true; }
+  if(t!==today){ today=t; turned=true; resyncDays(true); }
   if(turned && (!dayCardOpen() || nowMins()>=hm(DAY_START)+TURN_HOLD)){ turned=false; if(viewDate!==t){ setViewDate(t); return; } }
   renderToolbar(); renderFixtures(); markNow();
 }
@@ -4606,7 +4764,11 @@ if(window.claude&&window.claude.use){
           else { render(); clockTick(); }
         }catch(e){
           if(window.console) console.error("cadence: the store's Rule could not be drawn",e);
-          ruleSeen=null;
+          /* Every name back to its default first: the cached Rule, adopted over it,
+             sets what it carries, and with none cached the page has no Rule at all,
+             not the half of one that failed. */
+          ruleSeen=null; resetRule(); recRev++;
+          blocksCache={}; commitmentsCache={}; openCache={key:null,list:null};
           try{ adoptRule(JSON.parse(localStorage.getItem("cadence:rule")||"null")); }catch(e2){}
           drawOrSay();
           return;
