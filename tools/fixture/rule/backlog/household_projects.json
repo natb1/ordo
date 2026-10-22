@@ -1,7 +1,7 @@
 {
   "cost": "3-4 h/week, one day",
   "cue": "When Saturday's shower is done, the afternoon block opens.",
-  "displaces": "A Saturday afternoon focus slot (docket.yaml). Real cost.",
+  "displaces": "A Saturday afternoon focus slot (rule/policy › docket). Real cost.",
   "first_session": "Walk the house with a notepad. List what's bothering you. Fix nothing.",
   "id": "household_projects",
   "note": "The easiest of the three to promote, because the slot already exists and the capacity is already being spent there. Likely first through the gate.\n",
