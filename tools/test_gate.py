@@ -776,6 +776,19 @@ class Page(unittest.TestCase):
         self.assertIn('memo("meetings"', page_fn("meetingCounts"))
         self.assertIn('memo("sessions"', page_fn("sessionsRecorded"))
 
+    def test_an_items_notes_are_shown_as_written(self):
+        # plain text another writer left: set as text, never markup, its own line breaks
+        # kept and its leading blank lines and trailing space dropped; nothing where there
+        # is none. Never trimmed by a /\s+$/, which backtracks across a long run of spaces.
+        self.assertNotIn("\\s+$", page_fn("notesOf"))
+        got = run_js(["field", "notesOf"], r"""
+            function shown(n){ var host=el("div"); notesOf(host,{notes:n});
+              return host.kids.map(function(k){ return [k.className,k.textContent]; }); }
+            out([shown("\n\n  Quote by Saturday.\r\nThen <b>call</b>.  \n"), shown(" \n\t"), shown(""), shown(null), shown(["a"])]);""",
+            pre="var fieldSeq=0, document={createElement:function(t){ return {tagName:t.toUpperCase(), kids:[], setAttribute:function(){}, appendChild:function(c){ this.kids.push(c); return c; }}; }};\n"
+                + js_block("el", PAGE_SRC.split("<script>")[2]))
+        self.assertEqual(got, [[["fld", "Notes"], ["inotes", "  Quote by Saturday.\r\nThen <b>call</b>."]], [], [], [], []])
+
 
 if __name__ == "__main__":
     unittest.main()

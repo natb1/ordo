@@ -653,8 +653,7 @@
   .iopen .acts button{padding:9px;font-size:12.5px}
   .hist{font-size:12px;color:var(--soft);line-height:1.5;margin:4px 0 0}
   /* An item's notes, as its writer wrote them: their own line breaks, read not edited. */
-  .inotes{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5;color:var(--ink);
-    background:var(--raised);border-radius:9px;padding:8px 10px;margin:8px 0 0}
+  .inotes{white-space:pre-wrap;font-size:13px;line-height:1.5;background:var(--raised);border-radius:9px;padding:8px 10px}
   /* Remove is not Save's twin: quieter, and last. */
   .acts .rm{flex:0 0 auto;border-color:var(--line);color:var(--soft);padding-left:14px;padding-right:14px}
   .undo{display:flex;align-items:center;gap:10px;margin-top:12px;padding:8px 10px;border-radius:9px;
@@ -2390,6 +2389,7 @@ function tidy(o){
     o.blocks = typeof o.blocks==="string" ? [o.blocks]
              : isObj(o.blocks) ? Object.keys(o.blocks).filter(function(k){ return o.blocks[k]; }) : [];
   if(o.then!=null && !(isObj(o.then) && typeof o.then.what==="string" && o.then.what && o.then.sessions>0)) delete o.then;
+  if(o.notes!=null && typeof o.notes!=="string") delete o.notes;
   return o;
 }
 /* Every open TODO item. A finished one stays in the store, closed. */
@@ -3899,11 +3899,12 @@ function todoItem(host,p,x,dr){
   wrap.appendChild(acts);
 }
 /* An item's notes (the item contract, tools/items.py): plain text another writer
-   left — an owner's recommendation, say — shown as written and never edited here. */
+   left — an owner's recommendation, say — shown as written and never edited here.
+   Its trailing space goes by trimEnd, not a /\s+$/, which backtracks across every
+   run of spaces: one long run would stall each paint of the open card. */
 function notesOf(host,x){
-  if(typeof x.notes!=="string" || !x.notes.trim()) return;
-  head(host,"Notes");
-  host.appendChild(el("div","inotes",x.notes.replace(/^\s*\n|\s+$/g,"")));
+  var t=typeof x.notes==="string" ? x.notes.replace(/^\s*\n/,"").trimEnd() : "";
+  if(t) field(host,"Notes",el("div","inotes",t));
 }
 /* An item another tool owns (hypomnemata › undertaking): its source is one link, its
    owner closes it, and the card offers only that it is not wanted. The line to resume

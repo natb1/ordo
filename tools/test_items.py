@@ -69,7 +69,7 @@ class Shape(unittest.TestCase):
         self.assertIsNone(items.owner_of({"what": "x"}))
 
     def test_notes_are_plain_text(self):
-        notes = "Recommend $1M 20-year term.\nQuote by Saturday."
+        notes = "Compare two quotes.\nDecide by Saturday."
         self.assertEqual(check("todo", {"id": "i1", "what": "x", "notes": notes})["notes"], notes)
         self.assertEqual(check("periodic", {"id": "p1", "what": "x", "cadence": 7, "notes": "y"})["notes"], "y")
         self.assertEqual(check("todo", {"id": "garden-x", "what": "x", "source": SRC, "notes": notes},
