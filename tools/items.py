@@ -30,7 +30,9 @@ A document. Its id is lowercase letters, digits, `-` and `_`, at most 64. It has
 number of days, at least 1; its `then` is {what, sessions}; its history a map of
 dates. A todo item's kind is dictation or nothing, and a capture is dated today.
 `source`, where given, is {owner, url}: the owner a short id, the url https, and
-on a todo item only, until the periodic card has an owned view. An item with a
+on a todo item only, until the periodic card has an owned view. `notes`, where
+given, is plain text, multi-line, shown on the item's card as written and never
+edited there: an owner's place for the detail behind an item. An item with a
 source is owned: its owner closes it, it does not age while undated,
 and the page offers only that it is not wanted.
 
@@ -135,6 +137,8 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
     if check_source(doc, what) is not None and collection == "periodic":
         raise Refused(f"{what}: a periodic item has no owner yet; its card has no owned view, so only a todo item "
                       "carries a source")
+    if doc.get("notes") is not None and not isinstance(doc["notes"], str):
+        raise Refused(f"{what}: notes is plain text, not {doc['notes']!r}")
     if held is None or "project" in doc:
         if doc.get("project") is not None and not (isinstance(doc["project"], str) and doc["project"]):
             raise Refused(f"{what}: project is a project's id, not {doc['project']!r}")

@@ -919,7 +919,8 @@ gate, and this skill never makes it unasked. Once it has run, the note is let go
 carries none yet) is another tool's — another
 repository's, say — written to the store directly by its owner under the item
 contract (`tools/items.py`, whose docstring is the protocol), never through a run
-here. Its owner dates it and closes it; the page shows its source as one link and
+here. Its owner dates it and closes it, and may leave the detail behind it in
+`notes` (plain text, shown on the card as written); the page shows its source as one link and
 offers only "not wanted", and a run writes nothing of it but its next step (the
 record gate refuses a close, an edit, or a capture that names an owner). Undated, it does not age: it stands last in tier 2 until its owner
 dates it, and the never-wanted check passes it by. The owner's sync lives with the

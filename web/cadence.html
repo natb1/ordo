@@ -652,6 +652,9 @@
   .iopen .acts{margin-top:12px}
   .iopen .acts button{padding:9px;font-size:12.5px}
   .hist{font-size:12px;color:var(--soft);line-height:1.5;margin:4px 0 0}
+  /* An item's notes, as its writer wrote them: their own line breaks, read not edited. */
+  .inotes{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5;color:var(--ink);
+    background:var(--raised);border-radius:9px;padding:8px 10px;margin:8px 0 0}
   /* Remove is not Save's twin: quieter, and last. */
   .acts .rm{flex:0 0 auto;border-color:var(--line);color:var(--soft);padding-left:14px;padding-right:14px}
   .undo{display:flex;align-items:center;gap:10px;margin-top:12px;padding:8px 10px;border-radius:9px;
@@ -3856,6 +3859,7 @@ function todoItem(host,p,x,dr){
   var h=field(wrap,"Heading",textInput(e.what),"ed:what:"+x.id); h.addEventListener("input",function(){ e.what=h.value; });
   var d=field(wrap,"Details",document.createElement("textarea"),"ed:dictation:"+x.id); d.value=e.dictation; d.placeholder="Your own prose: the details, and why";
   d.addEventListener("input",function(){ e.dictation=d.value; });
+  notesOf(wrap,x);
   var n=field(wrap,"Next step",textInput(e.next,"Where you pick up"),"ed:next:"+x.id); n.addEventListener("input",function(){ e.next=n.value; });
   var by=field(wrap,"Due by",dateInput(e.by),"ed:by:"+x.id); by.addEventListener("change",function(){ e.by=by.value; });
   var bl=field(wrap,"It blocks",el("div"));
@@ -3894,6 +3898,13 @@ function todoItem(host,p,x,dr){
   acts.appendChild(actButton("Remove","no rm",function(){ finish("Removed: "+x.what+".",{done:true,removed:true,doneAt:today},{done:false,removed:false,doneAt:null}); }));
   wrap.appendChild(acts);
 }
+/* An item's notes (the item contract, tools/items.py): plain text another writer
+   left — an owner's recommendation, say — shown as written and never edited here. */
+function notesOf(host,x){
+  if(typeof x.notes!=="string" || !x.notes.trim()) return;
+  head(host,"Notes");
+  host.appendChild(el("div","inotes",x.notes.replace(/^\s*\n|\s+$/g,"")));
+}
 /* An item another tool owns (hypomnemata › undertaking): its source is one link, its
    owner closes it, and the card offers only that it is not wanted. The line to resume
    by is the page's own, here as on any item. A remove is dated, as a close is, so the
@@ -3902,6 +3913,7 @@ function ownedItem(host,p,x,dr,owner){
   var wrap=el("div","iopen"); host.appendChild(wrap);
   var nl=threadLine(x.id), n=field(wrap,"Next step",textInput(nl,"Where you pick up"),"ed:next:"+x.id);
   if(x.dictation) wrap.appendChild(el("div","hist",x.dictation));
+  notesOf(wrap,x);
   wrap.appendChild(el("div","hist",x.by ? "Due by "+x.by+"." : "Undated: it waits until "+owner+" dates it."));
   var row=el("div","links"), href=webLink(x.source.url);
   if(href){ var a=el("a",null,"From "+owner); a.href=href; a.target="_blank"; a.rel="noopener"; row.appendChild(a); }
@@ -4031,6 +4043,7 @@ function periodicItem(host,p,x,dr){
   var c=field(wrap,"Every … days",numInput(e.cadence,1),"ped:cadence:"+x.id); c.addEventListener("input",function(){ e.cadence=c.value; });
   var d=field(wrap,"Next due",dateInput(e.due),"ped:due:"+x.id); d.addEventListener("change",function(){ e.due=d.value; });
   if(x.outranks) para(wrap,"note","Marked to outrank any project once overdue.");
+  notesOf(wrap,x);
   head(wrap,"Done");
   var hist=(x.history||[]).slice();
   [x.tracks,x.id].forEach(function(k){ if(!k) return; var t=lastDoneDate(k); if(t && hist.indexOf(t)<0) hist.push(t); });
