@@ -637,6 +637,60 @@ class Page(unittest.TestCase):
         self.assertTrue(got["leave"]["late"])
         self.assertIsNone(got["over"])
 
+    MEETINGS = """
+        var DAY_START="04:00", DAYS=["sun","mon","tue","wed","thu","fri","sat"], CS=[], gone={};
+        var BS=[{key:"terce",at:540,items:[{id:"focus_1"}]},{key:"sext",at:720,items:[{id:"focus_2"}]},
+                {key:"compline",at:1200,items:[{id:"focus_3"}]}];
+        blocksFor=function(){ return BS; };
+        commitmentsFor=function(){ return CS; };
+        cancelledOn=function(id){ return !!gone[id]; };"""
+    MEETING_FNS = ["ymd", "parseYmd", "hm", "dayMins", "dayEnd", "meetingIn"]
+    MEETING_PRE = "var blocksFor, commitmentsFor, cancelledOn;"
+
+    def test_a_meeting_is_charged_to_the_session_the_compiler_judged(self):
+        # 2026-10-25 is a Sunday. The compiler's `takes` names the session; the start
+        # alone (11:50, in terce's block) would put it in focus_1.
+        got = run_js(self.MEETING_FNS, self.MEETINGS + """
+            CS=[{id:"m",meeting:true,start:"11:50",end:"12:40",takes:{sun:"focus_2"}}];
+            var r={f1:meetingIn("focus_1","2026-10-25"), f2:meetingIn("focus_2","2026-10-25")};
+            gone.m=true; r.cancelled=meetingIn("focus_2","2026-10-25"); r.even=meetingIn("focus_2","2026-10-25",true);
+            // a Rule compiled before takes existed: the block the start falls in, on the
+            // day's count, so one at 00:30 is in the evening's last session
+            gone={}; CS=[{id:"old",meeting:true,start:"10:00",end:"11:00"},{id:"late",meeting:true,start:"00:30",end:"01:30"}];
+            r.old=meetingIn("focus_1","2026-10-25"); r.late=meetingIn("focus_3","2026-10-25");
+            // takes for other weekdays only: derived, as before
+            CS=[{id:"w",meeting:true,start:"12:30",end:"13:00",takes:{mon:"focus_1"}}];
+            r.other=meetingIn("focus_2","2026-10-25");
+            out({f1:r.f1&&r.f1.id, f2:r.f2&&r.f2.id, cancelled:r.cancelled, even:r.even&&r.even.id,
+                 old:r.old&&r.old.id, late:r.late&&r.late.id, other:r.other&&r.other.id});""", pre=self.MEETING_PRE)
+        self.assertEqual(got, {"f1": None, "f2": "m", "cancelled": None, "even": "m",
+                               "old": "old", "late": "late", "other": "w"})
+
+    def test_meeting_in_reads_takes_first(self):
+        fn = page_fn("meetingIn")
+        self.assertIn("if(c.takes && c.takes[dow]){ if(c.takes[dow]===focusId) hit=c; return; }", fn)
+        self.assertIn("dayMins(c.start)", fn)
+        self.assertNotIn("hm(c.start)", fn)
+
+    def test_a_fixture_past_midnight_is_not_closed_by_the_mornings_bell(self):
+        # 23:00-00:30 ends after midnight, after every bell of the day: the first bell
+        # closes the morning's 07:00-08:00, not it
+        got = run_js(self.MEETING_FNS + ["closesFor"], self.MEETINGS + """
+            CS=[{id:"am",what:"Early",start:"07:00",end:"08:00"},{id:"late",what:"Late",start:"23:00",end:"00:30"}];
+            var r={terce:closesFor({key:"terce",breaks:"focus_0",at:540},"2026-10-25")};
+            CS=[{id:"late",what:"Late",start:"23:00",end:"00:30"}];
+            r.none=closesFor({key:"terce",breaks:"focus_0",at:540},"2026-10-25");
+            out(r);""", pre=self.MEETING_PRE)
+        self.assertEqual(got["terce"], {"kind": "fixture", "id": "am", "what": "Early"})
+        self.assertEqual(got["none"], {"kind": "none"})
+
+    def test_every_end_on_the_page_is_on_the_days_count(self):
+        # an end read with hm() alone is 00:30 = 30, before every bell; dayEnd reads it
+        # as tools/rule.py's busy() does, past 1440
+        self.assertNotRegex(PAGE_SRC, r"hm\(\w+\.end\)")
+        self.assertIn("dayEnd(c.start,c.end)", page_fn("closesFor"))
+        self.assertIn("return dayMins(a.start)-dayMins(b.start);", page_fn("commitmentsFor"))
+
     def test_the_meeting_under_way_is_on_the_days_count(self):
         self.assertIn("dayMins(c.start)<=now && now<dayEnd(c.start,c.end)", PAGE_SRC)
 

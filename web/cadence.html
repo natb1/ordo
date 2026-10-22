@@ -1494,7 +1494,7 @@ function commitmentsFor(dow,date){
     if(c.day!==dow) return false;
     if(c.until && date>c.until) return false;
     return true;
-  }).sort(function(a,b){ return hm(a.start)-hm(b.start); });
+  }).sort(function(a,b){ return dayMins(a.start)-dayMins(b.start); });
 }
 /* A bell rings at its usual hour unless a fixture moves it, and the fixture says
    which bell and to when. A DEPARTURE moves the bell before it earlier (Tuesday's
@@ -1567,10 +1567,11 @@ function closesFor(b,date){
     return mt ? {kind:"meeting",id:mt.id,what:mt.short||mt.what,focus:b.breaks} : {kind:"work",id:b.breaks};
   }
   /* The latest fixture that has already ended by the time this bell rings is the
-     one it closes. */
+     one it closes. Its end is on the Rule's day count (dayEnd), as tools/rule.py's
+     busy() reads it: one past midnight is after every bell of the evening. */
   var cs=commitmentsFor(dow,date), hit=null, prev=-1;
   blocksFor(date).forEach(function(x){ if(x.at<b.at && x.at>prev) prev=x.at; });
-  cs.forEach(function(c){ if(c.end && hm(c.end)<=b.at && hm(c.end)>prev) hit=c; });
+  cs.forEach(function(c){ var e=c.end && dayEnd(c.start,c.end); if(e && e<=b.at && e>prev) hit=c; });
   if(hit) return {kind:"fixture",id:hit.id,what:hit.short||hit.what};
   return {kind:"none"};
 }
@@ -1581,15 +1582,21 @@ function closesFor(b,date){
 function cancelledOn(id,date){ var rec=loadDay(date); return !!(rec && rec.cancelled && rec.cancelled[id]); }
 /* A meeting is a calendar event that falls within a work session, and it takes that
    session outright (tools/rule.py decides which events are meetings). The session
-   is the one whose block the meeting starts in. `even` finds one that did not happen
-   too, for the card that says so. */
+   is the one the compiler judged it inside: `takes`, {weekday: work item id}, from
+   rule.classify. A Rule compiled before `takes` existed gives none, and then the
+   session is the one whose block the meeting starts in, on the Rule's day count
+   (dayMins), the last block running to the next DAY_START. `even` finds one that
+   did not happen too, for the card that says so. */
 function meetingIn(focusId,date,even){
   var d=parseYmd(date), dow=DAYS[d.getDay()], bs=blocksFor(date), hit=null;
   bs.forEach(function(b,i){
     if(!b.items.some(function(it){ return it.id===focusId; })) return;
-    var to=bs[i+1] ? bs[i+1].at : 1440;
+    var to=bs[i+1] ? bs[i+1].at : hm(DAY_START)+1440;
     commitmentsFor(dow,date).forEach(function(c){
-      if(!hit && c.meeting && (even || !cancelledOn(c.id,date)) && hm(c.start)>=b.at && hm(c.start)<to) hit=c; });
+      if(hit || !c.meeting || (!even && cancelledOn(c.id,date))) return;
+      if(c.takes && c.takes[dow]){ if(c.takes[dow]===focusId) hit=c; return; }
+      var s=dayMins(c.start);
+      if(s>=b.at && s<to) hit=c; });
   });
   return hit;
 }
@@ -2718,7 +2725,7 @@ function rankWork(pid,focusId){
   followUps(focusId,pid).forEach(function(f){ follow.push({o:f,why:f.why}); owed[f.id]=f; });
   meetingsFor(pid,focusId).forEach(function(m){
     meet.push({o:{id:m.id,what:m.short||m.what,project:pid,meeting:true},
-               why:"A meeting"+(m.start?" at "+fmt(hm(m.start)):"")+": it takes its session outright and counts as one used."});
+               why:"A meeting"+(m.start?" at "+fmt(dayMins(m.start)):"")+": it takes its session outright and counts as one used."});
   });
   periodicFor(pid).forEach(function(c){
     var st=periodicStatus(c), every="every "+plural(c.cadence,"day");
@@ -3008,7 +3015,7 @@ function paintFocus(host,focusId){
   var mt=meetingIn(focusId,viewDate), off=mt ? null : meetingIn(focusId,viewDate,true);
   if(mt){
     head(host,"This session is a meeting");
-    para(host,"prompt",mt.what+", "+fmt(hm(mt.start))+(mt.end?" to "+fmt(hm(mt.end)):"")+
+    para(host,"prompt",mt.what+", "+fmt(dayMins(mt.start))+(mt.end?" to "+fmt(dayEnd(mt.start,mt.end)):"")+
       ". It takes the session"+(mt.project?" for "+projName(mt.project):"")+"; nothing is chosen for it.");
     var ma=el("div","acts");
     ma.appendChild(actButton("It did not happen — an ordinary session","no",function(){ setCancelled(mt.id,true); }));
@@ -4120,7 +4127,7 @@ function meetingLines(b){
     var c=it.focus && meetingIn(it.id,viewDate,true);
     if(!c) return;
     if(cancelledOn(c.id,viewDate)) out.push("Meeting — "+c.what+" did not happen: an ordinary session.");
-    else out.push("Meeting — "+c.what+", "+fmt(hm(c.start))+(c.end?" to "+fmt(hm(c.end)):"")+
+    else out.push("Meeting — "+c.what+", "+fmt(dayMins(c.start))+(c.end?" to "+fmt(dayEnd(c.start,c.end)):"")+
                   ". It takes this session"+(c.project?" for "+projName(c.project):"")+".");
   });
   return out;
