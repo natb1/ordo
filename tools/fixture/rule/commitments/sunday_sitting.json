@@ -1,0 +1,11 @@
+{
+  "calendar_event": "evt_sunday_sitting",
+  "end": "09:45",
+  "id": "sunday_sitting",
+  "must_be": "meeting",
+  "project": "ordo",
+  "seq": 3,
+  "start": "09:00",
+  "weekday": "sun",
+  "what": "The Sunday sitting"
+}

@@ -1,0 +1,1203 @@
+<title>Shell Layout Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  /* @inline:begin web/tokens.css — generated; edit that file, not this */
+  :root{
+    --ground:#F5F7F6; --surface:#FFFFFF; --raised:#FAFBFA;
+    --ink:#1B211F; --soft:#5B6462; --faint:#687170;
+    --line:#E0E5E2; --line-soft:#EDF0EE; --control:#87908D;
+    --accent:#35655A; --accent-ink:#FFFFFF; --accent-soft:#E4EEEA;
+    --blocked:#8A7B4F; --blocked-soft:#F3EEE0;
+    --serif:"Spectral",Georgia,"Times New Roman",serif;
+    --sans:-apple-system,"Segoe UI",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#121614; --surface:#1A1F1D; --raised:#202624;
+    --ink:#E7EBE9; --soft:#9AA39F; --faint:#848D89;
+    --line:#2A312E; --line-soft:#232A27; --control:#6A736F;
+    --accent:#72A793; --accent-ink:#10201B; --accent-soft:#1E2E29;
+    --blocked:#B9A570; --blocked-soft:#282419;
+  }}
+  /* @dark:begin — generated from the prefers-color-scheme block above; edit that, not this */
+  :root[data-theme="dark"]{
+    --ground:#121614; --surface:#1A1F1D; --raised:#202624;
+    --ink:#E7EBE9; --soft:#9AA39F; --faint:#848D89;
+    --line:#2A312E; --line-soft:#232A27; --control:#6A736F;
+    --accent:#72A793; --accent-ink:#10201B; --accent-soft:#1E2E29;
+    --blocked:#B9A570; --blocked-soft:#282419;
+  }
+  /* @dark:end */
+  /* @inline:end */
+  /* @inline:begin web/layout.css — generated; edit that file, not this */
+  html:has(.shell), html:has(.shell) body { height: 100%; }
+
+  /* The shell sizes its own rails and cannot assume the host reset border-box —
+     a published artifact's skeleton does not. Named rather than `.shell *`, so an
+     app's own content keeps whatever box model it chose. */
+  .shell, .shell-toolbar, .shell-toolbar-slot, .shell-nav, .shell-content,
+  .shell-content-scroll, .shell-content-footer,
+  .shell-context, .shell-card, .shell-card-bar, .shell-card-body,
+  .shell-btn, .shell-menuwrap, .shell-menu, .shell-scrim { box-sizing: border-box; }
+
+  .shell{
+    /* Override these on .shell to retune the layout; nothing below hard-codes them. */
+    --shell-nav-w: 232px;
+    --shell-context-w: 336px;
+    --shell-content-min: 480px;
+    /* Narrower than this, the strip of content an overlaid card would leave is
+       no use to read and a trap to tap, so the card covers the content instead. */
+    --shell-context-strip-min: 120px;
+    --shell-toolbar-h: 52px;
+    --shell-gap: 10px;
+    --shell-z-content: 0;
+    --shell-z-context: 20;
+    --shell-z-scrim: 30;
+    --shell-z-nav: 40;
+    --shell-z-menu: 60;
+
+    /* Nothing the shell holds may push it wider than the screen. A word longer than
+       its column — a pasted link, say — breaks where it has to rather than dragging
+       its region sideways. Inherited, so it covers the app's content too. */
+    overflow-wrap: break-word;
+
+    /* The two side columns, as they currently stand. A collapsed region takes no
+       width at all — the spec is that content grows into the space, not that an
+       empty rail sits there — so each state below only zeroes its own column. */
+    --_nav: var(--shell-nav-w);
+    --_ctx: var(--shell-context-w);
+
+    height: 100%;
+    display: grid;
+    grid-template-columns: var(--_nav) minmax(0, 1fr) var(--_ctx);
+    /* The third row is the content footer's. It is a row of the shell rather than
+       of the content area so that an overlaid context column can stop above it. */
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "toolbar toolbar context"
+      "nav     content context"
+      "nav     content context";
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  /* An overlaid region is drawn over the content, not beside it, so it takes no
+     column either. */
+  .shell[data-nav="overlay"],
+  .shell[data-nav-open="false"]{ --_nav: 0px; }
+  .shell[data-context="none"],
+  .shell[data-context="overlay"],
+  .shell[data-context="cover"]{ --_ctx: 0px; }
+
+  /* ---- toolbar ------------------------------------------------------------ */
+
+  .shell-toolbar{
+    grid-area: toolbar;
+    min-height: var(--shell-toolbar-h);
+    display: flex;
+    align-items: center;
+    gap: var(--shell-gap);
+    padding: 6px 10px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  /* The app's own toolbar content. It gets the middle and is free to do as it
+     likes there, including scrolling sideways when it runs out of room. */
+  .shell-toolbar-slot{
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--shell-gap);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .shell-toolbar-slot::-webkit-scrollbar{ display: none; }
+
+  /* ---- the two icon buttons the shell owns -------------------------------- */
+
+  /* 40px: a thumb's target, not a cursor's. The toolbar's 52px holds it. */
+  .shell-btn{
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--soft);
+    cursor: pointer;
+  }
+  .shell-btn:hover{ background: var(--raised); color: var(--ink); }
+  .shell-btn[aria-expanded="true"]{ background: var(--accent-soft); color: var(--accent); }
+  .shell-btn svg{ width: 18px; height: 18px; display: block; }
+  .shell-btn:focus-visible,
+  .shell-nav :is(a, button):focus-visible,
+  .shell-menu button:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- background-card menu ----------------------------------------------- */
+
+  .shell-menuwrap{ position: relative; flex: none; }
+  .shell-menu{
+    position: absolute;
+    top: calc(100% + 6px); right: 0;
+    z-index: var(--shell-z-menu);
+    min-width: 220px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.14);
+  }
+  .shell-menu[hidden]{ display: none !important; }
+  .shell-menu button{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 40px;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .shell-menu button:hover{ background: var(--raised); }
+  /* A tick that holds its column whether or not it is showing, so the labels line
+     up and the row does not jump when it is toggled. */
+  .shell-menu .shell-tick{ flex: none; width: 14px; color: var(--accent); visibility: hidden; }
+  .shell-menu button[aria-checked="true"] .shell-tick{ visibility: visible; }
+
+  /* ---- navigation ---------------------------------------------------------- */
+
+  .shell-nav{
+    grid-area: nav;
+    width: min(var(--shell-nav-w), 100%);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 10px;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+  .shell[data-nav-open="false"] .shell-nav{ display: none; }
+
+  /* Overlaid regions are placed in the grid rather than positioned absolutely, so
+     nothing here has to know how tall the toolbar ended up. The nav starts at the
+     second row — under the toolbar, which stays reachable, since the button that
+     closes the nav lives in it. */
+  .shell[data-nav="overlay"] .shell-nav{
+    grid-row: 2 / -1;
+    grid-column: 1 / -1;
+    justify-self: start;
+    z-index: var(--shell-z-nav);
+    box-shadow: 4px 0 24px rgba(0,0,0,.18);
+  }
+
+  .shell-scrim{
+    grid-row: 2 / -1;
+    grid-column: 1 / -1;
+    z-index: var(--shell-z-scrim);
+    background: rgba(10,14,12,.38);
+  }
+  .shell-scrim[hidden]{ display: none !important; }
+
+  /* ---- content ------------------------------------------------------------- */
+
+  /* The content area is a column of two: the part that scrolls, and a footer pinned
+     under it that does not. The footer collapses to nothing while the app leaves it
+     empty, so a page that never uses one lays out exactly as it did before there was
+     one — and an app shows and hides its footer by filling and emptying it, with no
+     second switch to keep in step. The two rows are the shell's own (subgrid), which
+     is what lets an overlaid context column cover the one and leave the other. */
+  .shell-content{
+    grid-area: content;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: subgrid;
+    z-index: var(--shell-z-content);
+  }
+  .shell-content-scroll{
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;   /* the content fits the screen; it never pans sideways */
+    overscroll-behavior: contain;
+    padding: 0 16px;
+  }
+  /* Unlike the toolbar slot, the footer never scrolls sideways: it is part of the
+     content, and the content fits the screen. What does not fit on one line wraps
+     to the next, and a single item longer than the strip wraps inside itself. */
+  .shell-content-footer{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--shell-gap);
+    padding: 8px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    min-width: 0;
+  }
+  .shell-content-footer > *{ min-width: 0; max-width: 100%; }
+  .shell-content-footer:empty{ display: none; }
+
+  /* ---- context ------------------------------------------------------------- */
+
+  .shell-context{
+    grid-area: context;
+    /* Never wider than what it is given. Below about 360px the fixed column would
+       hang off the left edge and clip the card, which is a real phone, not a
+       hypothetical one. */
+    width: min(var(--shell-context-w), 100%);
+    display: grid;
+    /* Even shares of the column, each card scrolling inside its own row. The one
+       column is pinned to the width given: left `auto`, WebKit sizes it to the
+       longest unwrapped line inside — a card title — and the card runs off the
+       screen. Chromium happens not to, which is why this is spelled out. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
+    gap: var(--shell-gap);
+    padding: var(--shell-gap);
+    background: var(--ground);
+    border-left: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .shell[data-context="none"] .shell-context{ display: none; }
+
+  /* Inline, the context column runs the full height beside the toolbar. Overlaid,
+     it covers the content and stops below the toolbar — it renders over content, and
+     covering the toolbar would bury the ⋮ button that toggles the very cards doing
+     the covering. It stops above the content footer too: the footer is where an app
+     puts what must not scroll away, and a card left open would otherwise hide it for
+     as long as it stayed open. */
+  .shell[data-context="overlay"] .shell-context,
+  .shell[data-context="cover"] .shell-context{
+    grid-row: 2 / 3;
+    grid-column: 2 / -1;
+    justify-self: end;
+    z-index: var(--shell-z-context);
+    box-shadow: -4px 0 24px rgba(0,0,0,.18);
+  }
+  /* On a phone an overlaid card left a strip of content a few dozen pixels wide
+     beside it: the labels hidden, the controls live, so a tap meant to dismiss the
+     card acted on something unseen. Covered, the card takes the content's whole
+     width, and layout.js makes what is under it inert until it closes. */
+  .shell[data-context="cover"] .shell-context{
+    grid-column: 1 / -1;
+    width: 100%;
+    border-left: 0;
+    box-shadow: none;
+  }
+
+  .shell-card{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);   /* see .shell-context */
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .shell-card-bar{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 12px;
+    background: var(--raised);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .shell-card-title{
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .shell-card-body{
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px;
+  }
+  /* A card opened from the keyboard takes the focus onto its body (layout.js), so
+     the body shows where focus is the way every control does. */
+  .shell-card-body:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .shell *{ animation: none !important; transition: none !important; }
+  }
+  /* @inline:end */
+
+  /* Everything below is the harness itself, not the shell. It exists to give the
+     shell something to hold, and to report which mode the shell is in — the one
+     thing you cannot see by looking at a layout that is behaving correctly. */
+  body{ margin:0; background:var(--ground); color:var(--ink); font-family:var(--sans); }
+  #app{ font-size:14px; }
+
+  .hx{ max-width:64ch; padding-block:18px 64px; }
+  .hx h2{ font-family:var(--serif); font-size:24px; font-weight:600; margin:0 0 4px;
+          text-wrap:balance; }
+  .hx h3{ font-size:13px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
+          color:var(--soft); margin:28px 0 8px; }
+  .hx p{ line-height:1.6; margin:0 0 12px; color:var(--ink); }
+  .hx p.lede{ color:var(--soft); }
+  .hx ul{ line-height:1.6; padding-left:20px; margin:0 0 12px; }
+  .hx li{ margin-bottom:6px; }
+  .hx code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em;
+            background:var(--raised); border:1px solid var(--line-soft);
+            border-radius:4px; padding:1px 5px; }
+  .hx pre{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+           line-height:1.55; background:var(--surface); border:1px solid var(--line);
+           border-radius:10px; padding:12px 14px; overflow-x:auto; margin:0 0 12px; }
+  .hx pre code{ background:none; border:0; padding:0; }
+
+  /* Navigation. The shell draws the rail; what goes in it is the app's. */
+  .navlist{ display:flex; flex-direction:column; gap:2px; }
+  .navlist b{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+              color:var(--faint); padding:10px 8px 4px; }
+  .navlist button{ text-align:left; font:inherit; color:var(--soft); cursor:pointer;
+                   background:transparent; border:0; border-radius:7px; padding:7px 9px; }
+  .navlist button:hover{ background:var(--raised); color:var(--ink); }
+  .navlist button[aria-current="true"]{ background:var(--accent-soft); color:var(--accent);
+                                        font-weight:600; }
+
+  /* Toolbar contents. Deliberately busy: the shell's toolbar slot has to survive
+     an app that puts more in it than fits. */
+  .tb{ display:flex; align-items:center; gap:14px; white-space:nowrap; }
+  .tb .k{ font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); }
+  .tb .v{ font-weight:600; font-variant-numeric:tabular-nums; }
+  .tb button{ font:inherit; color:var(--accent); background:var(--accent-soft);
+              border:0; border-radius:7px; padding:5px 10px; cursor:pointer; }
+
+  /* Content-footer contents. The shell draws the strip; these are the app's chips. */
+  .fchip{ font:600 12px var(--sans); color:var(--accent); background:var(--accent-soft);
+          border-radius:7px; padding:5px 9px; white-space:nowrap; }
+
+  /* Context card contents. */
+  .kv{ display:grid; grid-template-columns:auto 1fr; gap:6px 12px; align-items:baseline;
+       font-size:13px; }
+  .kv dt{ color:var(--faint); }
+  .kv dd{ margin:0; font-weight:600; font-variant-numeric:tabular-nums; }
+  .kv dd em{ font-style:normal; font-weight:400; color:var(--soft); }
+  .sw{ display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; }
+  .sw div{ border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:11px; }
+  .sw i{ display:block; height:34px; }
+  .sw span{ display:block; padding:4px 6px; color:var(--soft); font-style:normal; }
+  .note{ font-size:13px; line-height:1.55; color:var(--soft); margin:0 0 10px; }
+  kbd{ font-family:ui-monospace,Menlo,monospace; font-size:11px; background:var(--raised);
+       border:1px solid var(--line); border-radius:4px; padding:1px 5px; }
+</style>
+
+<div id="app"></div>
+
+<template id="t-nav">
+  <div class="navlist" id="navList">
+    <b>Shell</b>
+    <button type="button" data-view="regions">The four regions</button>
+    <button type="button" data-view="modes">When things overlay</button>
+    <button type="button" data-view="cards">Cards, not modals</button>
+    <button type="button" data-view="api">The API</button>
+    <b>Try it</b>
+    <button type="button" data-act="transient">Open a transient card</button>
+    <button type="button" data-act="all">Show every card</button>
+    <button type="button" data-act="none">Close every card</button>
+    <button type="button" data-act="footer">Empty / fill the footer</button>
+  </div>
+</template>
+
+<template id="t-toolbar">
+  <div class="tb">
+    <span><span class="k">Width</span> <span class="v" id="tbW">—</span></span>
+    <span><span class="k">Nav</span> <span class="v" id="tbNav">—</span></span>
+    <span><span class="k">Context</span> <span class="v" id="tbCtx">—</span></span>
+    <button type="button" id="tbAsk">Ask something</button>
+  </div>
+</template>
+
+<template id="t-footer">
+  <span class="fchip">A chip the content scrolls under</span>
+  <span class="fchip">Another</span>
+  <span class="fchip">And a third, to make it wrap when narrow</span>
+</template>
+
+<template id="t-content">
+  <div class="hx">
+    <section data-view="regions">
+      <h2>The four regions</h2>
+      <p class="lede">A toolbar across the top, a navigation rail on the left, the
+        scrollable content in the middle, and a column of context cards on the right.
+        Resize this window — everything the shell does, it does in response to width.</p>
+      <h3>What each one is for</h3>
+      <ul>
+        <li><b>Toolbar</b> — the nav toggle on the left, the app's own controls in the
+          middle, the background-card menu on the right. The shell owns the two buttons
+          and nothing between them.</li>
+        <li><b>Navigation</b> — constant width, collapsible, never scrolls the page.</li>
+        <li><b>Content</b> — the only region that grows. It takes whatever horizontal
+          space the other two are not using. It can pin a <b>footer</b> under itself:
+          a strip that stays put while the content scrolls past it, for the few things
+          that must not leave the screen. It takes no room at all while it is empty,
+          so a page that never fills one is laid out as though it did not exist.</li>
+        <li><b>Context</b> — constant width, full height beside the toolbar rather than
+          below it, because it is a column of the application and not a panel hanging off
+          the content.</li>
+      </ul>
+      <h3>What the app supplies</h3>
+      <p>Three nodes, an optional footer, and a list of cards. The app never writes a
+        <code>shell-</code> class, never positions anything, and never asks how wide the
+        window is.</p>
+      <h3>Toolbar or footer?</h3>
+      <p>Both survive the whole session, so the question is what the thing is about. The
+        toolbar is about the application — where you are and what is true right now. The
+        footer is about <em>this</em> content, and it sits at the bottom edge, which on a
+        phone is the half of the screen a thumb can reach. Put what must be acted on
+        there, and what must merely be known in the toolbar.</p>
+    </section>
+
+    <section data-view="modes" hidden>
+      <h2>When things overlay</h2>
+      <p class="lede">Two thresholds, both arithmetic on three constants rather than
+        guessed breakpoints. Watch the toolbar readout as you drag the window.</p>
+      <h3>Navigation</h3>
+      <p>The rail sits in flow only when the whole row fits — itself, a content column
+        no narrower than its minimum, and whatever context is showing right now:</p>
+      <pre><code>inline  ⟺  width ≥ nav + content-min + context-currently-shown</code></pre>
+      <p>Otherwise it overlays, and it starts collapsed. On a phone that is always, which
+        is how "collapsed by default on small screens" falls out without a second width
+        test written somewhere else to drift away from this one. Opening more context
+        cards can push the nav into overlay — the same rule, no special case.</p>
+      <h3>Context</h3>
+      <p>Cards sit in flow while content still clears its minimum beside them:</p>
+      <pre><code>inline  ⟺  width ≥ content-min + context</code></pre>
+      <p>When it does not, the column overlays the content and slides under the
+        navigation — so a nav opened on top of a card still reads as the outermost
+        thing on screen. The content left beside it stays usable.</p>
+      <pre><code>cover  ⟺  width − context &lt; context-strip-min</code></pre>
+      <p>On a phone that strip would be a few dozen pixels: too narrow to read what is
+        in it, wide enough to tap it by mistake. So there the card covers the content's
+        whole width, and the content under it is inert until the card closes.</p>
+      <h3>Where the numbers live</h3>
+      <p>In CSS, once: <code>--shell-nav-w</code>, <code>--shell-context-w</code>,
+        <code>--shell-content-min</code>. The script reads them back rather than
+        repeating them, because the alternative is media queries carrying the same
+        numbers a second time.</p>
+    </section>
+
+    <section data-view="cards" hidden>
+      <h2>Cards, not modals</h2>
+      <p class="lede">Everything that would have been a modal is a context card. Nothing
+        in this layout traps focus or dims the page to ask a question.</p>
+      <h3>Two kinds</h3>
+      <ul>
+        <li><b>Background</b> — listed in the toolbar's ⋮ menu, turned on and left on,
+          remembered between visits. Reference material you want beside your work.</li>
+        <li><b>Transient</b> — never listed, opened by the app when something happens,
+          closed when it is dealt with. This is what a modal becomes.</li>
+      </ul>
+      <p>Open several: the column divides its height evenly between them and each card
+        scrolls inside its own share. Close them all and the column takes no width at
+        all — content grows into the space rather than sitting beside an empty rail.</p>
+      <h3>Why not a dialog</h3>
+      <p>A modal asserts that nothing else matters until you answer. Most of the things
+        an app interrupts you with do not deserve that, and the ones that do are better
+        served by staying beside what they are about.</p>
+    </section>
+
+    <section data-view="api" hidden>
+      <h2>The API</h2>
+      <p class="lede">The encapsulation is the point. An app that reaches past this for a
+        <code>.shell-</code> element has coupled itself to an internal, and the layout
+        stops being liftable.</p>
+      <pre><code>const shell = Shell.mount({
+  root:    document.getElementById('app'),
+  toolbar: node,   // between the two icon buttons
+  nav:     node,   // the navigation itself
+  content: node,   // the scrollable middle
+  footer:  node,   // optional; pinned under it, absent while empty
+  cards:   [{ id, title, background, content }],
+  storageKey: 'demo',
+});
+
+shell.open(id, {focus:true})   shell.close(id)   shell.toggle(id)
+shell.isOpen(id)               shell.body(id)    shell.setTitle(id, s)
+shell.addCard(spec)            shell.removeCard(id)
+shell.footer()                 shell.scroller()
+shell.openNav()                shell.closeNav()  shell.toggleNav()
+shell.on('open'|'close'|'nav'|'mode', fn)</code></pre>
+      <h3>The seams</h3>
+      <p>Three accessors hand back an element for the app to fill, because somebody has
+        to fill them: <code>shell.body(id)</code> for a card's contents,
+        <code>shell.footer()</code> for the strip under the content, and
+        <code>shell.scroller()</code> for the element that actually scrolls — which is
+        inside the content region, not the region itself. Everything else is opaque.</p>
+      <p>Note what the footer does <em>not</em> have: a <code>showFooter()</code>. An
+        empty footer occupies nothing, so filling and emptying it is the whole of
+        showing and hiding it, and there is no second piece of state to get out of step
+        with what is in the DOM.</p>
+      <h3>What the shell will not do</h3>
+      <p>It has no opinion about routing, no opinion about what navigation means, and no
+        knowledge of any app. Swapping the content when a nav item is clicked is the
+        app's job — three lines, and they are yours to change.</p>
+    </section>
+  </div>
+</template>
+
+<template id="t-mode">
+  <p class="note">Live state. Drag the window edge and watch the thresholds cross.</p>
+  <dl class="kv" id="modeKv"></dl>
+</template>
+
+<template id="t-palette">
+  <p class="note">Every colour comes from <code>tokens.css</code>; the shell defines
+    none of its own.</p>
+  <div class="sw" id="sw"></div>
+</template>
+
+<template id="t-keys">
+  <p class="note"><kbd>Esc</kbd> closes the ⋮ menu, then an overlaid navigation, then
+    the transient card it is pressed in — from a field, the first press only leaves
+    the field.</p>
+  <p class="note">A card opened by the app takes the focus onto itself, or onto the one
+    control it marks <code>data-autofocus</code>, and gives it back when it closes.</p>
+  <p class="note">Clicking the scrim, or choosing anything in the navigation, closes an overlaid
+    navigation. Every control is reachable by keyboard and shows a focus ring.</p>
+  <p class="note">A card's close button is labelled with the card's own title, so it is
+    unambiguous when several are open.</p>
+</template>
+
+<template id="t-ask">
+  <p class="note">This card was opened by the application, not chosen from the menu. It
+    is what a modal used to be — except that, wherever there is room, you can still read,
+    scroll and click everything beside it.</p>
+  <p class="note">Close it with its own button, and it leaves no trace in the ⋮ menu.</p>
+</template>
+
+<script>
+  /* @inline:begin web/layout.js — generated; edit that file, not this */
+  (function (global) {
+    'use strict';
+
+    var SVG = {
+      nav: '<path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
+      dots: '<circle cx="10" cy="4.2" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="15.8" r="1.5" fill="currentColor"/>',
+      close: '<path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
+      tick: '<path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+    };
+
+    function el(tag, cls, attrs) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      for (var k in attrs || {}) n.setAttribute(k, attrs[k]);
+      return n;
+    }
+
+    function icon(which) {
+      var s = el('span');
+      s.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true">' + SVG[which] + '</svg>';
+      return s.firstChild;
+    }
+
+    /* Accepts a node, a string of HTML, or nothing — so an app can hand over a
+       built element or just markup, whichever it already has. */
+    function fill(slot, value) {
+      slot.textContent = '';
+      if (value == null) return slot;
+      if (typeof value === 'string') slot.innerHTML = value;
+      else slot.appendChild(value);
+      return slot;
+    }
+
+    /* localStorage is a convenience here, never a requirement: it is absent in a
+       private window and throws outright in some embeddings, and the layout has to
+       come up correctly either way. */
+    function store(key) {
+      var k = key == null ? null : 'shell:' + key;
+      return {
+        read: function () {
+          if (!k) return {};
+          try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; }
+        },
+        write: function (v) {
+          if (!k) return;
+          try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* not worth reporting */ }
+        }
+      };
+    }
+
+    function mount(opts) {
+      opts = opts || {};
+      var root = opts.root;
+      if (!root) throw new Error('Shell.mount needs a root element');
+      var saved = store(opts.storageKey);
+      var prefs = saved.read();
+
+      var cards = [];            // every registered card, in registration order
+      var listeners = {};
+      var navOpen = prefs.nav !== false;   // remembered preference, honoured only inline
+      // The background cards the reader left open where they had room; null until
+      // there is a preference, so a first visit takes each card's spec.open.
+      var wanted = Array.isArray(prefs.cards) ? prefs.cards.slice() : null;
+      var navWasInline = null;             // to notice the transition, not the state
+      var dims = { nav: 0, context: 0, min: 0, strip: 0 };
+
+      /* ---- DOM ------------------------------------------------------------ */
+
+      root.classList.add('shell');
+      root.textContent = '';
+
+      var toolbar = el('header', 'shell-toolbar');
+      var navBtn = el('button', 'shell-btn', {
+        type: 'button', 'aria-expanded': 'false',
+        'aria-label': opts.navLabel || 'Navigation'
+      });
+      navBtn.appendChild(icon('nav'));
+
+      var slot = el('div', 'shell-toolbar-slot');
+      fill(slot, opts.toolbar);
+
+      var menuWrap = el('div', 'shell-menuwrap');
+      var menuBtn = el('button', 'shell-btn', {
+        type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false',
+        'aria-label': opts.menuLabel || 'Background cards'
+      });
+      menuBtn.appendChild(icon('dots'));
+      var menu = el('div', 'shell-menu', { role: 'menu' });
+      menu.hidden = true;
+      menuWrap.appendChild(menuBtn);
+      menuWrap.appendChild(menu);
+
+      toolbar.appendChild(navBtn);
+      toolbar.appendChild(slot);
+      toolbar.appendChild(menuWrap);
+
+      var nav = el('nav', 'shell-nav', { 'aria-label': opts.navLabel || 'Navigation' });
+      fill(nav, opts.nav);
+      var navId = 'shell-nav-' + Math.random().toString(36).slice(2, 8);
+      nav.id = navId;
+      navBtn.setAttribute('aria-controls', navId);
+
+      var content = el('main', 'shell-content');
+      var scroller = el('div', 'shell-content-scroll');
+      fill(scroller, opts.content);
+      var footer = el('div', 'shell-content-footer');
+      fill(footer, opts.footer);
+      content.appendChild(scroller);
+      content.appendChild(footer);
+
+      var context = el('aside', 'shell-context', { 'aria-label': opts.contextLabel || 'Context' });
+      var scrim = el('div', 'shell-scrim');
+      scrim.hidden = true;
+
+      root.appendChild(toolbar);
+      root.appendChild(nav);
+      root.appendChild(content);
+      root.appendChild(context);
+      root.appendChild(scrim);
+
+      /* ---- events --------------------------------------------------------- */
+
+      function emit(name, detail) {
+        (listeners[name] || []).forEach(function (fn) { fn(detail); });
+      }
+
+      /* ---- geometry -------------------------------------------------------
+         The three widths live in CSS so an app can retune them there, and are read
+         back here rather than duplicated — the alternative is media queries with
+         the numbers written out a second time, which is how the two halves drift. */
+
+      function measure() {
+        var cs = getComputedStyle(root);
+        dims.nav = parseFloat(cs.getPropertyValue('--shell-nav-w')) || 0;
+        dims.context = parseFloat(cs.getPropertyValue('--shell-context-w')) || 0;
+        dims.min = parseFloat(cs.getPropertyValue('--shell-content-min')) || 0;
+        dims.strip = parseFloat(cs.getPropertyValue('--shell-context-strip-min')) || 0;
+      }
+
+      /* Whether a card could sit beside the content rather than over it. Asked of
+         the width, never of data-context, which reads 'none' while no card is open. */
+      function roomForContext() {
+        return root.clientWidth >= dims.min + dims.context;
+      }
+
+      /* Whether a card would leave the content usable: beside it, or over it with a
+         strip still wide enough to read ('inline' or 'overlay', never 'cover'). A
+         desk column is the second; a phone is 'cover'. */
+      function cardLeavesContent() {
+        return root.clientWidth - dims.context >= dims.strip;
+      }
+
+      function openCards() {
+        return cards.filter(function (c) { return c.open; });
+      }
+
+      function apply() {
+        var w = root.clientWidth;
+        var shown = openCards();
+        var ctxW = shown.length ? dims.context : 0;
+
+        /* Nav sits in flow only when the full row fits: itself, a content column
+           no narrower than its minimum, and whatever context is currently showing.
+           Otherwise it overlays — which on a phone is every time, giving the
+           collapsed-by-default behaviour without a width test written twice. */
+        var navInline = w >= dims.nav + dims.min + ctxW;
+
+        // Collapse on the way down; restore the remembered preference on the way up.
+        // The first measurement counts as a transition, so arriving narrow is the
+        // same as becoming narrow.
+        if (navWasInline !== navInline) navOpen = navInline && prefs.nav !== false;
+        navWasInline = navInline;
+
+        /* The nav is in flow only when there is room for it AND the context beside
+           content-min, so whether it takes space never decides the context's mode. */
+        var contextInline = w >= dims.min + ctxW;
+
+        root.dataset.nav = navInline ? 'inline' : 'overlay';
+        root.dataset.navOpen = String(navOpen);
+        /* Overlaid, a card leaves the content beside it usable. Where that strip
+           would be too narrow to read, the card covers it, and the content under
+           a card is inert: not reachable by touch, keyboard or screen reader. */
+        var ctxMode = ctxW === 0 ? 'none'
+          : contextInline ? 'inline'
+          : (w - dims.context < dims.strip ? 'cover' : 'overlay');
+        root.dataset.context = ctxMode;
+        scroller.inert = ctxMode === 'cover';
+
+        navBtn.setAttribute('aria-expanded', String(navOpen));
+        scrim.hidden = !(navOpen && !navInline);
+
+        emit('mode', {
+          nav: root.dataset.nav, navOpen: navOpen, context: root.dataset.context
+        });
+      }
+
+      /* ---- cards ---------------------------------------------------------- */
+
+      function find(id) {
+        for (var i = 0; i < cards.length; i++) if (cards[i].id === id) return cards[i];
+        return null;
+      }
+
+      function buildCard(spec) {
+        var card = el('section', 'shell-card');
+        var bar = el('header', 'shell-card-bar');
+        var h = el('h2', 'shell-card-title');
+        h.id = 'shell-card-title-' + spec.id;
+        h.textContent = spec.title || '';
+        card.setAttribute('aria-labelledby', h.id);
+
+        var close = el('button', 'shell-btn', {
+          type: 'button', 'aria-label': 'Close ' + (spec.title || 'card')
+        });
+        close.appendChild(icon('close'));
+        close.addEventListener('click', function () { api.close(spec.id); });
+
+        var body = el('div', 'shell-card-body', { tabindex: '-1' });
+        fill(body, spec.content);
+
+        bar.appendChild(h);
+        bar.appendChild(close);
+        card.appendChild(bar);
+        card.appendChild(body);
+        return { card: card, body: body, title: h, close: close };
+      }
+
+      /* Cards and menu items are moved into place, never rebuilt. Detaching a card
+         resets its scroll position and throws out any focus inside it, and rebuilding
+         the menu under a keypress destroys the item that was just activated. */
+      function renderCards() {
+        var shown = openCards();
+        Array.prototype.slice.call(context.children).forEach(function (n) {
+          if (!shown.some(function (c) { return c.el.card === n; })) context.removeChild(n);
+        });
+        shown.forEach(function (c, i) {
+          var at = context.children[i] || null;
+          if (at !== c.el.card) context.insertBefore(c.el.card, at);
+        });
+        renderMenu();
+        apply();
+      }
+
+      function renderMenu() {
+        var bg = cards.filter(function (c) { return c.background; });
+        menuWrap.hidden = bg.length === 0;
+        bg.forEach(function (c, i) {
+          var b = c.el.item;
+          b.setAttribute('aria-checked', String(!!c.open));
+          b.lastChild.textContent = c.title || c.id;
+          var at = menu.children[i] || null;
+          if (at !== b) menu.insertBefore(b, at);
+        });
+        while (menu.children.length > bg.length) menu.removeChild(menu.lastChild);
+      }
+
+      function menuItem(c) {
+        var b = el('button', null, { type: 'button', role: 'menuitemcheckbox' });
+        var tick = icon('tick');
+        tick.classList.add('shell-tick');
+        b.appendChild(tick);
+        b.appendChild(document.createTextNode(''));
+        /* Where the card cannot sit beside the content it lands under this menu, so
+           choosing it puts the menu away and gives the card the focus — the rule the
+           overlaid nav keeps. Beside the content the menu covers nothing and stays,
+           so several cards can be turned on in a row. */
+        b.addEventListener('click', function () {
+          if (c.open) { api.close(c.id); return; }
+          if (roomForContext()) { api.open(c.id); return; }
+          setMenu(false);
+          api.open(c.id, { focus: true });
+        });
+        return b;
+      }
+
+      /* What had the focus before a card took it, to be given back when it closes.
+         Nothing, if that was the page itself or the card's own inside. */
+      function opener(c) {
+        var a = document.activeElement;
+        return a && a !== document.body && !c.el.card.contains(a) ? a : null;
+      }
+
+      function giveBack(c) {
+        var t = c.opener;
+        c.opener = null;
+        // An item of a menu that has since closed cannot hold focus; its button can.
+        if (t && menu.contains(t) && menu.hidden) t = menuBtn;
+        if (t && t.isConnected) t.focus({ preventScroll: true });
+      }
+
+      /* The card body, unless the app marked a control that the card exists to be
+         typed into. Never simply the first field — see the header. */
+      function focusFirst(c) {
+        var t = c.el.body.querySelector('[data-autofocus]');
+        (t || c.el.body).focus();
+      }
+
+      function persist() {
+        var v = { nav: prefs.nav !== false };
+        if (wanted) v.cards = wanted;
+        saved.write(v);
+      }
+
+      /* The reader opened or closed a background card. Remembered only where it
+         leaves the content usable (see the header). */
+      function want(c, open) {
+        if (!c.background || !cardLeavesContent()) return;
+        if (!wanted) wanted = cards.filter(function (x) { return x.background && x.open && x !== c; })
+                                   .map(function (x) { return x.id; });
+        wanted = wanted.filter(function (id) { return id !== c.id; });
+        if (open) wanted.push(c.id);
+        persist();
+      }
+
+      function setMenu(open) {
+        menu.hidden = !open;
+        menuBtn.setAttribute('aria-expanded', String(open));
+      }
+
+      /* ---- API ------------------------------------------------------------ */
+
+      var api = {
+        addCard: function (spec) {
+          if (find(spec.id)) throw new Error('Shell: duplicate card id ' + spec.id);
+          var c = {
+            id: spec.id, title: spec.title, background: !!spec.background,
+            open: false, onClose: spec.onClose, el: buildCard(spec)
+          };
+          if (c.background) c.el.item = menuItem(c);
+          cards.push(c);
+          // A stored preference wins; spec.open is only the state of a first visit.
+          // Either way it opens only where it leaves the content usable (see the header).
+          if (c.background) {
+            c.open = cardLeavesContent() && (wanted ? wanted.indexOf(c.id) !== -1 : !!spec.open);
+          }
+          renderCards();
+          return api;
+        },
+
+        /* Closed first, so whoever tracks cards through 'close' hears about it and a
+           removed background card is not remembered as open. */
+        removeCard: function (id) {
+          api.close(id);
+          if (wanted && wanted.indexOf(id) !== -1) {
+            wanted = wanted.filter(function (w) { return w !== id; });
+            persist();
+          }
+          cards = cards.filter(function (c) { return c.id !== id; });
+          renderCards();
+          return api;
+        },
+
+        /* 'open' is emitted before focus is taken, so an app that fills the card on
+           'open' has filled it by the time focus looks for what it marked. */
+        open: function (id, o) {
+          var c = find(id);
+          if (!c) return api;
+          if (!c.open) {
+            c.opener = opener(c);
+            c.open = true;
+            renderCards();
+            want(c, true);
+            emit('open', { id: id });
+          }
+          if (o && o.focus) {
+            // Opened again from somewhere else: that is where focus goes back to.
+            c.opener = opener(c) || c.opener;
+            focusFirst(c);
+          }
+          return api;
+        },
+
+        close: function (id) {
+          var c = find(id);
+          if (!c || !c.open) return api;
+          // Detaching the card drops any focus inside it on the floor; pick it up.
+          var had = c.el.card.contains(document.activeElement);
+          c.open = false;
+          renderCards();
+          want(c, false);
+          if (had) giveBack(c);
+          else c.opener = null;
+          if (c.onClose) c.onClose();
+          emit('close', { id: id, hadFocus: had });
+          return api;
+        },
+
+        toggle: function (id) {
+          var c = find(id);
+          return c && c.open ? api.close(id) : api.open(id);
+        },
+
+        isOpen: function (id) { var c = find(id); return !!(c && c.open); },
+
+        /* The one place an app is meant to reach into a card: where its contents go. */
+        body: function (id) { var c = find(id); return c ? c.el.body : null; },
+
+        /* The same seam for the content area: the element that scrolls, and the strip
+           pinned beneath it. An empty footer takes no room, so an app shows and hides
+           one by filling and emptying it — there is no second switch to forget, and
+           no state kept here that could disagree with what is in the DOM. */
+        scroller: function () { return scroller; },
+        footer: function () { return footer; },
+
+        setTitle: function (id, title) {
+          var c = find(id);
+          if (c) {
+            c.title = title;
+            c.el.title.textContent = title;
+            c.el.close.setAttribute('aria-label', 'Close ' + (title || 'card'));
+            if (c.background) renderMenu();
+          }
+          return api;
+        },
+
+        openNav: function () { return setNav(true); },
+        closeNav: function () { return setNav(false); },
+        toggleNav: function () { return setNav(!navOpen); },
+
+        on: function (name, fn) {
+          (listeners[name] = listeners[name] || []).push(fn);
+          return api;
+        },
+
+        refresh: function () { measure(); apply(); return api; },
+
+        destroy: function () {
+          if (ro) ro.disconnect();
+          else global.removeEventListener('resize', apply);
+          document.removeEventListener('keydown', onKey);
+          document.removeEventListener('click', onDocClick);
+        }
+      };
+
+      function setNav(open) {
+        navOpen = open;
+        if (root.dataset.nav === 'inline') { prefs.nav = open; persist(); }
+        apply();
+        emit('nav', { open: open });
+        return api;
+      }
+
+      /* ---- wiring --------------------------------------------------------- */
+
+      navBtn.addEventListener('click', function () { api.toggleNav(); });
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      scrim.addEventListener('click', function () { api.closeNav(); });
+      /* An overlaid nav covers what it navigates to, so choosing anything in it puts
+         it away. Inline it stays: there it costs nothing, and closing it would be
+         remembered as the reader's preference. */
+      nav.addEventListener('click', function (e) {
+        if (root.dataset.nav === 'overlay' && navOpen && e.target.closest('a,button')) api.closeNav();
+      });
+
+      function onKey(e) {
+        if (e.key !== 'Escape') return;
+        if (!menu.hidden) { setMenu(false); menuBtn.focus(); return; }
+        if (navOpen && root.dataset.nav === 'overlay') { api.closeNav(); navBtn.focus(); return; }
+        /* Escape puts away the card it is pressed in, if that card is transient. A
+           background card was turned on by the reader and stays until they turn it
+           off. From a field the first Escape only leaves the field, so a card is
+           never closed — and what was typed in it dropped — by one stray key. */
+        var c = cardOf(e.target);
+        if (!c || c.background) return;
+        if (isField(e.target)) { c.el.body.focus(); return; }
+        api.close(c.id);
+      }
+
+      function cardOf(node) {
+        for (var i = 0; i < cards.length; i++)
+          if (cards[i].open && cards[i].el.card.contains(node)) return cards[i];
+        return null;
+      }
+
+      function isField(n) {
+        return !!n && (n.isContentEditable || (n.matches && n.matches(
+          'textarea, select, input:not([type=button]):not([type=submit]):not([type=reset])' +
+          ':not([type=checkbox]):not([type=radio])')));
+      }
+
+      function onDocClick(e) {
+        if (!menu.hidden && !menuWrap.contains(e.target)) setMenu(false);
+      }
+
+      document.addEventListener('keydown', onKey);
+      document.addEventListener('click', onDocClick);
+
+      var ro = null;
+      if (global.ResizeObserver) {
+        ro = new ResizeObserver(function () { apply(); });
+        ro.observe(root);
+      } else {
+        global.addEventListener('resize', apply);
+      }
+
+      measure();
+      (opts.cards || []).forEach(api.addCard);
+      renderCards();
+      return api;
+    }
+
+    global.Shell = { mount: mount };
+  })(window);
+  /* @inline:end */
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var pick = function (id) { return document.getElementById(id).content.cloneNode(true); };
+
+  var shell = Shell.mount({
+    root: document.getElementById('app'),
+    toolbar: pick('t-toolbar'),
+    nav: pick('t-nav'),
+    content: pick('t-content'),
+    footer: pick('t-footer'),
+    storageKey: 'layout-demo',
+    cards: [
+      { id: 'mode',    title: 'Layout state',   background: true, open: true, content: pick('t-mode') },
+      { id: 'palette', title: 'Token palette',  background: true, open: true, content: pick('t-palette') },
+      { id: 'keys',    title: 'Keyboard',       background: true, content: pick('t-keys') },
+      { id: 'ask',     title: 'Asked by the app',                  content: pick('t-ask') }
+    ]
+  });
+
+  /* Routing — the app's job, not the shell's. */
+  var views = document.querySelectorAll('#app [data-view]');
+  function show(name) {
+    Array.prototype.forEach.call(views, function (n) {
+      var isNav = n.tagName === 'BUTTON';
+      var match = n.getAttribute('data-view') === name;
+      if (isNav) n.setAttribute('aria-current', String(match));
+      else n.hidden = !match;
+    });
+    shell.scroller().scrollTop = 0;
+  }
+
+  /* The app's own nav markup, reached by its own id — never through the shell's. */
+  document.getElementById('navList').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.view) return show(b.dataset.view);
+    if (b.dataset.act === 'transient') shell.open('ask', { focus: true });
+    if (b.dataset.act === 'all') ['mode', 'palette', 'keys'].forEach(function (i) { shell.open(i); });
+    if (b.dataset.act === 'none') ['mode', 'palette', 'keys', 'ask'].forEach(function (i) { shell.close(i); });
+    /* Emptying it IS hiding it — there is no shell.showFooter() to fall out of step
+       with what is actually in there. */
+    if (b.dataset.act === 'footer') {
+      var f = shell.footer();
+      if (f.firstChild) f.textContent = '';
+      else f.appendChild(pick('t-footer'));
+    }
+  });
+
+  document.getElementById('tbAsk').addEventListener('click', function () {
+    shell.open('ask', { focus: true });
+  });
+
+  /* The readout. The only reason the harness listens to 'mode' at all. */
+  /* Card contents are reached through shell.body — a closed card is detached, so
+     document.getElementById cannot see one that starts closed. */
+  var kv = shell.body('mode').querySelector('#modeKv');
+  var out = {
+    w: document.getElementById('tbW'),
+    nav: document.getElementById('tbNav'),
+    ctx: document.getElementById('tbCtx')
+  };
+  shell.on('mode', function (m) {
+    var w = document.getElementById('app').clientWidth;
+    out.w.textContent = w + 'px';
+    out.nav.textContent = m.nav + (m.navOpen ? ' · open' : ' · closed');
+    out.ctx.textContent = m.context;
+    if (!kv) return;
+    var cs = getComputedStyle(document.getElementById('app'));
+    var v = function (n) { return cs.getPropertyValue(n).trim(); };
+    kv.innerHTML =
+      '<dt>Shell width</dt><dd>' + w + 'px</dd>' +
+      '<dt>Navigation</dt><dd>' + m.nav + ' <em>' + (m.navOpen ? 'open' : 'closed') + '</em></dd>' +
+      '<dt>Context</dt><dd>' + m.context + '</dd>' +
+      '<dt>nav-w</dt><dd>' + v('--shell-nav-w') + '</dd>' +
+      '<dt>context-w</dt><dd>' + v('--shell-context-w') + '</dd>' +
+      '<dt>content-min</dt><dd>' + v('--shell-content-min') + '</dd>';
+  });
+
+  /* Swatches, built from the tokens themselves so the card cannot go out of date:
+     every custom property the first plain :root rule (tokens.css's) declares. */
+  var sw = shell.body('palette').querySelector('#sw');
+  var tokens = [];
+  Array.prototype.some.call(document.styleSheets, function (sheet) {
+    var rules;
+    try { rules = sheet.cssRules; } catch (e) { return false; }  // a font sheet from another origin
+    return Array.prototype.some.call(rules, function (r) {
+      if (r.selectorText !== ':root') return false;
+      Array.prototype.forEach.call(r.style, function (p) {
+        if (p.indexOf('--') === 0 && !/^--(sans|serif)$/.test(p)) tokens.push(p.slice(2));
+      });
+      return true;
+    });
+  });
+  if (sw) {
+    tokens.forEach(function (name) {
+      var d = document.createElement('div');
+      d.innerHTML = '<i style="background:var(--' + name + ')"></i><span>--' + name + '</span>';
+      sw.appendChild(d);
+    });
+  }
+
+  show('regions');
+  shell.refresh();
+})();
+</script>

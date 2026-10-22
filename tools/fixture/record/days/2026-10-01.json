@@ -1,0 +1,108 @@
+{
+  "bells": {
+    "evening": {
+      "answeredAt": "8:00 PM",
+      "delay": 0,
+      "early": 0,
+      "projects": [
+        "nix_config"
+      ],
+      "threads": {
+        "nix_config": "where to pick up"
+      },
+      "ticked": true,
+      "undertakings": []
+    },
+    "midday": {
+      "answeredAt": "11:01 AM",
+      "delay": 0,
+      "early": 0,
+      "projects": [
+        "canondb"
+      ],
+      "threads": {
+        "canondb": "where to pick up"
+      },
+      "ticked": true,
+      "undertakings": []
+    },
+    "morning": {
+      "answeredAt": "7:03 AM",
+      "delay": 0,
+      "early": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "vespers": {
+      "answeredAt": "4:02 PM",
+      "delay": 0,
+      "early": 0,
+      "projects": [
+        "ordo"
+      ],
+      "threads": {
+        "ordo": "where to pick up"
+      },
+      "ticked": true,
+      "undertakings": []
+    }
+  },
+  "cancelled": {},
+  "date": "2026-10-01",
+  "drinks": null,
+  "examen": {},
+  "focus": {
+    "focus_1": {
+      "planned": "canondb",
+      "projects": [
+        "canondb"
+      ]
+    },
+    "focus_2": {
+      "planned": "ordo",
+      "projects": [
+        "ordo"
+      ]
+    },
+    "focus_3": {
+      "planned": "nix_config",
+      "projects": [
+        "nix_config"
+      ]
+    }
+  },
+  "items": {
+    "breakfast": true,
+    "dinner": true,
+    "dishes": true,
+    "dog": true,
+    "dog_2": true,
+    "examen": true,
+    "focus_1": true,
+    "focus_2": true,
+    "focus_3": true,
+    "garden": true,
+    "great_silence": true,
+    "gym": true,
+    "lunch": true,
+    "meds": true,
+    "recycling": true,
+    "shower": true,
+    "sleep": true,
+    "sync": true,
+    "teeth": true,
+    "weight": true
+  },
+  "meds": null,
+  "na": {
+    "groceries": true
+  },
+  "pours": {
+    "p0": 1
+  },
+  "times": {
+    "sleep": "10:00 PM"
+  }
+}

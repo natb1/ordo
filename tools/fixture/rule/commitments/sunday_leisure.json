@@ -1,0 +1,11 @@
+{
+  "calendar_event": "evt_sunday_leisure",
+  "end": "20:00",
+  "id": "sunday_leisure",
+  "must_be": "meeting",
+  "project": "ordo",
+  "seq": 4,
+  "start": "19:15",
+  "weekday": "sun",
+  "what": "Leisure after the game"
+}

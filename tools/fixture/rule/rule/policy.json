@@ -1,0 +1,31 @@
+{
+  "docket": {
+    "focus_slots_per_day": 3,
+    "realistic_per_week": 20,
+    "rule": "At the bell, the suggested project is the one FURTHEST BEHIND its allocation, unless an overdue periodic item is marked to outrank it. Arithmetic, not appetite. Behind is measured as a share: the smallest fraction of its allocation used, ties to the larger allocation, the same measure the sort uses for periodic items, so a short week falls on every project in proportion and not all on the smallest. A project with no allocation this week is behind nothing; it comes last, as slack. Overdue means past its due day: on the day itself the item waits in its project's own sort. Several overdue at once go furthest past due first, as a fraction of their cadence. A meeting spends a slot without being chosen for it: a project's used count is its sessions worked and its meetings together. One that did not happen — a cancelled week, marked on the page the day of — spends nothing: that session is an ordinary one, and the meeting counts for nothing. A session counts for every project it worked, whether the bell named the project or only one of its items (a review is ordo's slot); a follow-up counts for none. A slot is one slot of supply, so one shared by n projects charges each 1/n, and the counts never outrun the slots worked.\n",
+    "set_at": "the Sunday sitting",
+    "sort": "Within the project the work is taken in order from three queues, which are three tiers of priority, never a matrix (hypomnemata › allocation). First, the meetings of the session: each takes its session outright, and the order always shows them. Second, periodic items and TODO items together, by one measure: how far overdue each is as a fraction of its cadence. A TODO item with a date is due on it, counted from its capture; one without is due fourteen days after it was captured, so it rises as it ages. A periodic item not yet due waits below. Third, canon: the project's frontier hypomnemata by pressure, then dictations waiting to be dictated, oldest first. A blocker takes the tier and the rank of what it stops and stands just before it, and the page draws the two as bound; one that stops an Office item or a fixture stands in the second tier at that thing's next day, which is the only way the Office enters the order. There is no scoring by leverage and no rule of one in progress.\n",
+    "starvation_is_data": "A project far under at week's end usually means the allocation was wrong, or another project pulls harder than you admitted. Change the number, never scold. Read it as a share: a short week leaves every project at about the same fraction, so the outlier is the signal.\n"
+  },
+  "todo": {
+    "capture": "Say it whenever you think of it, in your own words; it lands in the project's TODO list with its details, and a next step. A name alone keeps costing attention; a plan discharges it.\n",
+    "default_project": "ordo",
+    "due_after_days": 14,
+    "eject_after_reviews": 8,
+    "fields": {
+      "blocks": "what it stops: an Office item, a fixture or meeting, a periodic item, another TODO item, or a question on a frontier (q:<project>:<question>). It takes the tier and the rank of what it stops and stands just before it; one that stops an Office item or a fixture stands at that thing's next day. Whatever it names is blocked, not missed, while it is open: an Office item keeps its row, blocked; a periodic item waits past its due date, blocked rather than overdue, just after its repair.\n",
+      "by": "the date it is due — a deadline, a fine, a thing getting worse. Overdue counts from capture to this date. Without one an item is due `due_after_days` after it was captured, so it rises as it ages.\n",
+      "dictation": "the item's details in your own prose: what it is, why, and anything the order cannot read",
+      "next_step": "where you pick up; the page edits it, the bell records it",
+      "sessions_used": "a repair's diagnostic sessions so far, against timebox.max_sessions; 0 at capture"
+    },
+    "reviewed": "at the Sunday sitting, with everything else",
+    "third_time": "A thing that breaks a third time is not a breakdown any more — it is a standing fault, and belongs in the backlog as a replacement, with a cue, a slot and a cost.\n",
+    "timebox": {
+      "at_the_bell": "resolved / money / back to the sort — pick one, out loud",
+      "diagnostic_minutes": 25,
+      "escalation": "\"This is a money problem, not a time problem\" is a legitimate and frequently correct answer. The Rule does not require you to be your own repairman [RB-31]. After two diagnostic sessions, calling someone is the default, not the failure.\n",
+      "max_sessions": 2
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "calendar_event": "evt_checkup",
+  "date": "2026-10-28",
+  "end": "09:20",
+  "id": "checkup",
+  "seq": 6,
+  "start": "09:00",
+  "what": "A one-off appointment"
+}

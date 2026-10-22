@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-04T13:00:00Z",
+  "docs": [
+    {
+      "collection": "rule",
+      "data": {
+        "docket": {
+          "realistic_per_week": 20
+        }
+      },
+      "doc_id": "policy"
+    },
+    {
+      "collection": "projects",
+      "data": {
+        "id": "canondb",
+        "rule": {
+          "allocation": 7
+        }
+      },
+      "doc_id": "canondb"
+    }
+  ]
+}

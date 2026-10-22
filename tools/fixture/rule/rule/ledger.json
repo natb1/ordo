@@ -1,0 +1,28 @@
+{
+  "drink": {
+    "max_per_day": 2,
+    "model": "budget",
+    "no_stock_in_house": true,
+    "over_ration_response": "Show the number. Nothing else. No colour change, no warning, no comment. Going over is information; a scolding is the mechanism that turns it into a relapse [MARLATT-1985].\n",
+    "ration_per_week": 8,
+    "week_starts": "sun"
+  },
+  "gated": {
+    "confirmed": [
+      "sleep",
+      "coding",
+      "gaming"
+    ],
+    "watching": [
+      "media",
+      "drinking"
+    ]
+  },
+  "groceries": {
+    "trigger": "you noticed you are out of something"
+  },
+  "protein": {
+    "anchor": "breakfast",
+    "floor_grams_per_day": 120
+  }
+}

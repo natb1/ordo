@@ -1,0 +1,397 @@
+{
+  "anchors": [
+    {
+      "bell": "07:00",
+      "breaks": "sleep",
+      "items": [
+        {
+          "do": "Morning medication",
+          "guard": "bell",
+          "id": "meds",
+          "kind": "office",
+          "log": "required",
+          "minutes": 2,
+          "note": "First thing, before anything else. Most time-sensitive item in the day. Logged every morning — without the dose recorded, a \"failed to exit\" entry is uninterpretable where a medication bears on the disengagement the gated list measures. hypomnemata › gated.\n",
+          "required": true
+        },
+        {
+          "after": [
+            "meds"
+          ],
+          "do": "Weigh in",
+          "guard": "bell",
+          "id": "weight",
+          "kind": "office",
+          "minutes": 2,
+          "note": "BEFORE breakfast, and before anything to drink, because the only way a daily number means anything is if it is taken under the same conditions every time — same hour, same state, same scale. README.md, \"Drinking and weight\". Recorded, never scored. A single day's weight moves two pounds on water alone, so the page shows the number and nothing else: no arrow, no difference from yesterday, no colour. A trend is a weekly-review object.\n",
+          "value": {
+            "step": 0.2,
+            "type": "number",
+            "unit": "lb"
+          }
+        },
+        {
+          "after": [
+            "meds"
+          ],
+          "children": [
+            {
+              "do": "Prepared",
+              "id": "breakfast_prepared",
+              "minutes": 15
+            },
+            {
+              "do": "Ate",
+              "id": "breakfast_ate",
+              "minutes": 15
+            }
+          ],
+          "do": "Breakfast",
+          "guard": "bell",
+          "id": "breakfast",
+          "kind": "office",
+          "minutes": 30,
+          "note": "Protein floor lives here (README.md, \"Drinking and weight\"). Stays immediately after the medication: first thing is when the floor is easiest to meet, and breakfast is what carries it."
+        },
+        {
+          "after": [
+            "breakfast"
+          ],
+          "do": "Sync the day",
+          "guard": "bell",
+          "id": "sync",
+          "kind": "office",
+          "minutes": 5,
+          "note": "Open Claude Code and run /ordo. The page is a copy: a fixture added to the calendar, a meeting, a notebook's frontier reach it only when carried there, and this is the carrying. Before the first work session, so the work is ordered from what is true today. It may be run again at any time.\n"
+        },
+        {
+          "do": "Focus session 1",
+          "gated": true,
+          "id": "focus_1",
+          "kind": "work"
+        }
+      ],
+      "key": "morning",
+      "name": "Lauds"
+    },
+    {
+      "bell": "11:00",
+      "breaks": "focus_1",
+      "items": [
+        {
+          "do": "Walk and feed the dog",
+          "guard": "bell",
+          "id": "dog",
+          "kind": "office",
+          "minutes": 30,
+          "note": "First on purpose: the item you never skip carries the transition. hypomnemata › bell",
+          "required": true
+        },
+        {
+          "children": [
+            {
+              "do": "Brush",
+              "id": "brush"
+            },
+            {
+              "do": "Floss",
+              "id": "floss"
+            },
+            {
+              "do": "Rinse",
+              "id": "rinse"
+            }
+          ],
+          "do": "Teeth",
+          "guard": "bell",
+          "id": "teeth",
+          "kind": "office",
+          "minutes": 5
+        },
+        {
+          "do": "Gym",
+          "guard": "plan",
+          "id": "gym",
+          "kind": "office",
+          "minutes": 45,
+          "mode": "walking",
+          "note": "Saturday's trainer counts toward the floor of 3, and meets at the trainer's gym instead of the usual one (commitments.trainer): on Saturday, this row is the trainer session, and you tick it for that.\n",
+          "skip_weekday": [
+            "sun",
+            "wed"
+          ],
+          "to": "The gym, 6 Market St, Springfield",
+          "when": {
+            "floor_per_week": 3
+          }
+        },
+        {
+          "after": [
+            "gym"
+          ],
+          "do": "Grocery store",
+          "guard": "none",
+          "id": "groceries",
+          "kind": "office",
+          "minutes": 45,
+          "note": "After the gym, before the shower — you are already out.",
+          "skip_weekday": [
+            "sun",
+            "wed"
+          ],
+          "when": {
+            "ledger": "groceries"
+          }
+        },
+        {
+          "after": [
+            "gym",
+            "groceries"
+          ],
+          "do": "Shower",
+          "guard": "bell",
+          "id": "shower",
+          "kind": "office",
+          "minutes": 15
+        },
+        {
+          "after": [
+            "shower"
+          ],
+          "children": [
+            {
+              "do": "Prepared",
+              "id": "lunch_prepared",
+              "minutes": 15
+            },
+            {
+              "do": "Ate",
+              "id": "lunch_ate",
+              "minutes": 15
+            }
+          ],
+          "do": "Lunch",
+          "guard": "bell",
+          "id": "lunch",
+          "kind": "office",
+          "minutes": 30
+        },
+        {
+          "do": "Focus session 2",
+          "gated": true,
+          "id": "focus_2",
+          "kind": "work",
+          "skip_weekday": [
+            "sun"
+          ]
+        }
+      ],
+      "key": "midday",
+      "name": "Sext"
+    },
+    {
+      "bell": "16:00",
+      "breaks": "focus_2",
+      "breaks_by_weekday": {
+        "sun": "ttrpg"
+      },
+      "items": [
+        {
+          "children": [
+            {
+              "do": "Prepared",
+              "id": "dinner_prepared",
+              "minutes": 30
+            },
+            {
+              "do": "Ate",
+              "id": "dinner_ate",
+              "minutes": 15
+            }
+          ],
+          "do": "Dinner",
+          "guard": "bell",
+          "id": "dinner",
+          "kind": "office",
+          "minutes": 45
+        },
+        {
+          "do": "Walk the dog (second)",
+          "guard": "bell",
+          "id": "dog_2",
+          "kind": "office",
+          "minutes": 30,
+          "note": "Improv Tuesdays only. The 17:30 block is 41 minutes of departure prep and cannot hold a walk; the alternative is 21:30 after class, so the dog goes out before you leave instead. Keyed to the class, not the weekday, so it goes back to Compline when the class's `until` passes.\n",
+          "required": true,
+          "when": {
+            "commitment": "improv"
+          }
+        },
+        {
+          "do": "Focus session 3",
+          "gated": true,
+          "id": "focus_3",
+          "kind": "work",
+          "note": "Resolves the open question left when Vespers was added. Four bells, four slots, one of which is always sleep — so the 16:00-20:00 stretch is the third focus slot. Short on Tuesday (improv at 17:30). On Sunday it runs from the end of dinner to Compline and a meeting spends it: leisure after the game (commitments.sunday_leisure). Not the Great Silence, which follows the Examen.\n"
+        }
+      ],
+      "key": "vespers",
+      "name": "Vespers"
+    },
+    {
+      "bell": "20:00",
+      "breaks": "focus_3",
+      "items": [
+        {
+          "do": "Walk the dog (second)",
+          "guard": "bell",
+          "id": "dog_2",
+          "kind": "office",
+          "minutes": 30,
+          "required": true,
+          "unless": {
+            "commitment": "improv"
+          }
+        },
+        {
+          "do": "Dishes and kitchen reset",
+          "guard": "bell",
+          "id": "dishes",
+          "kind": "office",
+          "minutes": 20,
+          "note": "Moved here from midday to balance the blocks. hypomnemata › kinds — under review.",
+          "nullable": true
+        },
+        {
+          "do": "Trash to curb",
+          "guard": "bell",
+          "id": "trash",
+          "kind": "office",
+          "minutes": 5,
+          "note": "On an improv Tuesday this comes first — it has to go out before you leave anyway.",
+          "when": {
+            "weekday": [
+              "tue"
+            ]
+          }
+        },
+        {
+          "do": "Freshen up and change",
+          "id": "freshen_up",
+          "kind": "fixture",
+          "note": "Departure prep. See commitments.improv.",
+          "when": {
+            "commitment": "improv"
+          }
+        },
+        {
+          "commitment": "improv",
+          "do": "Leave for improv",
+          "id": "depart",
+          "kind": "fixture",
+          "when": {
+            "commitment": "improv"
+          }
+        },
+        {
+          "do": "Recycling to curb",
+          "guard": "bell",
+          "id": "recycling",
+          "kind": "office",
+          "minutes": 5,
+          "when": {
+            "weekday": [
+              "thu"
+            ]
+          }
+        },
+        {
+          "do": "Water the garden",
+          "guard": "bell",
+          "id": "garden",
+          "kind": "office",
+          "minutes": 10,
+          "nullable": true,
+          "when": {
+            "not_winter": true
+          }
+        },
+        {
+          "do": "The Examen, five steps",
+          "examen": true,
+          "guard": "bell",
+          "id": "examen",
+          "kind": "office",
+          "minutes": 10,
+          "note": "Ends the day. Everything after is declared leisure, not unfinished day.",
+          "required": true
+        },
+        {
+          "do": "The Great Silence — the day's business is closed",
+          "guard": "bell",
+          "id": "great_silence",
+          "note": "Compline means completion. The device for the 21:00-23:00 drift: the difference between leisure you chose and an evening you lost is entirely whether it was declared. hypomnemata › examen.\n"
+        },
+        {
+          "do": "Lights out",
+          "guard": "alarm",
+          "id": "sleep",
+          "required": true,
+          "target": "22:00"
+        }
+      ],
+      "key": "evening",
+      "name": "Compline"
+    }
+  ],
+  "kinds": [
+    "office",
+    "fixture",
+    "work"
+  ],
+  "meta": {
+    "clock": {
+      "resolution_minutes": 1,
+      "show_countdown": "on_demand"
+    },
+    "day_starts": "04:00",
+    "lights_out": {
+      "acceptable": [
+        "21:00",
+        "23:00"
+      ],
+      "target": "22:00"
+    },
+    "timezone": "America/New_York",
+    "warning_bell_minutes": 10,
+    "winter": {
+      "end": "03-15",
+      "start": "11-15"
+    }
+  },
+  "variations": [
+    {
+      "change": "Evening bell moves to 17:30, derived from the commitment (see commitments.improv). Order changes too, because the block ends in a departure: exit rite, TRASH TO CURB (it has to go out before you leave anyway), freshen up, leave by 18:11. Dishes and the Examen happen after class, before sleep.\n",
+      "commitment": "improv",
+      "item_order": [
+        "exit_focus_2",
+        "trash",
+        "freshen_up",
+        "depart",
+        "dishes",
+        "examen",
+        "great_silence",
+        "sleep"
+      ],
+      "name": "tuesday"
+    },
+    {
+      "change": "No change to the Office and no item order of its own. The trainer (09:00-09:30, leave by 08:52) is a departure inside focus 1 — the focus slot Saturday loses (docket.yaml) — and Saturday's Gym row is that session, ticked toward the floor of 3. The afternoon is an ordinary focus slot; household projects will take one if they promote (backlog.yaml). Evening bell at 20:00, as every day.\n",
+      "name": "saturday"
+    },
+    {
+      "change": "TTRPG 13:00-17:30. ONE variation: Vespers moves 16:00 -> 18:30, derived from the game's end (17:30 + 21 travel + 39 settle). It closes the game, and dinner sits where dinner belongs. Compline stays at 20:00, as every other day. Focus 2 is dropped (the midday block is 84 minutes before the game's prep). Focus 1 and focus 3 are both spent by meetings: the sitting at 09:00, and leisure from the end of dinner to Compline.\n",
+      "name": "sunday"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "cost": "~30 min/month",
+  "cue": "When the monthly backlog review is done, before closing the file.",
+  "displaces": "Extends the monthly sitting by ~30 min. Competes with nothing daily.",
+  "first_session": "One month only. Open the pile, sort nothing into folders yet, just read what is there.",
+  "id": "filing",
+  "kind": "maintenance",
+  "note": "A DIFFERENT KIND of item from the other three, and the difference matters. This is maintenance of an existing obligation, not a new activity — the same family as the haircut among the periodic items, not the same family as learning guitar. The gate was built to filter enthusiasm, and there is no enthusiasm to filter here.\nPractical consequence: gate criterion 4 is PER-SLOT. This one wants the monthly sitting; the other three want daily or weekly slots. They are not competing, so this can promote independently of them and does not spend the one-at-a-time budget on the day.\n",
+  "parked_on": "2026-09-21",
+  "review_count": 0,
+  "reviewed_on": null,
+  "seq": 2,
+  "slot": "The monthly review sitting — NOT a daily slot",
+  "status": "parked",
+  "what": "File the month's papers"
+}

@@ -1,0 +1,15 @@
+{
+  "cost": "~1 h/week",
+  "cue": "When Sunday's post-game exit rite is done.",
+  "displaces": "Part of the Sunday drift window.",
+  "first_session": "Twenty-five minutes drawing whatever is on the table in front of you.",
+  "id": "drawing",
+  "note": "Lowest cost of the three and aimed at the week's weakest hour. Do not promote it at the same time as anything else — one at a time is the whole method [FRANKLIN-AUTO].\n",
+  "parked_on": "2026-09-21",
+  "review_count": 0,
+  "reviewed_on": null,
+  "seq": 3,
+  "slot": "Sunday evening, after the early bell",
+  "status": "parked",
+  "what": "Drawing"
+}

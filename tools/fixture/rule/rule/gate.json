@@ -1,0 +1,14 @@
+{
+  "gate": {
+    "criteria": {
+      "anchors_run": ">=6 of 7 days, four consecutive weeks, all four bells (Lauds, Sext, Vespers, Compline) answered",
+      "not_in_desolation": "no promotion on a good week's high, no deletion on a bad week's low",
+      "resume_lines": ">=80% of the bells that close a focus session with something picked carry a resume line",
+      "rule_stable": "weekly review proposed no change for two consecutive weeks",
+      "slot_empty": "the named slot is free, and what it displaces is named"
+    },
+    "eject_after_reviews": 6,
+    "novitiate_scale": "once a week, not daily — freely revocable, logged as no kind of failure",
+    "novitiate_weeks": 4
+  }
+}

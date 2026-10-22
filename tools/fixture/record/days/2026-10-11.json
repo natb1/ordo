@@ -1,0 +1,74 @@
+{
+  "bells": {
+    "evening": {
+      "answeredAt": "8:00 PM",
+      "delay": 0,
+      "early": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "midday": {
+      "answeredAt": "11:01 AM",
+      "delay": 0,
+      "early": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "morning": {
+      "answeredAt": "7:03 AM",
+      "delay": 0,
+      "early": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "vespers": {
+      "answeredAt": "6:31 PM",
+      "delay": 0,
+      "early": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    }
+  },
+  "cancelled": {},
+  "date": "2026-10-11",
+  "drinks": null,
+  "examen": {},
+  "focus": {},
+  "items": {
+    "breakfast": true,
+    "dinner": true,
+    "dishes": true,
+    "dog": true,
+    "dog_2": true,
+    "examen": true,
+    "focus_1": true,
+    "focus_3": true,
+    "garden": true,
+    "great_silence": true,
+    "lunch": true,
+    "meds": true,
+    "shower": true,
+    "sleep": true,
+    "sync": true,
+    "teeth": true,
+    "weight": true
+  },
+  "meds": null,
+  "na": {},
+  "pours": {
+    "p0": 1,
+    "p1": 1,
+    "p2": 1
+  },
+  "times": {
+    "sleep": "10:40 PM"
+  }
+}

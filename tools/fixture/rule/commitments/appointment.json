@@ -1,0 +1,33 @@
+{
+  "calendar_event": "evt_appointment",
+  "derived_bell": "11:55",
+  "derived_leave_by": "12:05",
+  "end": "14:00",
+  "from": "1 Example St, Springfield",
+  "id": "appointment",
+  "locations": [
+    {
+      "frequency": "often",
+      "to": "The office, 3 Office Park, Springfield",
+      "travel_minutes": 55
+    },
+    {
+      "frequency": "sometimes",
+      "to": "The park, 10 Park Rd, Springfield",
+      "travel_minutes": 40
+    },
+    {
+      "frequency": "currently on the calendar",
+      "to": "The other office, 1 Station Rd, Springfield",
+      "travel_minutes": 35
+    }
+  ],
+  "mode": "transit",
+  "note": "It splits the Wednesday midday block: 11:00-11:55 before (prep from the 11:55 bell), and 14:55-16:00 after the return — 120 minutes at the 55-minute worst case, more from a nearer place. check_capacity.py counts the two as one pool, since no item marks which side of the appointment the Office falls on.\n",
+  "prep_minutes": 10,
+  "seq": 5,
+  "start": "13:00",
+  "travel_minutes": 55,
+  "weekday": "wed",
+  "what": "Weekly appointment"
+}

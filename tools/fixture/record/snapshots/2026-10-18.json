@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-18T13:00:00Z",
+  "counts": {
+    "week": {
+      "slots_worked": 14
+    }
+  },
+  "docs": [
+    {
+      "collection": "rule",
+      "data": {
+        "docket": {
+          "realistic_per_week": 20
+        }
+      },
+      "doc_id": "policy"
+    },
+    {
+      "collection": "projects",
+      "data": {
+        "id": "canondb",
+        "rule": {
+          "allocation": 6
+        }
+      },
+      "doc_id": "canondb"
+    }
+  ]
+}
