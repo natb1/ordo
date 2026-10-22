@@ -147,24 +147,17 @@ class Record:
         raise why
 
     def _parts_on(self, item_id, entry, d):
+        """The item's parts on the date, or Refused with why it is not expected:
+        rule.why_not, the one reading of an item on a date (its block's weekday, its
+        own, the fixtures, the season and a whole day's keep, which may name a part)."""
         key, it, parent = entry
-        dow = rule.weekday_of(d)
-        anchor = self.a["anchors"][key]
-        if dow in (anchor.get("skip_weekday") or []):
-            raise Refused(f"{item_id} is not on {d}: the {key} block has no {dow}")
         top = parent or it
         if top.get("examen") or it.get("examen"):
             raise Refused(f"{item_id} is the Examen, which is answered on the page, not written from here")
-        cs = self.events_on(d)
-        timed = [c for c in cs if not rule.whole_day(c)]
-        if not rule.applies(top, dow, timed):
-            raise Refused(f"{item_id} is not on {d}: {top['id']} is off on {dow}, or follows a fixture that is not on that day")
-        if (top.get("when") or {}).get("not_winter") and rule.winter(self.a, d):
-            raise Refused(f"{item_id} is not on {d}: {top['id']} is off in winter")
-        for c in cs:
-            if rule.whole_day(c) and top["id"] not in (c.get("keep") or []) and item_id not in (c.get("keep") or []):
-                raise Refused(f"{item_id} is not expected on {d}: {c['id']} takes the whole day and keeps "
-                              + (", ".join(c.get("keep") or []) or "nothing of the Office"))
+        why = rule.why_not(self.a, top, d, self.events_on(d), key=key, part=item_id)
+        if why:
+            # a whole day makes it not expected; anything else, not on that date at all
+            raise Refused(f"{item_id} is not {'expected ' if 'takes the whole day' in why else ''}on {d}: {why}")
         return [k for k in (it.get("children") or [it])]
 
     def blocker_of(self, item_id, group_id, d):

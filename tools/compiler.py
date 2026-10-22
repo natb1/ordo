@@ -320,7 +320,7 @@ def commitments(a, d, gloss):
         if not commitment_keys(c) or rule.whole_day(c):
             continue
         try:
-            sort, why = rule.kind(a, c)
+            sort, why, takes = rule.classify(a, c)
         except rule.RuleError as e:
             errors.append(str(e))
             continue
@@ -354,7 +354,12 @@ def commitments(a, d, gloss):
             e["moves"] = {"anchor": c["sets_anchor_bell"], "at": c.get("derived_anchor_bell")}
         if meeting:
             # A meeting is supply consumed: the page counts it against its project.
+            # `takes` is the session it spends on each weekday it falls on, as
+            # tools/rule.py found it: {weekday: the work item id of that block's
+            # session}, e.g. {"sun": "focus_1"}, so the page and the counts read it
+            # rather than guess the block again from the start.
             e["meeting"] = True
+            e["takes"] = takes
             e["project"] = rule.project(c, d)
             if not e["project"]:
                 errors.append(f"commitment {c['id']} is a meeting and names no project, and no project is the default")
