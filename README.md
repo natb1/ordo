@@ -320,7 +320,7 @@ a list; an event points at the page, or tells you to leave.
 | `tools/compiler.py` | Compiles the Rule into what the page reads, and refuses what it cannot run. |
 | `tools/gate.py` | The one way a change reaches the Rule: applies it to an export, runs the compiler and the capacity check, and writes the batch to send, with a snapshot. Also the weekly snapshot and a restore. |
 | `tools/rule.py` | What a calendar event is to the day: a meeting or a fixture, computed from where it falls. |
-| `tools/check_capacity.py` | Fails if a block asks for more minutes than it has, or if a fixture's derived times do not follow from its travel, prep and settle. A weekday whose fixture has an `until:` is checked with it and without it. |
+| `tools/check_capacity.py` | Fails if a block asks for more minutes than it has, or if a fixture's derived times do not follow from its travel, prep and settle. Every distinct day from today on is checked: each weekday with each set of events on together, in and out of winter. |
 | `tools/notifiers.py` | What the Clock alarms and the Cadence calendar should hold, derived from the Rule. |
 | `tools/fixture/rule/` | A frozen copy of the Rule, for the tests only. Never updated to follow the store. |
 | `tools/ruleyaml.py` | Loads `tradition/sources.yaml` strictly: a key given twice fails. |

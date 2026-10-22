@@ -10,18 +10,23 @@ lapses where there was really one bad schedule.
 The day checked is the day the page renders: the bells the Rule gives, moved
 where a fixture moves them and taken in the order they ring, the last block ending
 at lights-out; a departure taking its prep as well as the ride; and a block that a
-departure item splits checked on each side of it, in the order the day runs. A
-weekday whose fixture has a last day still to come (an `until`, a `date`, the end of
-a range) is checked twice, with it and without it, since the page renders both; past
-it, only without. A fixture that takes whole days has no hours and is not counted:
-what it does not keep is simply not expected. Which events are meetings and which
+departure item splits checked on each side of it, in the order the day runs. Every
+distinct day the page can render from today on is checked (rule.variants): each
+weekday with each set of events that is on together on some date, and in and out of
+the winter — so a second event that moves the same bell on a later date is checked
+on that date, and an item off in winter is not counted in it. An event past its
+last day is not on any of them. An event that ends before it starts runs past
+midnight (rule.busy). A fixture that takes whole days has no hours and is not
+counted: what it does not keep is simply not expected. Which events are meetings and which
 fixtures is printed last (tools/rule.py); the arithmetic is the same for both.
 
 The day's arithmetic is rule.py's — one reading of what an event occupies, of where
 a bell rings and of which items a day has — so the kind an event is given and the
 capacity it is checked against can never come from two definitions.
 
-    ORDO_RULE=<dir> python3 tools/check_capacity.py [--strict]
+    ORDO_RULE=<dir> python3 tools/check_capacity.py [--strict] [--today YYYY-MM-DD]
+
+--today pins the Rule's today, for a test; the Rule's clock otherwise.
 """
 import sys
 
@@ -41,13 +46,10 @@ errors, warnings, rows = [], [], []
 hm, clock, travel, busy, minutes = rule.hm, rule.clock, rule.travel, rule.busy, rule.minutes
 
 # A fixture's `until` retires it, and what it causes goes with it (the page's
-# commitmentOn). One whose until has passed is not on its weekday at all; one whose
-# until is still to come is checked both ways, since both weekdays will be rendered.
-# A fixture on one date is the same case: its weekday is rendered with it that once
-# and without it every other week, and it is over the day after. Two of them on the
-# same weekday are checked together even when their dates differ, which errs safe.
-TODAY = rule.today(A)
-OFF = set()
+# commitmentsFor). Each day checked is a date (rule.variants) with the events on it,
+# so what is on together is what the page renders together.
+TODAY = (sys.argv[sys.argv.index("--today") + 1] if "--today" in sys.argv else rule.today(A))
+PASS = {"date": None, "cs": []}
 
 
 last_day = rule.last_day
@@ -58,11 +60,12 @@ def ended(c):
 
 
 def commitments(day):
-    """Every event with hours on this weekday, meeting and fixture alike. Sunday has
-    three — the sitting, the game and leisure — and the earlier version of this
+    """Every event with hours on the date checked, meeting and fixture alike. Sunday
+    has three — the sitting, the game and leisure — and the earlier version of this
     returned only the first one it found, which would have silently ignored the
     rest."""
-    return rule.on_weekday(A, day, TODAY, OFF)
+    assert rule.weekday_of(PASS["date"]) == day
+    return PASS["cs"]
 
 
 def day_blocks(day):
@@ -80,8 +83,9 @@ def day_blocks(day):
 
 def applies(item, day):
     """An item a fixture causes is on the days the fixture is (when: {commitment: X}),
-    or off them (unless: {commitment: X})."""
-    return rule.applies(item, day, commitments(day))
+    or off them (unless: {commitment: X}); one off in winter is off on a winter date
+    (rule.item_on, the one reading of an item on a date)."""
+    return rule.item_on(A, item, PASS["date"], commitments(day))
 
 
 def in_order(items, day):
@@ -204,51 +208,57 @@ def main():
                     errors.append(f"commitment {cid}: moves {c['sets_anchor_bell']} to {clock(at)}, before "
                                   "you are back and settled"
                                   + (f" ({clock(back)}) — at the earliest {clock(back)}" if back else ""))
-        # Past its until it has you nowhere, and the bell it moved is back at its hour.
-        for day in ([] if ended(c) else rule.weekdays(c)):
-            for key, at, _ in day_blocks(day):
-                if back is not None and lo < at < back:
-                    errors.append(f"{day} {key}: its bell at {clock(at)} rings while {cid} has you "
-                                  f"({clock(lo)}-{clock(back) if back else '?'})")
 
-    # ---- every block, every day, and each weekday again once its fixtures end -------
+    # ---- every block of every distinct day from today on ----------------------------
     # A passed until is a note, not a warning: the entry stays in the Rule (README),
     # and --strict would make it block every publish from then on.
     notes = [f"commitment {c['id']}: its last day ({last_day(c)}) has passed, so {', '.join(rule.weekdays(c))} is "
              "checked without it" for c in A.get("commitments") or [] if ended(c)]
-    passes = []
+    passes = rule.variants(A, TODAY)
+    per_day = {}
+    for d, cs in passes:
+        per_day.setdefault(rule.weekday_of(d), []).append((d, cs))
     for day in DAYS:
-        passes.append((day, ()))
-        ending = tuple(c["id"] for c in commitments(day) if last_day(c))
-        if ending:
-            passes.append((day, ending))
-    for day, off in passes:
-        OFF.clear(); OFF.update(off)
-        cs = commitments(day)
-        for key, start, end in day_blocks(day):
-            items = in_order([it for it in A["anchors"][key]["items"] if applies(it, day)], day)
-            for label, lo, hi, part in segments(key, start, end, items, cs):
-                if off:
-                    label = f"{label} (no {'+'.join(off)})"
-                avail = free(lo, hi, cs)
-                base = required(part, conditional=False)
-                full = required(part, conditional=True)
-                slack = avail - base
-                rows.append((day, label, avail, base, full, slack))
-                if base > avail:
-                    errors.append(
-                        f"{day} {label}: Office needs {base} min, block has {avail} — impossible")
-                elif full > avail:
-                    warnings.append(
-                        f"{day} {label}: fits at {base} min, but {full} with every conditional "
-                        f"and the block has {avail} — something must slide on a full day")
+        every = {c["id"] for _, cs in per_day.get(day, []) for c in cs}
+        seasons = {rule.winter(A, d) for d, _ in per_day.get(day, [])}
+        for d, cs in per_day.get(day, []):
+            PASS["date"], PASS["cs"] = d, cs
+            # which of this weekday's days it is, where it has more than one
+            off = sorted(every - {c["id"] for c in cs})
+            tag = ", ".join(([f"no {'+'.join(off)}"] if off else [])
+                            + (["winter"] if len(seasons) > 1 and rule.winter(A, d) else []))
+            tag = f" ({d}{': ' + tag if tag else ''})" if len(per_day[day]) > 1 else ""
+            blocks = day_blocks(day)
+            # An event has you away from its prep to its settle: no bell rings then.
+            for c in cs:
+                lo, back = busy(c)
+                for key, at, _ in blocks:
+                    if back is not None and lo < at < back:
+                        errors.append(f"{day} {key}: its bell at {clock(at)} rings while {c['id']} has you "
+                                      f"({clock(lo)}-{clock(back)})")
+            for key, start, end in blocks:
+                items = in_order([it for it in A["anchors"][key]["items"] if applies(it, day)], day)
+                for label, lo, hi, part in segments(key, start, end, items, cs):
+                    label += tag
+                    avail = free(lo, hi, cs)
+                    base = required(part, conditional=False)
+                    full = required(part, conditional=True)
+                    slack = avail - base
+                    rows.append((day, label, avail, base, full, slack))
+                    if base > avail:
+                        errors.append(
+                            f"{day} {label}: Office needs {base} min, block has {avail} — impossible")
+                    elif full > avail:
+                        warnings.append(
+                            f"{day} {label}: fits at {base} min, but {full} with every conditional "
+                            f"and the block has {avail} — something must slide on a full day")
 
-    w = f"{'day':<5}{'block':<20}{'avail':>6}{'office':>8}{'+cond':>7}{'slack':>7}"
+    w = f"{'day':<5}{'block':<44}{'avail':>6}{'office':>8}{'+cond':>7}{'slack':>7}"
     print(w)
     print("-" * len(w))
     for day, label, avail, base, full, slack in rows:
         mark = "  <-- OVER" if base > avail else ("  (tight)" if slack < 30 else "")
-        print(f"{day:<5}{label:<20}{avail:>6}{base:>8}{full:>7}{slack:>7}{mark}")
+        print(f"{day:<5}{label:<44}{avail:>6}{base:>8}{full:>7}{slack:>7}{mark}")
 
     print()
     print("meetings and fixtures, by where each event falls:")

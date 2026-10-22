@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""The rule that tells a meeting from a fixture, and when an event is on.
+"""The rule that tells a meeting from a fixture, when an event is on, whether an
+item is on a date, and the capacity check that reads the same arithmetic.
 
     python3 -m unittest tools/test_rule.py
 """
 import copy
+import json
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -164,6 +170,159 @@ class Today(unittest.TestCase):
         # at 23:30 New York on the 15th the series is still on; the machine's UTC date is the 16th
         self.assertEqual([c["id"] for c in rule.on_weekday(a, "thu", today=rule.today(a, "2026-10-16T03:30:00Z"))], ["c"])
         self.assertEqual(rule.on_weekday(a, "thu", today="2026-10-16"), [])
+
+
+def wintry(*commitments):
+    """DAY with a winter, and a morning walk the winter takes away."""
+    a = day(*commitments)
+    a["meta"]["winter"] = {"start": "12-01", "end": "02-28"}
+    a["anchors"]["morning"]["items"].insert(1, {"id": "walk", "kind": "office", "minutes": 30,
+                                                "when": {"not_winter": True}})
+    return a
+
+
+class ItemOn(unittest.TestCase):
+    """One reading of whether an item is on a date, for every caller that has one."""
+
+    def test_an_item_off_in_winter_is_off_on_a_winter_date(self):
+        a = wintry()
+        walk = a["anchors"]["morning"]["items"][1]
+        self.assertTrue(rule.item_on(a, walk, "2026-10-05"))
+        self.assertFalse(rule.item_on(a, walk, "2026-01-05"))
+        self.assertIn("winter", rule.why_not(a, walk, "2026-01-05"))
+
+    def test_its_weekdays_and_its_blocks(self):
+        a = day()
+        focus_2 = a["anchors"]["midday"]["items"][1]
+        self.assertFalse(rule.item_on(a, focus_2, "2026-01-04"))          # a Sunday
+        a["anchors"]["midday"]["skip_weekday"] = ["mon"]
+        lunch = a["anchors"]["midday"]["items"][0]
+        self.assertTrue(rule.item_on(a, lunch, "2026-01-05"))
+        self.assertFalse(rule.item_on(a, lunch, "2026-01-05", key="midday"))
+
+    def test_an_item_a_fixture_causes_follows_the_fixtures_dates(self):
+        a = day({"id": "class", "date": "2026-01-05", "start": "19:00", "end": "20:00"})
+        pack = {"id": "pack", "kind": "office", "minutes": 10, "when": {"commitment": "class"}}
+        self.assertTrue(rule.item_on(a, pack, "2026-01-05"))
+        self.assertFalse(rule.item_on(a, pack, "2026-01-12"))
+        self.assertFalse(rule.item_on(a, dict(pack, when={}, unless={"commitment": "class"}), "2026-01-05"))
+
+    def test_a_whole_day_keeps_an_item_or_a_part_of_one(self):
+        a = day({"id": "away", "first": "2026-01-05", "last": "2026-01-09", "all_day": True, "keep": ["made"]})
+        lunch, meds = a["anchors"]["midday"]["items"][0], a["anchors"]["morning"]["items"][0]
+        self.assertFalse(rule.item_on(a, meds, "2026-01-05"))
+        self.assertTrue(rule.item_on(a, meds, "2026-01-10"))
+        self.assertTrue(rule.item_on(a, lunch, "2026-01-05", part="made"))
+        self.assertFalse(rule.item_on(a, lunch, "2026-01-05", part="ate"))
+        # read without its whole days, for the day's arithmetic
+        self.assertTrue(rule.item_on(a, meds, "2026-01-05", cs=[]))
+
+    def test_the_session_of_a_winter_date_opens_without_the_winter_items(self):
+        a = wintry()
+        self.assertEqual(rule.sessions(a, "mon", [], "2026-10-05")["morning"][0], 7 * 60 + 40)
+        self.assertEqual(rule.sessions(a, "mon", [], "2026-01-05")["morning"][0], 7 * 60 + 10)
+        # read by weekday alone, outside winter: the longer Office
+        self.assertEqual(rule.sessions(a, "mon", [])["morning"][0], 7 * 60 + 40)
+
+    def test_a_meeting_is_read_in_the_season_of_its_dates(self):
+        call = {"id": "call", "date": "2026-01-05", "start": "07:15", "end": "07:30"}
+        self.assertEqual(kind(wintry(call), "call"), "meeting")           # the walk is off in winter
+        weekly = dict(call, weekday="mon")
+        del weekly["date"]
+        self.assertEqual(kind(wintry(weekly), "call"), "fixture")         # but not in October
+
+
+class PastMidnight(unittest.TestCase):
+    """An end before its start runs past midnight; the day's minutes run on past 1440."""
+
+    def test_an_end_before_its_start_is_the_next_morning(self):
+        self.assertEqual(rule.busy({"id": "x", "start": "19:00", "end": "00:30"}), (19 * 60, 24 * 60 + 30))
+
+    def test_an_end_at_its_start_is_refused(self):
+        with self.assertRaises(rule.RuleError):
+            rule.busy({"id": "x", "start": "19:00", "end": "19:00"})
+
+    def test_one_that_runs_past_midnight_is_no_meeting_of_the_afternoon(self):
+        a = day({"id": "late", "weekday": "mon", "start": "19:00", "end": "00:30"})
+        self.assertEqual(kind(a, "late"), "fixture")
+
+
+class Bells(unittest.TestCase):
+    def test_of_two_events_moving_one_bell_the_first_to_start_moves_it(self):
+        # the page's bellOf reads its events sorted by start
+        late = {"id": "late", "start": "21:00", "sets_anchor_bell": "midday", "derived_anchor_bell": "20:30"}
+        early = {"id": "early", "start": "13:00", "sets_anchor_bell": "midday", "derived_anchor_bell": "12:00"}
+        self.assertEqual(rule.bell(DAY, "midday", [late, early]), 12 * 60)
+
+    def test_every_distinct_day_is_read_on_a_date_of_its_own(self):
+        a = day({"id": "series", "weekday": "tue", "until": "2026-01-13", "start": "09:00", "end": "09:30"},
+                {"id": "once", "date": "2026-01-20", "start": "13:00", "end": "13:30"})
+        tue = [(d, sorted(c["id"] for c in cs)) for d, cs in rule.variants(a, "2026-01-01")
+               if rule.weekday_of(d) == "tue"]
+        self.assertEqual(tue, [("2026-01-06", ["series"]), ("2026-01-20", ["once"]), ("2026-01-27", [])])
+
+
+class Takes(unittest.TestCase):
+    """A meeting carries the session it spends, by weekday, as the work item's id."""
+
+    def test_a_meeting_takes_its_blocks_work_item(self):
+        a = day({"id": "call", "weekday": "mon", "start": "09:00", "end": "09:45"},
+                {"id": "course", "first": "2026-01-05", "last": "2026-01-06", "start": "13:00", "end": "14:00"})
+        self.assertEqual(rule.takes(a, a["commitments"][0], "2026-01-01"), {"mon": "focus_1"})
+        self.assertEqual(rule.takes(a, a["commitments"][1], "2026-01-01"), {"mon": "focus_2", "tue": "focus_2"})
+
+    def test_a_fixture_takes_nothing(self):
+        a = day({"id": "open", "weekday": "mon", "start": "09:00"})
+        self.assertIsNone(rule.takes(a, a["commitments"][0], "2026-01-01"))
+
+    def test_the_compiler_carries_it_on_each_meeting(self):
+        import compiler
+        import ruledir
+        compiler.errors.clear()
+        out = compiler.compile(ruledir.load(ruledir.FIXTURE))
+        self.assertEqual(compiler.errors, [])
+        by = {c["id"]: c for c in out["COMMITMENTS"]}
+        self.assertEqual(by["sunday_sitting"]["takes"], {"sun": "focus_1"})
+        self.assertEqual(by["sunday_leisure"]["takes"], {"sun": "focus_3"})
+        self.assertNotIn("takes", by["improv"])
+
+
+class Capacity(unittest.TestCase):
+    """tools/check_capacity.py over the frozen Rule with one event added, as the
+    gate runs it."""
+    TOOLS = Path(__file__).resolve().parent
+
+    def run_with(self, c):
+        with tempfile.TemporaryDirectory() as t:
+            shutil.copytree(self.TOOLS / "fixture" / "rule", t, dirs_exist_ok=True)
+            Path(t, "commitments", c["id"] + ".json").write_text(json.dumps(dict(c, seq=99)))
+            return subprocess.run([sys.executable, "-B", str(self.TOOLS / "check_capacity.py"),
+                                   "--today", "2026-10-22"],
+                                  env=dict(os.environ, ORDO_RULE=t), capture_output=True, text=True)
+
+    def test_the_frozen_rule_fits(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = subprocess.run([sys.executable, "-B", str(self.TOOLS / "check_capacity.py"), "--today", "2026-10-22"],
+                               env=dict(os.environ, ORDO_RULE=str(self.TOOLS / "fixture" / "rule")),
+                               capture_output=True, text=True, cwd=t)
+        self.assertEqual(p.returncode, 0, p.stdout)
+        self.assertIn("(2026-12-22: no improv, winter)", p.stdout)       # the evening without improv, in winter
+
+    def test_an_event_past_midnight_takes_the_rest_of_its_block(self):
+        p = self.run_with({"id": "late", "weekday": "mon", "start": "21:00", "end": "00:30",
+                           "calendar_event": "e", "what": "x"})
+        self.assertEqual(p.returncode, 1, p.stdout)
+        self.assertIn("mon evening (2026-10-26): Office needs 70 min, block has 60", p.stdout)
+        self.assertIn("late              fixture", p.stdout)
+
+    def test_a_second_event_moving_a_bell_is_checked_on_its_own_date(self):
+        # improv moves the evening bell on Tuesdays until 2026-12-15; this moves it on
+        # a later Tuesday, to leave a 30-minute evening
+        p = self.run_with({"id": "late_show", "date": "2026-12-22", "start": "22:00", "end": "23:00",
+                           "sets_anchor_bell": "evening", "derived_anchor_bell": "21:30",
+                           "calendar_event": "e", "what": "x"})
+        self.assertEqual(p.returncode, 1, p.stdout)
+        self.assertIn("tue evening (2026-12-22: no improv, winter): Office needs 65 min, block has 30", p.stdout)
 
 
 class Project(unittest.TestCase):
