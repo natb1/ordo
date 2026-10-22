@@ -23,6 +23,12 @@ run python3 -m unittest -q tools/test_counts.py
 # The shell: how it measures, opens and listens (behaviour under node, where present).
 run python3 -m unittest -q tools/test_layout.py
 run python3 tools/sync_assets.py --check
+# The repo is public: the fixtures hold example values only, and the docs link no one's page.
+run python3 -m unittest -q tools/test_fixture_public.py
+# The skill's reference agrees with the skill: where an item lives, how it closes, where a dictation runs.
+run python3 -m unittest -q tools/test_skill_docs.py
+# The check's note names the un-audited sources by their keys.
+run python3 -m unittest -q tools/test_tradition.py
 # Every citation, in the markdown and in the Rule: the frozen copy stands in for the store.
 run env ORDO_RULE=tools/fixture/rule python3 tradition/check.py
 # Strictly: a key given twice is an error, not a silent last-one-wins.

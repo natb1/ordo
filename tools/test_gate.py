@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The gate: what it lets through, what it writes, and what it refuses.
 
-Run on a frozen copy of the Rule (tools/fixture/rule), as the store held it.
+Run on a frozen copy of the Rule (tools/fixture/rule): an invented one, laid out as the store holds it.
 
     python3 -m unittest tools/test_gate.py
 """

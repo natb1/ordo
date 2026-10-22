@@ -386,7 +386,7 @@
       "name": "tuesday"
     },
     {
-      "change": "No change to the Office and no item order of its own. The trainer (09:00-09:30, leave by 08:52) is a departure inside focus 1 — the focus slot Saturday loses (docket.yaml) — and Saturday's Gym row is that session, ticked toward the floor of 3. The afternoon is an ordinary focus slot; household projects will take one if they promote (backlog.yaml). Evening bell at 20:00, as every day.\n",
+      "change": "No change to the Office and no item order of its own. The trainer (09:00-09:30, leave by 08:52) is a departure inside focus 1 — the focus slot Saturday loses (rule/policy › docket) — and Saturday's Gym row is that session, ticked toward the floor of 3. The afternoon is an ordinary focus slot; household projects will take one if they promote (the backlog). Evening bell at 20:00, as every day.\n",
       "name": "saturday"
     },
     {

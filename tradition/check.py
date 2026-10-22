@@ -88,7 +88,9 @@ def main() -> int:
         return 1
     sources = load(REGISTRY)["sources"]
 
-    used, errors, warnings = {}, [], []
+    # `unaudited` keeps each warning's key as the citation matched it: the warning's
+    # own text names a field path (`steps[0]`) whose brackets are not a key's.
+    used, errors, warnings, unaudited = {}, [], [], set()
 
     for where, at, key in scan(export):
         used.setdefault(key, []).append(f"{where}:{at}")
@@ -101,6 +103,7 @@ def main() -> int:
             )
         elif entry.get("verified") == "unverified":
             warnings.append(f"{where}:{at}: [{key}] is un-audited")
+            unaudited.add(key)
 
     unused = [
         k for k, v in sources.items()
@@ -113,7 +116,7 @@ def main() -> int:
         for w in warnings:
             print(f"ERROR  {w}")
     elif warnings:
-        distinct = sorted({w.split("[")[1].split("]")[0] for w in warnings})
+        distinct = sorted(unaudited)
         print(f"note   {len(warnings)} citation(s) to {len(distinct)} un-audited source(s): {', '.join(distinct)}")
     if unused:
         print(f"note   {len(unused)} registered but uncited: {', '.join(sorted(unused))}")

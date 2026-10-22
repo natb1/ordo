@@ -1,8 +1,9 @@
 # Versioned registry of every appeal to tradition made anywhere in this repo.
 #
-# Rule: no claim in README.md, SKILL.md, any reference, the Rule's yaml (routine/*.yaml,
-# web/gloss.yaml) or the hypomnemata may rest on a source that is not registered here. Each is cited by key, `[KEY]`; `tradition/check.py`
-# fails if a key is used but not defined.
+# Rule: no claim in README.md, SKILL.md, any reference, the Rule (the documents in the
+# Cadence page's store; tools/fixture/rule is a frozen copy) or the hypomnemata may rest
+# on a source that is not registered here. Each is cited by key, `[KEY]`;
+# `tradition/check.py` fails if a key is used but not defined.
 #
 # The `verified` field is the point of this file. Values:
 #   web-YYYY-MM-DD  checked against a primary or reputable secondary source on that date
@@ -389,7 +390,7 @@ sources:
     author: Michel Foucault
     date: 1982
     domain: philosophy
-    supports: Epimeleia heautou, and the hypomnemata — notebooks of self-record. The genealogy of routine/log/.
+    supports: Epimeleia heautou, and the hypomnemata — notebooks of self-record. The genealogy of the record (the store's days).
     verified: unverified
 
   PLATO-MENO-71B:
