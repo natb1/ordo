@@ -144,7 +144,7 @@ class Projects(unittest.TestCase):
     def test_a_local_repo_is_named_and_never_linked(self):
         p = self.compiled()["garden"]
         self.assertEqual((p["what"], p["checkout"], p["allocation"]),
-                         ("The garden", "desk:/srv/git/allotment", 0))
+                         ("The garden", "box:/srv/git/allotment", 0))
         self.assertNotIn("repo", p)   # stored, an unset link is left out: the page has none to follow
 
     def test_a_github_repo_is_linked_and_named_by_its_what(self):
@@ -194,7 +194,7 @@ class Projects(unittest.TestCase):
         self.assertEqual(ps["garden"]["what"], "allotment")   # its repo's last part, not its id
 
     def test_a_repo_that_is_neither_is_refused(self):
-        for r in ("garden", "desk:srv/git/garden", "https://github.com/natb1/ordo", "desk:/", "a/b/c", "",
+        for r in ("garden", "box:srv/git/garden", "https://github.com/natb1/ordo", "box:/", "a/b/c", "",
                   "github.com/natb1", "natb1/..", "../.."):
             with self.subTest(repo=r), self.assertRaisesRegex(gate.Refused, "device:/path"):
                 gate.gate(store(), [self.repo(r)])

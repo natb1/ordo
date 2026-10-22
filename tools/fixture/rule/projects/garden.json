@@ -6,7 +6,7 @@
     "calendar": null,
     "hypomnemata": null,
     "id": "garden",
-    "repo": "desk:/srv/git/allotment",
+    "repo": "box:/srv/git/allotment",
     "seq": 3,
     "what": "The garden"
   }

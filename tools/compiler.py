@@ -29,7 +29,7 @@ MODE = {"driving": 0, "bicycling": 1, "walking": 2, "transit": 3}
 # A plain date as the page does arithmetic on it (ymd()).
 YMD = items.YMD   # the date rule is held once, in the item contract
 # A project's repo: owner/name on GitHub, or an absolute path on a named device
-# (desk:/srv/git/allotment), which the page names and never links. A URL is neither,
+# (box:/srv/git/allotment), which the page names and never links. A URL is neither,
 # nor a host or a path step: an owner has no dot, and a name is not all dots.
 GITHUB = re.compile(r"[\w-]+/(?!\.+$)[\w.-]+")
 LOCAL = re.compile(r"[A-Za-z0-9][\w-]*:/(?!/)\S+")
