@@ -1,4 +1,8 @@
 {
-  "artifact": "0381e667-9e52-40e4-896d-1a547a8bc00e",
-  "state_enum": "9c222e7b-c855"
+  "artifact": "https://claude.ai/code/artifact/b700cd97-fc03-4060-836e-e2557e2dcfd3",
+  "state_enum": "beb877f2-119f",
+  "project": "ordo",
+  "canon": {
+    "ordo": "ti-esti"
+  }
 }
