@@ -79,8 +79,8 @@
         ".claude/skills/ordo/SKILL.md",
         ".claude/skills/ordo/reference/blockers.md"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/38",
-      "rounds": 5
+      "pull_request": "https://github.com/natb1/ordo/pull/3",
+      "rounds": 6
     },
     {
       "question": "record",
@@ -90,8 +90,8 @@
         ".principal/notebook.json",
         ".gitignore"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/32",
-      "rounds": 1
+      "pull_request": "https://github.com/natb1/ordo/pull/3",
+      "rounds": 2
     },
     {
       "question": "kinds",
