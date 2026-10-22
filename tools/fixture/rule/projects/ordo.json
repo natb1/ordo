@@ -1,0 +1,40 @@
+{
+  "id": "ordo",
+  "rule": {
+    "active": true,
+    "allocation": 7,
+    "calendar": "rule@example.com",
+    "default": true,
+    "hypomnemata": {
+      "end": "That what he lives match what he decided, at every stretch the Rule decides for ahead and reads after, so that the day runs on his own values and not on the hour's appetite; and that the Rule cost the least attention that still binds, an item the Rule holds in place passing into his own keeping only when the record shows it holds where the Rule does not reach. For the sake of the agency his own notebook names, the capacity to act on his own values, which this notebook reads and does not restate.",
+      "frontier": [
+        {
+          "headline": "You are keeping a rule of life with a human who has divided the day with bells and asked you to vary it as little as possible. What is a rule, and what does keeping one require of you, and of them?",
+          "id": "ti-esti",
+          "pressure": 0
+        }
+      ],
+      "notebook": "https://notebook.example/ordo",
+      "revision": {
+        "allocation": 30,
+        "bell": 36,
+        "breakdown": 28,
+        "count": 29,
+        "cue": 22,
+        "deviation": 37,
+        "examen": 28,
+        "gate": 28,
+        "gated": 23,
+        "kinds": 77,
+        "record": 42,
+        "ti-esti": 236,
+        "tradition": 21,
+        "undertaking": 21
+      }
+    },
+    "id": "ordo",
+    "repo": "natb1/ordo",
+    "seq": 2,
+    "what": "ordo — the Rule"
+  }
+}

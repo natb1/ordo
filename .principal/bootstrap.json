@@ -1,0 +1,223 @@
+{
+  "description": "What /principal:bootstrap built from the notebook ahead of canon, and still owns. An entry is dropped when canon reconciles the application; the files are then canon's.",
+  "pull_requests": "A pull_request that links natb1/private was opened there, in the private repository this code was built in before it moved to natb1/ordo: it is not readable from this public repository, and is kept only as the record of where that application was reviewed. A later round links its pull request in natb1/ordo.",
+  "applications": [
+    {
+      "question": "record",
+      "application": "the gate",
+      "files": [
+        "tools/gate.py",
+        "tools/compiler.py",
+        "tools/ruledir.py",
+        "tools/rule.py",
+        "tools/test_gate.py",
+        "tools/test_ruledir.py",
+        "tools/test_rule.py",
+        "tools/fixture/rule/backlog/drawing.json",
+        "tools/fixture/rule/backlog/household_projects.json",
+        "tools/fixture/rule/backlog/instrument.json",
+        "tools/fixture/rule/backlog/filing.json",
+        "tools/fixture/rule/commitments/improv.json",
+        "tools/fixture/rule/commitments/checkup.json",
+        "tools/fixture/rule/commitments/appointment.json",
+        "tools/fixture/rule/commitments/sunday_leisure.json",
+        "tools/fixture/rule/commitments/sunday_sitting.json",
+        "tools/fixture/rule/commitments/trainer.json",
+        "tools/fixture/rule/commitments/ttrpg.json",
+        "tools/fixture/rule/projects/canondb.json",
+        "tools/fixture/rule/projects/nix_config.json",
+        "tools/fixture/rule/projects/ordo.json",
+        "tools/fixture/rule/projects/garden.json",
+        "tools/fixture/rule/rule/examen.json",
+        "tools/fixture/rule/rule/exit_rite.json",
+        "tools/fixture/rule/rule/gate.json",
+        "tools/fixture/rule/rule/gloss.json",
+        "tools/fixture/rule/rule/ledger.json",
+        "tools/fixture/rule/rule/office.json",
+        "tools/fixture/rule/rule/policy.json"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 5
+    },
+    {
+      "question": "record",
+      "application": "the record gate",
+      "files": [
+        "tools/record.py",
+        "tools/test_record.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/33",
+      "rounds": 2
+    },
+    {
+      "question": "record",
+      "application": "the item contract",
+      "files": [
+        "tools/items.py",
+        "tools/test_items.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/33",
+      "rounds": 1
+    },
+    {
+      "question": "record",
+      "application": "the publish gate",
+      "files": [
+        "tools/preflight.sh",
+        "tools/sync_assets.py",
+        "web/layout.css",
+        "web/layout.js",
+        "web/tokens.css"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/33",
+      "rounds": 2
+    },
+    {
+      "question": "record",
+      "application": "the ordo skill",
+      "files": [
+        ".claude/skills/ordo/SKILL.md",
+        ".claude/skills/ordo/reference/blockers.md"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 5
+    },
+    {
+      "question": "record",
+      "application": "the bootstrap manifest",
+      "files": [
+        ".principal/bootstrap.json",
+        ".principal/notebook.json",
+        ".gitignore"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/32",
+      "rounds": 1
+    },
+    {
+      "question": "kinds",
+      "application": "the Cadence calendar",
+      "files": [
+        "tools/notifiers.py",
+        "tools/test_notifiers.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/32",
+      "rounds": 2
+    },
+    {
+      "question": "kinds",
+      "application": "the Docket view",
+      "files": [
+        "web/cadence.html"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/33",
+      "rounds": 3
+    },
+    {
+      "question": "deviation",
+      "application": "the capacity checker",
+      "files": [
+        "tools/check_capacity.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/32",
+      "rounds": 3
+    },
+    {
+      "question": "tradition",
+      "application": "the registry check",
+      "files": [
+        "tradition/check.py",
+        "tools/ruleyaml.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/32",
+      "rounds": 1
+    },
+    {
+      "question": "allocation",
+      "application": "the project card",
+      "files": [
+        "web/cadence.html"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/35",
+      "rounds": 2
+    },
+    {
+      "question": "undertaking",
+      "application": "the TODO card",
+      "files": [
+        "web/cadence.html"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/33",
+      "rounds": 2
+    },
+    {
+      "question": "undertaking",
+      "application": "the dictations card",
+      "files": [
+        "web/cadence.html"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/23",
+      "rounds": 1
+    },
+    {
+      "question": "horizon",
+      "application": "the horizon counts",
+      "files": [
+        "tools/counts.py",
+        "tools/test_counts.py",
+        "tools/fixture/record/days/2026-09-20.json",
+        "tools/fixture/record/days/2026-09-21.json",
+        "tools/fixture/record/days/2026-09-22.json",
+        "tools/fixture/record/days/2026-09-24.json",
+        "tools/fixture/record/days/2026-09-25.json",
+        "tools/fixture/record/days/2026-09-26.json",
+        "tools/fixture/record/days/2026-09-27.json",
+        "tools/fixture/record/days/2026-09-28.json",
+        "tools/fixture/record/days/2026-09-29.json",
+        "tools/fixture/record/days/2026-09-30.json",
+        "tools/fixture/record/days/2026-10-01.json",
+        "tools/fixture/record/days/2026-10-02.json",
+        "tools/fixture/record/days/2026-10-03.json",
+        "tools/fixture/record/days/2026-10-04.json",
+        "tools/fixture/record/days/2026-10-05.json",
+        "tools/fixture/record/days/2026-10-06.json",
+        "tools/fixture/record/days/2026-10-08.json",
+        "tools/fixture/record/days/2026-10-09.json",
+        "tools/fixture/record/days/2026-10-10.json",
+        "tools/fixture/record/days/2026-10-11.json",
+        "tools/fixture/record/days/2026-10-12.json",
+        "tools/fixture/record/days/2026-10-13.json",
+        "tools/fixture/record/days/2026-10-15.json",
+        "tools/fixture/record/days/2026-10-16.json",
+        "tools/fixture/record/days/2026-10-17.json",
+        "tools/fixture/record/make.py",
+        "tools/fixture/record/snapshots/2026-10-04.json",
+        "tools/fixture/record/snapshots/2026-10-11.json",
+        "tools/fixture/record/snapshots/2026-10-18.json",
+        "tools/fixture/record/todo/i123.json"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 1
+    },
+    {
+      "question": "unprompted",
+      "application": "the guard on each item",
+      "files": [
+        "tools/compiler.py",
+        "tools/fixture/rule/rule/office.json",
+        "tools/test_gate.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 1
+    },
+    {
+      "question": "record",
+      "application": "the change ledger",
+      "files": [
+        "tools/gate.py",
+        "tools/test_gate.py"
+      ],
+      "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 1
+    }
+  ]
+}

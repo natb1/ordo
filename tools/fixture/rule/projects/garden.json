@@ -1,0 +1,13 @@
+{
+  "id": "garden",
+  "rule": {
+    "active": true,
+    "allocation": 0,
+    "calendar": null,
+    "hypomnemata": null,
+    "id": "garden",
+    "repo": "box:/srv/git/allotment",
+    "seq": 3,
+    "what": "The garden"
+  }
+}

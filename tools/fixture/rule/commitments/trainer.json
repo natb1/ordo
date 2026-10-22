@@ -1,0 +1,16 @@
+{
+  "calendar_event": "evt_trainer",
+  "derived_bell": "08:42",
+  "derived_leave_by": "08:52",
+  "end": "09:30",
+  "from": "1 Example St, Springfield",
+  "id": "trainer",
+  "mode": "bicycling",
+  "prep_minutes": 10,
+  "seq": 2,
+  "start": "09:00",
+  "to": "The trainer's gym, 7 Harbor Way, Springfield",
+  "travel_minutes": 8,
+  "weekday": "sat",
+  "what": "Session with trainer"
+}

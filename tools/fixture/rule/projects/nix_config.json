@@ -1,0 +1,13 @@
+{
+  "id": "nix_config",
+  "rule": {
+    "active": true,
+    "allocation": 6,
+    "calendar": null,
+    "hypomnemata": null,
+    "id": "nix_config",
+    "repo": "natb1/nix-config",
+    "seq": 1,
+    "what": "nix-config"
+  }
+}

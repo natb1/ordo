@@ -1,0 +1,88 @@
+{
+  "anchors": {
+    "evening": {
+      "dog_2": {
+        "sub": "30 min."
+      },
+      "great_silence": {
+        "sub": "What follows is leisure you chose."
+      },
+      "sleep": {
+        "sub": "Target 22:00. Acceptable 21:00–23:00."
+      },
+      "trash": {
+        "sub": "It has to go out tonight — on an improv Tuesday, before you leave."
+      }
+    },
+    "midday": {
+      "dog": {
+        "sub": "30 min. First on purpose — it carries the transition."
+      },
+      "groceries": {
+        "sub": "45 min, if needed — you're already out."
+      },
+      "gym": {
+        "sub": "45 min. Floor of 3 a week; Saturday's trainer counts."
+      }
+    },
+    "morning": {
+      "breakfast": {
+        "sub": "Protein floor — easiest first thing."
+      },
+      "meds": {
+        "sub": "Right after you are up. Most time-sensitive item of the day."
+      },
+      "sync": {
+        "sub": "Open Claude Code, run /ordo. Before the first work session."
+      },
+      "weight": {
+        "sub": "Before breakfast, and before anything to drink."
+      }
+    },
+    "vespers": {
+      "dog_2": {
+        "sub": "Improv Tuesdays only — before you leave, because 5:30 is departure prep and 9:30 is late for him."
+      }
+    }
+  },
+  "commitments": {
+    "sunday_leisure": {
+      "short": "leisure"
+    },
+    "sunday_sitting": {
+      "short": "the sitting"
+    },
+    "ttrpg": {
+      "short": "the game"
+    }
+  },
+  "examen": {
+    "gratitude": {
+      "prompt": "One thing. First, always.",
+      "title": "Gratitude"
+    },
+    "review": {
+      "prompt": "What happened, plainly. Drinks are already counted — nothing to judge.",
+      "title": "Review"
+    },
+    "shame_check": {
+      "prompt": "Name the feeling. Then: is that the act, or the person? Judge the act. Pardon the person.",
+      "store": "shame",
+      "title": "The shame check"
+    },
+    "tomorrow": {
+      "prompt": "One intention, in if-then form.",
+      "title": "Tomorrow"
+    },
+    "wins": {
+      "prompt": "What you did. Actions, not outcomes.",
+      "title": "Wins"
+    }
+  },
+  "exit_rite": [
+    "Write where you pick up",
+    "Stand and leave the room",
+    "Water",
+    "Say the next item aloud"
+  ]
+}

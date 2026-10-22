@@ -1,0 +1,93 @@
+{
+  "bells": {
+    "evening": {
+      "answeredAt": "8:00 PM",
+      "closes": "focus_3",
+      "delay": 0,
+      "projects": [
+        "canondb"
+      ],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "midday": {
+      "answeredAt": "11:01 AM",
+      "closes": "focus_1",
+      "delay": 0,
+      "projects": [
+        "ordo"
+      ],
+      "threads": {
+        "ordo": "where to pick up"
+      },
+      "ticked": true,
+      "undertakings": []
+    },
+    "morning": {
+      "answeredAt": "7:03 AM",
+      "closes": "sleep",
+      "delay": 0,
+      "projects": [],
+      "threads": {},
+      "ticked": true,
+      "undertakings": []
+    },
+    "vespers": null
+  },
+  "cancelled": {},
+  "date": "2026-10-15",
+  "drinks": null,
+  "examen": {},
+  "focus": {
+    "focus_1": {
+      "planned": "ordo",
+      "projects": [
+        "ordo"
+      ]
+    },
+    "focus_2": null,
+    "focus_3": {
+      "planned": "canondb",
+      "projects": [
+        "canondb"
+      ]
+    }
+  },
+  "items": {
+    "breakfast_ate": true,
+    "breakfast_prepared": true,
+    "brush": true,
+    "dishes": true,
+    "dog": true,
+    "dog_2": true,
+    "examen": true,
+    "floss": true,
+    "focus_1": true,
+    "focus_2": false,
+    "focus_3": true,
+    "garden": true,
+    "great_silence": true,
+    "gym": true,
+    "lunch_ate": true,
+    "lunch_prepared": true,
+    "meds": true,
+    "recycling": true,
+    "rinse": true,
+    "shower": true,
+    "sleep": true,
+    "sync": true,
+    "weight": true
+  },
+  "meds": null,
+  "na": {
+    "groceries": true
+  },
+  "pours": {
+    "p0": 1,
+    "p1": 1
+  },
+  "times": {
+    "sleep": "10:10 PM"
+  }
+}

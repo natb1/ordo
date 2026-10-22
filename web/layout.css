@@ -1,0 +1,337 @@
+/* The application shell — toolbar, collapsible nav, content, context cards.
+ *
+ * App-agnostic on purpose. It knows about four regions and a stack of cards; it
+ * knows nothing about what any of them contain. Everything it draws is namespaced
+ * `shell-`, everything it colours comes from tokens.css, and every dimension it
+ * depends on is a custom property below — so an app can restyle it without
+ * forking it, and it can be lifted into a shared repo without dragging an app
+ * along. Pair it with layout.js, which owns the state; this file only draws.
+ *
+ * Geometry
+ *   +-------------------------------------------+---------+
+ *   | toolbar                                   |         |
+ *   +---------+---------------------------------+ context |
+ *   | nav     | content (scrolls)               |         |
+ *   |         +---------------------------------+         |
+ *   |         | footer (pinned, empty = absent) |         |
+ *   +---------+---------------------------------+---------+
+ *
+ * Nav and context are constant width; content takes the rest. Either side region
+ * can be in flow or overlaid — layout.js measures and sets data-nav / data-context
+ * on the root, and this file draws whatever it is told. The context has a third
+ * state, cover, for a screen too narrow to leave a useful strip beside a card. Stacking order when they
+ * overlay is nav > scrim > context > content, so a nav opened over a card still
+ * reads as the outermost thing on screen.
+ */
+
+/* The shell owns the viewport, so its host has to give it one to own. */
+html:has(.shell), html:has(.shell) body { height: 100%; }
+
+/* The shell sizes its own rails and cannot assume the host reset border-box —
+   a published artifact's skeleton does not. Named rather than `.shell *`, so an
+   app's own content keeps whatever box model it chose. */
+.shell, .shell-toolbar, .shell-toolbar-slot, .shell-nav, .shell-content,
+.shell-content-scroll, .shell-content-footer,
+.shell-context, .shell-card, .shell-card-bar, .shell-card-body,
+.shell-btn, .shell-menuwrap, .shell-menu, .shell-scrim { box-sizing: border-box; }
+
+.shell{
+  /* Override these on .shell to retune the layout; nothing below hard-codes them. */
+  --shell-nav-w: 232px;
+  --shell-context-w: 336px;
+  --shell-content-min: 480px;
+  /* Narrower than this, the strip of content an overlaid card would leave is
+     no use to read and a trap to tap, so the card covers the content instead. */
+  --shell-context-strip-min: 120px;
+  --shell-toolbar-h: 52px;
+  --shell-gap: 10px;
+  --shell-z-content: 0;
+  --shell-z-context: 20;
+  --shell-z-scrim: 30;
+  --shell-z-nav: 40;
+  --shell-z-menu: 60;
+
+  /* Nothing the shell holds may push it wider than the screen. A word longer than
+     its column — a pasted link, say — breaks where it has to rather than dragging
+     its region sideways. Inherited, so it covers the app's content too. */
+  overflow-wrap: break-word;
+
+  /* The two side columns, as they currently stand. A collapsed region takes no
+     width at all — the spec is that content grows into the space, not that an
+     empty rail sits there — so each state below only zeroes its own column. */
+  --_nav: var(--shell-nav-w);
+  --_ctx: var(--shell-context-w);
+
+  height: 100%;
+  display: grid;
+  grid-template-columns: var(--_nav) minmax(0, 1fr) var(--_ctx);
+  /* The third row is the content footer's. It is a row of the shell rather than
+     of the content area so that an overlaid context column can stop above it. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "toolbar toolbar context"
+    "nav     content context"
+    "nav     content context";
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* An overlaid region is drawn over the content, not beside it, so it takes no
+   column either. */
+.shell[data-nav="overlay"],
+.shell[data-nav-open="false"]{ --_nav: 0px; }
+.shell[data-context="none"],
+.shell[data-context="overlay"],
+.shell[data-context="cover"]{ --_ctx: 0px; }
+
+/* ---- toolbar ------------------------------------------------------------ */
+
+.shell-toolbar{
+  grid-area: toolbar;
+  min-height: var(--shell-toolbar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--shell-gap);
+  padding: 6px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+/* The app's own toolbar content. It gets the middle and is free to do as it
+   likes there, including scrolling sideways when it runs out of room. */
+.shell-toolbar-slot{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--shell-gap);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.shell-toolbar-slot::-webkit-scrollbar{ display: none; }
+
+/* ---- the two icon buttons the shell owns -------------------------------- */
+
+/* 40px: a thumb's target, not a cursor's. The toolbar's 52px holds it. */
+.shell-btn{
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--soft);
+  cursor: pointer;
+}
+.shell-btn:hover{ background: var(--raised); color: var(--ink); }
+.shell-btn[aria-expanded="true"]{ background: var(--accent-soft); color: var(--accent); }
+.shell-btn svg{ width: 18px; height: 18px; display: block; }
+.shell-btn:focus-visible,
+.shell-nav :is(a, button):focus-visible,
+.shell-menu button:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- background-card menu ----------------------------------------------- */
+
+.shell-menuwrap{ position: relative; flex: none; }
+.shell-menu{
+  position: absolute;
+  top: calc(100% + 6px); right: 0;
+  z-index: var(--shell-z-menu);
+  min-width: 220px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.14);
+}
+.shell-menu[hidden]{ display: none !important; }
+.shell-menu button{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.shell-menu button:hover{ background: var(--raised); }
+/* A tick that holds its column whether or not it is showing, so the labels line
+   up and the row does not jump when it is toggled. */
+.shell-menu .shell-tick{ flex: none; width: 14px; color: var(--accent); visibility: hidden; }
+.shell-menu button[aria-checked="true"] .shell-tick{ visibility: visible; }
+
+/* ---- navigation ---------------------------------------------------------- */
+
+.shell-nav{
+  grid-area: nav;
+  width: min(var(--shell-nav-w), 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 10px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+.shell[data-nav-open="false"] .shell-nav{ display: none; }
+
+/* Overlaid regions are placed in the grid rather than positioned absolutely, so
+   nothing here has to know how tall the toolbar ended up. The nav starts at the
+   second row — under the toolbar, which stays reachable, since the button that
+   closes the nav lives in it. */
+.shell[data-nav="overlay"] .shell-nav{
+  grid-row: 2 / -1;
+  grid-column: 1 / -1;
+  justify-self: start;
+  z-index: var(--shell-z-nav);
+  box-shadow: 4px 0 24px rgba(0,0,0,.18);
+}
+
+.shell-scrim{
+  grid-row: 2 / -1;
+  grid-column: 1 / -1;
+  z-index: var(--shell-z-scrim);
+  background: rgba(10,14,12,.38);
+}
+.shell-scrim[hidden]{ display: none !important; }
+
+/* ---- content ------------------------------------------------------------- */
+
+/* The content area is a column of two: the part that scrolls, and a footer pinned
+   under it that does not. The footer collapses to nothing while the app leaves it
+   empty, so a page that never uses one lays out exactly as it did before there was
+   one — and an app shows and hides its footer by filling and emptying it, with no
+   second switch to keep in step. The two rows are the shell's own (subgrid), which
+   is what lets an overlaid context column cover the one and leave the other. */
+.shell-content{
+  grid-area: content;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: subgrid;
+  z-index: var(--shell-z-content);
+}
+.shell-content-scroll{
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;   /* the content fits the screen; it never pans sideways */
+  overscroll-behavior: contain;
+  padding: 0 16px;
+}
+/* Unlike the toolbar slot, the footer never scrolls sideways: it is part of the
+   content, and the content fits the screen. What does not fit on one line wraps
+   to the next, and a single item longer than the strip wraps inside itself. */
+.shell-content-footer{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--shell-gap);
+  padding: 8px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.shell-content-footer > *{ min-width: 0; max-width: 100%; }
+.shell-content-footer:empty{ display: none; }
+
+/* ---- context ------------------------------------------------------------- */
+
+.shell-context{
+  grid-area: context;
+  /* Never wider than what it is given. Below about 360px the fixed column would
+     hang off the left edge and clip the card, which is a real phone, not a
+     hypothetical one. */
+  width: min(var(--shell-context-w), 100%);
+  display: grid;
+  /* Even shares of the column, each card scrolling inside its own row. The one
+     column is pinned to the width given: left `auto`, WebKit sizes it to the
+     longest unwrapped line inside — a card title — and the card runs off the
+     screen. Chromium happens not to, which is why this is spelled out. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--shell-gap);
+  padding: var(--shell-gap);
+  background: var(--ground);
+  border-left: 1px solid var(--line);
+  overflow: hidden;
+}
+.shell[data-context="none"] .shell-context{ display: none; }
+
+/* Inline, the context column runs the full height beside the toolbar. Overlaid,
+   it covers the content and stops below the toolbar — it renders over content, and
+   covering the toolbar would bury the ⋮ button that toggles the very cards doing
+   the covering. It stops above the content footer too: the footer is where an app
+   puts what must not scroll away, and a card left open would otherwise hide it for
+   as long as it stayed open. */
+.shell[data-context="overlay"] .shell-context,
+.shell[data-context="cover"] .shell-context{
+  grid-row: 2 / 3;
+  grid-column: 2 / -1;
+  justify-self: end;
+  z-index: var(--shell-z-context);
+  box-shadow: -4px 0 24px rgba(0,0,0,.18);
+}
+/* On a phone an overlaid card left a strip of content a few dozen pixels wide
+   beside it: the labels hidden, the controls live, so a tap meant to dismiss the
+   card acted on something unseen. Covered, the card takes the content's whole
+   width, and layout.js makes what is under it inert until it closes. */
+.shell[data-context="cover"] .shell-context{
+  grid-column: 1 / -1;
+  width: 100%;
+  border-left: 0;
+  box-shadow: none;
+}
+
+.shell-card{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);   /* see .shell-context */
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.shell-card-bar{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  background: var(--raised);
+  border-bottom: 1px solid var(--line-soft);
+}
+.shell-card-title{
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shell-card-body{
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+}
+/* A card opened from the keyboard takes the focus onto its body (layout.js), so
+   the body shows where focus is the way every control does. */
+.shell-card-body:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+
+@media (prefers-reduced-motion: reduce){
+  .shell *{ animation: none !important; transition: none !important; }
+}

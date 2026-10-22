@@ -1,0 +1,48 @@
+/* Cadence design tokens — the one copy of every colour and typeface.
+ *
+ * Canonical source. web/cadence.html and web/layout-demo.html each carry an
+ * inlined copy between `@inline:begin web/tokens.css` / `@inline:end` markers,
+ * because a published artifact has to be a single file; tools/sync_assets.py
+ * writes those copies and preflight refuses to publish when they disagree with
+ * this file. Edit here, never there.
+ *
+ * Themed in the dialect a Claude artifact expects: values on :root, redefined
+ * for dark under prefers-color-scheme guarded by :root:not([data-theme="light"])
+ * and again under :root[data-theme="dark"], so [data-theme] always wins. The dark
+ * values are written once, in the first of those; the second is generated from it
+ * by sync_assets.py, between the @dark markers. Edit the first.
+ *
+ * Names are roles, not appearances: --ink is body text whatever colour it is.
+ * Keep them that way, so the file can be lifted into a shared brand repo the day
+ * a second page needs it.
+ *
+ * --faint is the quietest colour text may take, and still reads at 4.5:1 on
+ * --ground, --surface and --raised. --control is the edge of a control that is
+ * otherwise empty — an unticked circle, a context button — at 3:1 on the same
+ * three. --line and --line-soft only divide, and need neither.
+ */
+:root{
+  --ground:#F5F7F6; --surface:#FFFFFF; --raised:#FAFBFA;
+  --ink:#1B211F; --soft:#5B6462; --faint:#687170;
+  --line:#E0E5E2; --line-soft:#EDF0EE; --control:#87908D;
+  --accent:#35655A; --accent-ink:#FFFFFF; --accent-soft:#E4EEEA;
+  --blocked:#8A7B4F; --blocked-soft:#F3EEE0;
+  --serif:"Spectral",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#121614; --surface:#1A1F1D; --raised:#202624;
+  --ink:#E7EBE9; --soft:#9AA39F; --faint:#848D89;
+  --line:#2A312E; --line-soft:#232A27; --control:#6A736F;
+  --accent:#72A793; --accent-ink:#10201B; --accent-soft:#1E2E29;
+  --blocked:#B9A570; --blocked-soft:#282419;
+}}
+/* @dark:begin — generated from the prefers-color-scheme block above; edit that, not this */
+:root[data-theme="dark"]{
+  --ground:#121614; --surface:#1A1F1D; --raised:#202624;
+  --ink:#E7EBE9; --soft:#9AA39F; --faint:#848D89;
+  --line:#2A312E; --line-soft:#232A27; --control:#6A736F;
+  --accent:#72A793; --accent-ink:#10201B; --accent-soft:#1E2E29;
+  --blocked:#B9A570; --blocked-soft:#282419;
+}
+/* @dark:end */

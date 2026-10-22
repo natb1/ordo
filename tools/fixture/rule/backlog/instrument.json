@@ -1,0 +1,15 @@
+{
+  "cost": "~3 h/week",
+  "cue": "When the Examen is done, before the Great Silence.",
+  "displaces": "The first 25 minutes of declared leisure.",
+  "first_session": "Unpack it, tune it, play one scale badly for 25 minutes. Stop on time.",
+  "id": "instrument",
+  "note": "Was drafted into the evening anchor as a competing response to the drinking slot [MARLATT-1985], then pulled. If the drink ration is holding by the time this promotes, that argument is spent and this is just a thing you want to do — which is a better reason anyway.\n",
+  "parked_on": "2026-09-21",
+  "review_count": 0,
+  "reviewed_on": null,
+  "seq": 1,
+  "slot": "Evening, 25 min, after the Examen",
+  "status": "parked",
+  "what": "Learn a musical instrument"
+}

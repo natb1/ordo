@@ -1,0 +1,53 @@
+{
+  "id": "canondb",
+  "rule": {
+    "active": true,
+    "allocation": 7,
+    "calendar": null,
+    "hypomnemata": {
+      "end": "That what the AI does on the human's behalf is what the human would have it do, across sessions, because the AI would do it with nothing in its context pushing it there and never because it is held to it; that the conditions on which the two work can be read in the record they keep; and that the condition on which the human keeps the AI can be tested there, off what was agreed and off what comes back when a question is put again, never off either party's report. For the sake of the condition the human's own notebook sets on what he keeps as a means, which this notebook reads and does not restate.",
+      "frontier": [
+        {
+          "headline": "You are working with a human who will keep working with you. What does that require of you, and what does it require of them?",
+          "id": "ti-esti",
+          "pressure": 0
+        }
+      ],
+      "notebook": "https://notebook.example/canondb",
+      "revision": {
+        "again": 9,
+        "alignment": 304,
+        "applications-section": 36,
+        "asymmetry": 9,
+        "attenuation": 50,
+        "canon": 77,
+        "context": 489,
+        "dictate": 81,
+        "disposition": 74,
+        "dissent": 10,
+        "docs-encoding": 164,
+        "drift": 15,
+        "elenchus": 112,
+        "failures": 58,
+        "glossary-section": 24,
+        "graph": 214,
+        "hinge-section": 29,
+        "hypomnemata": 180,
+        "irreversible": 36,
+        "masthead": 26,
+        "party": 50,
+        "priority": 58,
+        "recognition": 138,
+        "terms-section": 26,
+        "thesis-section": 25,
+        "ti-esti": 407,
+        "tradition": 16,
+        "wording": 7
+      }
+    },
+    "id": "canondb",
+    "repo": "natb1/CanonDB",
+    "seq": 0,
+    "what": "CanonDB"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "calendar_event": "evt_improv",
+  "derived_anchor_bell": "17:30",
+  "derived_bell": "17:30",
+  "derived_leave_by": "18:11",
+  "directions": "https://maps.example/improv",
+  "end": "21:00",
+  "from": "1 Example St, Springfield",
+  "id": "improv",
+  "mode": "bicycling",
+  "prep_minutes": 25,
+  "seq": 0,
+  "sets_anchor_bell": "evening",
+  "start": "18:30",
+  "to": "The improv theatre, 17 Stage St, Springfield",
+  "travel_minutes": 19,
+  "until": "2026-12-15",
+  "weekday": "tue",
+  "what": "Improv class"
+}

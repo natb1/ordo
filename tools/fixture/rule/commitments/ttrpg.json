@@ -1,0 +1,21 @@
+{
+  "calendar_event": "evt_ttrpg",
+  "derived_anchor_bell": "18:30",
+  "derived_bell": "12:24",
+  "derived_leave_by": "12:39",
+  "directions": "https://maps.example/ttrpg",
+  "end": "17:30",
+  "from": "1 Example St, Springfield",
+  "id": "ttrpg",
+  "mode": "bicycling",
+  "prep_minutes": 15,
+  "return_minutes": 21,
+  "seq": 1,
+  "sets_anchor_bell": "vespers",
+  "settle_minutes": 39,
+  "start": "13:00",
+  "to": "The game shop, 1 Main St, Springfield",
+  "travel_minutes": 21,
+  "weekday": "sun",
+  "what": "TTRPG group"
+}
