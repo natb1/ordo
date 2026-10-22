@@ -776,6 +776,37 @@ class Page(unittest.TestCase):
         self.assertIn('memo("meetings"', page_fn("meetingCounts"))
         self.assertIn('memo("sessions"', page_fn("sessionsRecorded"))
 
+    def test_a_cards_save_writes_only_what_was_changed_on_it(self):
+        # A field another device changed while the card was open is not written back
+        # over with what the card opened on: the card's Save sends only its own edits.
+        got = run_js(["isObj", "canon", "todoSavePatch"], r"""
+            var was={what:"Call",dictation:"",next:"",by:"2026-10-30",blocks:["gym"]};
+            function e(o){ return Object.assign({was:was},was,{blocks:was.blocks.slice()},o); }
+            out([todoSavePatch(e({}),{what:"Call"}),
+                 todoSavePatch(e({dictation:"  why  "}),{what:"Call"}),
+                 todoSavePatch(e({what:" ",by:"",blocks:[]}),{what:"Call"})]);""")
+        self.assertEqual(got, [{}, {"dictation": "why"}, {"what": "Call", "by": None, "blocks": []}])
+        # the owned card's line and the periodic card's fields are drafts the same way
+        owned, periodic = page_fn("ownedItem"), page_fn("periodicItem")
+        self.assertIn("dr.edit=dr.edit||{id:x.id,next:nl,was:nl}", owned)
+        self.assertIn("e.next!==e.was", owned)
+        self.assertNotIn("(n.value||\"\").trim()", owned)
+        self.assertIn("e.what!==e.what0", periodic)
+        self.assertIn("String(e.cadence)!==String(e.cadence0)", periodic)
+
+    def test_an_items_notes_are_shown_as_written(self):
+        # plain text another writer left: set as text, never markup, its own line breaks
+        # kept and its leading blank lines and trailing space dropped; nothing where there
+        # is none. Never trimmed by a /\s+$/, which backtracks across a long run of spaces.
+        self.assertNotIn("\\s+$", page_fn("notesOf"))
+        got = run_js(["field", "notesOf"], r"""
+            function shown(n){ var host=el("div"); notesOf(host,{notes:n});
+              return host.kids.map(function(k){ return [k.className,k.textContent]; }); }
+            out([shown("\n\n  Quote by Saturday.\r\nThen <b>call</b>.  \n"), shown(" \n\t"), shown(""), shown(null), shown(["a"])]);""",
+            pre="var fieldSeq=0, document={createElement:function(t){ return {tagName:t.toUpperCase(), kids:[], setAttribute:function(){}, appendChild:function(c){ this.kids.push(c); return c; }}; }};\n"
+                + js_block("el", PAGE_SRC.split("<script>")[2]))
+        self.assertEqual(got, [[["fld", "Notes"], ["inotes", "  Quote by Saturday.\nThen <b>call</b>."]], [], [], [], []])
+
 
 if __name__ == "__main__":
     unittest.main()

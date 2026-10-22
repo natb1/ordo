@@ -68,6 +68,17 @@ class Shape(unittest.TestCase):
         self.assertEqual(items.owner_of({"source": SRC}), "garden")
         self.assertIsNone(items.owner_of({"what": "x"}))
 
+    def test_notes_are_plain_text(self):
+        notes = "Compare two quotes.\nDecide by Saturday."
+        self.assertEqual(check("todo", {"id": "i1", "what": "x", "notes": notes})["notes"], notes)
+        self.assertEqual(check("periodic", {"id": "p1", "what": "x", "cadence": 7, "notes": "y"})["notes"], "y")
+        self.assertEqual(check("todo", {"id": "garden-x", "what": "x", "source": SRC, "notes": notes},
+                               owner="garden")["notes"], notes)
+        self.assertIsNone(check("todo", {"id": "i1", "what": "x", "notes": None})["notes"])
+        for n in (["a", "b"], {"a": 1}, 3, 0, False, []):
+            with self.subTest(notes=n), self.assertRaisesRegex(items.Refused, "notes is plain text"):
+                check("todo", {"id": "i1", "what": "x", "notes": n})
+
     def test_the_input_is_not_changed(self):
         doc = {"id": "i1", "what": "x"}
         check("todo", doc)
