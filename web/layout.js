@@ -14,6 +14,8 @@
  *     content: node,          // the scrollable middle
  *     footer:  node,          // optional; pinned under the middle, absent while empty
  *     cards:   [ {id, title, background, open, content, onClose} ],
+ *              // open: the state a card comes up in. For a transient card it
+ *              // is honoured as given; for a background one see below.
  *     storageKey: 'cadence',  // null to remember nothing
  *   });
  *
@@ -22,6 +24,9 @@
  *   shell.setTitle(id, title)  shell.footer()  shell.scroller()
  *   shell.toggleNav()  shell.openNav()  shell.closeNav()
  *   shell.on('open'|'close'|'nav'|'mode', fn)  shell.refresh()  shell.destroy()
+ *
+ * 'mode' ({nav, navOpen, context}) is emitted when one of those changes, not on
+ * every resize; an app that tracks the size itself listens for that itself.
  *
  * A `background` card is one the reader turns on and leaves on — it is listed in
  * the toolbar's ⋮ menu and its state is remembered, as the nav's is: only where
@@ -107,6 +112,7 @@
     var wanted = Array.isArray(prefs.cards) ? prefs.cards.slice() : null;
     var navWasInline = null;             // to notice the transition, not the state
     var dims = { nav: 0, context: 0, min: 0, strip: 0 };
+    var lastMode = null;                 // the 'mode' payload last emitted, as a key
 
     /* ---- DOM ------------------------------------------------------------ */
 
@@ -171,15 +177,32 @@
     /* ---- geometry -------------------------------------------------------
        The three widths live in CSS so an app can retune them there, and are read
        back here rather than duplicated — the alternative is media queries with
-       the numbers written out a second time, which is how the two halves drift. */
+       the numbers written out a second time, which is how the two halves drift.
+       Each is resolved to pixels by the browser itself, through a probe sized
+       with it, so a width given in rem, em or clamp(...) reads as what it lays out
+       as, not as its leading number. They are read again on every resize: an
+       @media rule that retunes one has to reach the arithmetic here too. */
+
+    var PROBE = 'position:absolute;visibility:hidden;pointer-events:none;' +
+      'height:0;padding:0;border:0;margin:0;min-width:0;max-width:none;' +
+      'box-sizing:content-box;top:0;left:0;';
 
     function measure() {
-      var cs = getComputedStyle(root);
-      dims.nav = parseFloat(cs.getPropertyValue('--shell-nav-w')) || 0;
-      dims.context = parseFloat(cs.getPropertyValue('--shell-context-w')) || 0;
-      dims.min = parseFloat(cs.getPropertyValue('--shell-content-min')) || 0;
-      dims.strip = parseFloat(cs.getPropertyValue('--shell-context-strip-min')) || 0;
+      var probe = el('div', null, { 'aria-hidden': 'true' });
+      root.appendChild(probe);
+      function px(name) {
+        probe.style.cssText = PROBE + 'width:var(' + name + ',0px);';
+        var w = probe.getBoundingClientRect().width;
+        return isFinite(w) && w > 0 ? w : 0;
+      }
+      dims.nav = px('--shell-nav-w');
+      dims.context = px('--shell-context-w');
+      dims.min = px('--shell-content-min');
+      dims.strip = px('--shell-context-strip-min');
+      root.removeChild(probe);
     }
+
+    function onResize() { measure(); apply(); }
 
     /* Whether a card could sit beside the content rather than over it. Asked of
        the width, never of data-context, which reads 'none' while no card is open. */
@@ -198,7 +221,24 @@
       return cards.filter(function (c) { return c.open; });
     }
 
+    /* A background card's opening waits for a width to judge it by. Mounted in a
+       host that is hidden, every width reads 0, and deciding then would shut a
+       card the reader left open for good; so the decision is held until the shell
+       is first laid out. True if any card was settled. */
+    function settle() {
+      var held = cards.filter(function (c) { return c.pending; });
+      if (!held.length || root.clientWidth <= 0) return false;
+      measure();
+      held.forEach(function (c) {
+        c.pending = false;
+        c.open = cardLeavesContent() &&
+          (wanted ? wanted.indexOf(c.id) !== -1 : c.specOpen);
+      });
+      return true;
+    }
+
     function apply() {
+      if (settle()) { placeCards(); renderMenu(); }
       var w = root.clientWidth;
       var shown = openCards();
       var ctxW = shown.length ? dims.context : 0;
@@ -233,9 +273,13 @@
       navBtn.setAttribute('aria-expanded', String(navOpen));
       scrim.hidden = !(navOpen && !navInline);
 
-      emit('mode', {
-        nav: root.dataset.nav, navOpen: navOpen, context: root.dataset.context
-      });
+      /* Only on a change. A resize that moves nothing is not news, and whoever
+         listens may do real work on each one. */
+      var mode = { nav: root.dataset.nav, navOpen: navOpen, context: root.dataset.context };
+      var key = mode.nav + '|' + mode.navOpen + '|' + mode.context;
+      if (key === lastMode) return;
+      lastMode = key;
+      emit('mode', mode);
     }
 
     /* ---- cards ---------------------------------------------------------- */
@@ -272,7 +316,7 @@
     /* Cards and menu items are moved into place, never rebuilt. Detaching a card
        resets its scroll position and throws out any focus inside it, and rebuilding
        the menu under a keypress destroys the item that was just activated. */
-    function renderCards() {
+    function placeCards() {
       var shown = openCards();
       Array.prototype.slice.call(context.children).forEach(function (n) {
         if (!shown.some(function (c) { return c.el.card === n; })) context.removeChild(n);
@@ -281,6 +325,10 @@
         var at = context.children[i] || null;
         if (at !== c.el.card) context.insertBefore(c.el.card, at);
       });
+    }
+
+    function renderCards() {
+      placeCards();
       renderMenu();
       apply();
     }
@@ -373,9 +421,15 @@
         if (c.background) c.el.item = menuItem(c);
         cards.push(c);
         // A stored preference wins; spec.open is only the state of a first visit.
-        // Either way it opens only where it leaves the content usable (see the header).
+        // Either way it opens only where it leaves the content usable (see the header),
+        // which is judged once the shell has a width: settle(), from apply().
+        // A transient card simply comes up as spec.open says; no 'open' is emitted
+        // for either, as nothing has happened yet that anyone could be told of.
         if (c.background) {
-          c.open = cardLeavesContent() && (wanted ? wanted.indexOf(c.id) !== -1 : !!spec.open);
+          c.pending = true;
+          c.specOpen = !!spec.open;
+        } else {
+          c.open = !!spec.open;
         }
         renderCards();
         return api;
@@ -399,6 +453,7 @@
       open: function (id, o) {
         var c = find(id);
         if (!c) return api;
+        c.pending = false;              // the app or the reader has decided
         if (!c.open) {
           c.opener = opener(c);
           c.open = true;
@@ -416,6 +471,7 @@
 
       close: function (id) {
         var c = find(id);
+        if (c) c.pending = false;       // the app or the reader has decided
         if (!c || !c.open) return api;
         // Detaching the card drops any focus inside it on the floor; pick it up.
         var had = c.el.card.contains(document.activeElement);
@@ -470,7 +526,7 @@
 
       destroy: function () {
         if (ro) ro.disconnect();
-        else global.removeEventListener('resize', apply);
+        else global.removeEventListener('resize', onResize);
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('click', onDocClick);
       }
@@ -498,6 +554,9 @@
 
     function onKey(e) {
       if (e.key !== 'Escape') return;
+      /* Not while an input method is composing — there Escape cancels the
+         composition — and not once a control of the app has consumed the key. */
+      if (e.isComposing || e.defaultPrevented) return;
       if (!menu.hidden) { setMenu(false); menuBtn.focus(); return; }
       if (navOpen && root.dataset.nav === 'overlay') { api.closeNav(); navBtn.focus(); return; }
       /* Escape puts away the card it is pressed in, if that card is transient. A
@@ -531,10 +590,10 @@
 
     var ro = null;
     if (global.ResizeObserver) {
-      ro = new ResizeObserver(function () { apply(); });
+      ro = new ResizeObserver(function () { onResize(); });
       ro.observe(root);
     } else {
-      global.addEventListener('resize', apply);
+      global.addEventListener('resize', onResize);
     }
 
     measure();
