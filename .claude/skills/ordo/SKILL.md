@@ -57,7 +57,7 @@ when its code (`web/`) changes, and then every open Cadence view is reloaded.
 | `rule` | `office` (meta, the blocks as `anchors`, the variations), `examen`, `exit_rite`, `ledger` (the drink ration, the protein floor, the gated lists), `policy` (`docket` and `todo`), `gloss` (the page's short wording), `gate` (the backlog's gate); and `compiled`, the constants the page reads | through the gate |
 | `commitments/<id>` | one calendar event, with its travel fields and derived times | through the gate |
 | `backlog/<id>` | one parked goal | through the gate |
-| `projects/<id>` | under `rule`: `repo`, `what`, `allocation`, `calendar`, `hypomnemata` (`notebook`, `revision`, `frontier`, `end`), `active`, `default`. Beside it, the page's own: `thread` (the next step), this week's edited `allocation` | `rule` through the gate; the rest is the page's |
+| `projects/<id>` | under `rule`: `repo`, `what`, `allocation`, `calendar`, `hypomnemata` (`notebook`, `project`, `revision`, `frontier`, `end`), `active`, `default`. Beside it, the page's own: `thread` (the next step), this week's edited `allocation` | `rule` through the gate; the rest is the page's |
 | `todo/<id>` | a TODO item, or a dictation (`kind: "dictation"`) | the page, and `/ordo` directly |
 | `periodic/<id>` | a periodic item: `what`, `project`, `cadence`, `outranks`, `last`, `then`, `due`, `history` | the page, and `/ordo` directly |
 | `days/<date>` | what was ticked, answered and poured that day | the page, and `/ordo` directly |
@@ -388,13 +388,18 @@ change changes nothing.
      weeks). A passed event in the Rule shows on no day ahead; the capacity check
      notes it and checks without it. Its days in the store keep what was recorded.
 3. **Read each notebook's frontier, only if it changed.** For each project whose
-   `rule.hypomnemata` names a notebook, read the notebook's author
-   tabs where they stand (the principal plugin's tools; the notebook's tab list
-   first). Its **revision** is the `rev` each author tab answers with, kept as a map
+   `rule.hypomnemata` names a notebook, read its author tabs where they stand (the
+   principal plugin's tools; the notebook's tab list first). One document holds every
+   project's notebook, each a root at the top level, so `rule.hypomnemata.project`
+   names the root this project's tabs stand under, and its author tabs are those
+   tabs alone: not another project's, not a party's under `tradition`, and never the
+   reserved `lease` tab. Read the tab list once for every project that shares the
+   document. Its **revision** is the `rev` each author tab answers with, kept as a map
    `{<question>: <rev>}`. If every tab answers with the rev the project holds, the
    frontier has not moved: change nothing. Otherwise run the plugin's
-   `tools/frontier.py` over saved searches of the author tabs (` · ` and `▸ `, as
-   its usage says) and update the project's `rule.hypomnemata.revision` and
+   `tools/frontier.py --project <project>` over saved searches of the author tabs
+   (` · ` and `▸ `, as its usage says) and update the project's
+   `rule.hypomnemata.revision` and
    `frontier` — one entry
    per question it prints, `{id, headline, pressure}`, heaviest first, the headline
    being the question's own words as its tab gives them; and `end`, the end the
@@ -904,8 +909,8 @@ dictation, a quick note kept in the page's store (the Docket's dictations card)
 until it is dictated. Its work is to be run through `/principal:dictate <note>` for
 that notebook, and the card offers the exact invocation to copy. It runs in a Claude
 Code session in a checkout of the repository whose `.principal/notebook.json` names
-that notebook, because the dictate skill finds the notebook from there and nowhere
-else. For the Rule's own project (the one whose notebook is this skill's
+that notebook and that project (its `project`), because the dictate skill finds the
+notebook, and which of its projects to write, from there and nowhere else. For the Rule's own project (the one whose notebook is this skill's
 hypomnemata) that is this repository, `natb1/ordo`, the one this skill runs from,
 whatever the project's `rule.repo` says; for another project it is its `rule.repo`.
 Before sending one there, check that the checkout holds a `.principal/notebook.json`.
