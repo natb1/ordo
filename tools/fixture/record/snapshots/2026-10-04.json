@@ -2,23 +2,979 @@
   "at": "2026-10-04T13:00:00Z",
   "docs": [
     {
-      "collection": "rule",
+      "collection": "backlog",
       "data": {
-        "docket": {
-          "realistic_per_week": 20
-        }
+        "cost": "~1 h/week",
+        "cue": "When Sunday's post-game exit rite is done.",
+        "displaces": "Part of the Sunday drift window.",
+        "first_session": "Twenty-five minutes drawing whatever is on the table in front of you.",
+        "id": "drawing",
+        "note": "Lowest cost of the three and aimed at the week's weakest hour. Do not promote it at the same time as anything else \u2014 one at a time is the whole method [FRANKLIN-AUTO].\n",
+        "parked_on": "2026-09-21",
+        "review_count": 0,
+        "reviewed_on": null,
+        "seq": 3,
+        "slot": "Sunday evening, after the early bell",
+        "status": "parked",
+        "what": "Drawing"
       },
-      "doc_id": "policy"
+      "doc_id": "drawing"
+    },
+    {
+      "collection": "backlog",
+      "data": {
+        "cost": "~30 min/month",
+        "cue": "When the monthly backlog review is done, before closing the file.",
+        "displaces": "Extends the monthly sitting by ~30 min. Competes with nothing daily.",
+        "first_session": "One month only. Open the pile, sort nothing into folders yet, just read what is there.",
+        "id": "filing",
+        "kind": "maintenance",
+        "note": "A DIFFERENT KIND of item from the other three, and the difference matters. This is maintenance of an existing obligation, not a new activity \u2014 the same family as the haircut among the periodic items, not the same family as learning guitar. The gate was built to filter enthusiasm, and there is no enthusiasm to filter here.\nPractical consequence: gate criterion 4 is PER-SLOT. This one wants the monthly sitting; the other three want daily or weekly slots. They are not competing, so this can promote independently of them and does not spend the one-at-a-time budget on the day.\n",
+        "parked_on": "2026-09-21",
+        "review_count": 0,
+        "reviewed_on": null,
+        "seq": 2,
+        "slot": "The monthly review sitting \u2014 NOT a daily slot",
+        "status": "parked",
+        "what": "File the month's papers"
+      },
+      "doc_id": "filing"
+    },
+    {
+      "collection": "backlog",
+      "data": {
+        "cost": "3-4 h/week, one day",
+        "cue": "When Saturday's shower is done, the afternoon block opens.",
+        "displaces": "A Saturday afternoon focus slot (rule/policy \u203a docket). Real cost.",
+        "first_session": "Walk the house with a notepad. List what's bothering you. Fix nothing.",
+        "id": "household_projects",
+        "note": "The easiest of the three to promote, because the slot already exists and the capacity is already being spent there. Likely first through the gate.\n",
+        "parked_on": "2026-09-21",
+        "review_count": 0,
+        "reviewed_on": null,
+        "seq": 0,
+        "slot": "Saturday afternoon (a focus slot \u2014 hypomnemata \u203a allocation)",
+        "status": "parked",
+        "what": "Household projects"
+      },
+      "doc_id": "household_projects"
+    },
+    {
+      "collection": "backlog",
+      "data": {
+        "cost": "~3 h/week",
+        "cue": "When the Examen is done, before the Great Silence.",
+        "displaces": "The first 25 minutes of declared leisure.",
+        "first_session": "Unpack it, tune it, play one scale badly for 25 minutes. Stop on time.",
+        "id": "instrument",
+        "note": "Was drafted into the evening anchor as a competing response to the drinking slot [MARLATT-1985], then pulled. If the drink ration is holding by the time this promotes, that argument is spent and this is just a thing you want to do \u2014 which is a better reason anyway.\n",
+        "parked_on": "2026-09-21",
+        "review_count": 0,
+        "reviewed_on": null,
+        "seq": 1,
+        "slot": "Evening, 25 min, after the Examen",
+        "status": "parked",
+        "what": "Learn a musical instrument"
+      },
+      "doc_id": "instrument"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_appointment",
+        "derived_bell": "11:55",
+        "derived_leave_by": "12:05",
+        "end": "14:00",
+        "from": "1 Example St, Springfield",
+        "id": "appointment",
+        "locations": [
+          {
+            "frequency": "often",
+            "to": "The office, 3 Office Park, Springfield",
+            "travel_minutes": 55
+          },
+          {
+            "frequency": "sometimes",
+            "to": "The park, 10 Park Rd, Springfield",
+            "travel_minutes": 40
+          },
+          {
+            "frequency": "currently on the calendar",
+            "to": "The other office, 1 Station Rd, Springfield",
+            "travel_minutes": 35
+          }
+        ],
+        "mode": "transit",
+        "note": "It splits the Wednesday midday block: 11:00-11:55 before (prep from the 11:55 bell), and 14:55-16:00 after the return \u2014 120 minutes at the 55-minute worst case, more from a nearer place. check_capacity.py counts the two as one pool, since no item marks which side of the appointment the Office falls on.\n",
+        "prep_minutes": 10,
+        "seq": 5,
+        "start": "13:00",
+        "travel_minutes": 55,
+        "weekday": "wed",
+        "what": "Weekly appointment"
+      },
+      "doc_id": "appointment"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_checkup",
+        "date": "2026-10-28",
+        "end": "09:20",
+        "id": "checkup",
+        "seq": 6,
+        "start": "09:00",
+        "what": "A one-off appointment"
+      },
+      "doc_id": "checkup"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_improv",
+        "derived_anchor_bell": "17:30",
+        "derived_bell": "17:30",
+        "derived_leave_by": "18:11",
+        "directions": "https://maps.example/improv",
+        "end": "21:00",
+        "from": "1 Example St, Springfield",
+        "id": "improv",
+        "mode": "bicycling",
+        "prep_minutes": 25,
+        "seq": 0,
+        "sets_anchor_bell": "evening",
+        "start": "18:30",
+        "to": "The improv theatre, 17 Stage St, Springfield",
+        "travel_minutes": 19,
+        "until": "2026-12-15",
+        "weekday": "tue",
+        "what": "Improv class"
+      },
+      "doc_id": "improv"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_sunday_leisure",
+        "end": "20:00",
+        "id": "sunday_leisure",
+        "must_be": "meeting",
+        "project": "ordo",
+        "seq": 4,
+        "start": "19:15",
+        "weekday": "sun",
+        "what": "Leisure after the game"
+      },
+      "doc_id": "sunday_leisure"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_sunday_sitting",
+        "end": "09:45",
+        "id": "sunday_sitting",
+        "must_be": "meeting",
+        "project": "ordo",
+        "seq": 3,
+        "start": "09:00",
+        "weekday": "sun",
+        "what": "The Sunday sitting"
+      },
+      "doc_id": "sunday_sitting"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_trainer",
+        "derived_bell": "08:42",
+        "derived_leave_by": "08:52",
+        "end": "09:30",
+        "from": "1 Example St, Springfield",
+        "id": "trainer",
+        "mode": "bicycling",
+        "prep_minutes": 10,
+        "seq": 2,
+        "start": "09:00",
+        "to": "The trainer's gym, 7 Harbor Way, Springfield",
+        "travel_minutes": 8,
+        "weekday": "sat",
+        "what": "Session with trainer"
+      },
+      "doc_id": "trainer"
+    },
+    {
+      "collection": "commitments",
+      "data": {
+        "calendar_event": "evt_ttrpg",
+        "derived_anchor_bell": "18:30",
+        "derived_bell": "12:24",
+        "derived_leave_by": "12:39",
+        "directions": "https://maps.example/ttrpg",
+        "end": "17:30",
+        "from": "1 Example St, Springfield",
+        "id": "ttrpg",
+        "mode": "bicycling",
+        "prep_minutes": 15,
+        "return_minutes": 21,
+        "seq": 1,
+        "sets_anchor_bell": "vespers",
+        "settle_minutes": 39,
+        "start": "13:00",
+        "to": "The game shop, 1 Main St, Springfield",
+        "travel_minutes": 21,
+        "weekday": "sun",
+        "what": "TTRPG group"
+      },
+      "doc_id": "ttrpg"
     },
     {
       "collection": "projects",
       "data": {
         "id": "canondb",
         "rule": {
-          "allocation": 7
+          "active": true,
+          "allocation": 7,
+          "calendar": null,
+          "hypomnemata": {
+            "end": "That what the AI does on the human's behalf is what the human would have it do, across sessions, because the AI would do it with nothing in its context pushing it there and never because it is held to it; that the conditions on which the two work can be read in the record they keep; and that the condition on which the human keeps the AI can be tested there, off what was agreed and off what comes back when a question is put again, never off either party's report. For the sake of the condition the human's own notebook sets on what he keeps as a means, which this notebook reads and does not restate.",
+            "frontier": [
+              {
+                "headline": "You are working with a human who will keep working with you. What does that require of you, and what does it require of them?",
+                "id": "ti-esti",
+                "pressure": 0
+              }
+            ],
+            "notebook": "https://notebook.example/canondb",
+            "revision": {
+              "again": 9,
+              "alignment": 304,
+              "applications-section": 36,
+              "asymmetry": 9,
+              "attenuation": 50,
+              "canon": 77,
+              "context": 489,
+              "dictate": 81,
+              "disposition": 74,
+              "dissent": 10,
+              "docs-encoding": 164,
+              "drift": 15,
+              "elenchus": 112,
+              "failures": 58,
+              "glossary-section": 24,
+              "graph": 214,
+              "hinge-section": 29,
+              "hypomnemata": 180,
+              "irreversible": 36,
+              "masthead": 26,
+              "party": 50,
+              "priority": 58,
+              "recognition": 138,
+              "terms-section": 26,
+              "thesis-section": 25,
+              "ti-esti": 407,
+              "tradition": 16,
+              "wording": 7
+            }
+          },
+          "id": "canondb",
+          "repo": "natb1/CanonDB",
+          "seq": 0,
+          "what": "CanonDB"
         }
       },
       "doc_id": "canondb"
+    },
+    {
+      "collection": "projects",
+      "data": {
+        "id": "garden",
+        "rule": {
+          "active": true,
+          "allocation": 0,
+          "calendar": null,
+          "hypomnemata": null,
+          "id": "garden",
+          "repo": "desk:/srv/git/allotment",
+          "seq": 3,
+          "what": "The garden"
+        }
+      },
+      "doc_id": "garden"
+    },
+    {
+      "collection": "projects",
+      "data": {
+        "id": "nix_config",
+        "rule": {
+          "active": true,
+          "allocation": 6,
+          "calendar": null,
+          "hypomnemata": null,
+          "id": "nix_config",
+          "repo": "natb1/nix-config",
+          "seq": 1,
+          "what": "nix-config"
+        }
+      },
+      "doc_id": "nix_config"
+    },
+    {
+      "collection": "projects",
+      "data": {
+        "id": "ordo",
+        "rule": {
+          "active": true,
+          "allocation": 7,
+          "calendar": "rule@example.com",
+          "default": true,
+          "hypomnemata": {
+            "end": "That what he lives match what he decided, at every stretch the Rule decides for ahead and reads after, so that the day runs on his own values and not on the hour's appetite; and that the Rule cost the least attention that still binds, an item the Rule holds in place passing into his own keeping only when the record shows it holds where the Rule does not reach. For the sake of the agency his own notebook names, the capacity to act on his own values, which this notebook reads and does not restate.",
+            "frontier": [
+              {
+                "headline": "You are keeping a rule of life with a human who has divided the day with bells and asked you to vary it as little as possible. What is a rule, and what does keeping one require of you, and of them?",
+                "id": "ti-esti",
+                "pressure": 0
+              }
+            ],
+            "notebook": "https://notebook.example/ordo",
+            "revision": {
+              "allocation": 30,
+              "bell": 36,
+              "breakdown": 28,
+              "count": 29,
+              "cue": 22,
+              "deviation": 37,
+              "examen": 28,
+              "gate": 28,
+              "gated": 23,
+              "kinds": 77,
+              "record": 42,
+              "ti-esti": 236,
+              "tradition": 21,
+              "undertaking": 21
+            }
+          },
+          "id": "ordo",
+          "repo": "natb1/ordo",
+          "seq": 2,
+          "what": "ordo \u2014 the Rule"
+        }
+      },
+      "doc_id": "ordo"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "steps": [
+          {
+            "gratitude": "One thing. First, always."
+          },
+          {
+            "wins": "What I did. Actions, not outcomes."
+          },
+          {
+            "review": "What happened, plainly. Drinks counted as a number, not judged."
+          },
+          {
+            "shame_check": "Name the feeling. Judging the act, or the person? Judge the act, pardon the person."
+          },
+          {
+            "tomorrow": "One intention, in if-then form."
+          }
+        ]
+      },
+      "doc_id": "examen"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "seconds": 90,
+        "steps": [
+          "Write the resume line: the next concrete action, one sentence.",
+          "Stand up and leave the room.",
+          "Water.",
+          "Say the next anchor's first item out loud."
+        ]
+      },
+      "doc_id": "exit_rite"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "gate": {
+          "criteria": {
+            "anchors_run": ">=6 of 7 days, four consecutive weeks, all four bells (Lauds, Sext, Vespers, Compline) answered",
+            "not_in_desolation": "no promotion on a good week's high, no deletion on a bad week's low",
+            "resume_lines": ">=80% of the bells that close a focus session with something picked carry a resume line",
+            "rule_stable": "weekly review proposed no change for two consecutive weeks",
+            "slot_empty": "the named slot is free, and what it displaces is named"
+          },
+          "eject_after_reviews": 6,
+          "novitiate_scale": "once a week, not daily \u2014 freely revocable, logged as no kind of failure",
+          "novitiate_weeks": 4
+        }
+      },
+      "doc_id": "gate"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "anchors": {
+          "evening": {
+            "dog_2": {
+              "sub": "30 min."
+            },
+            "great_silence": {
+              "sub": "What follows is leisure you chose."
+            },
+            "sleep": {
+              "sub": "Target 22:00. Acceptable 21:00\u201323:00."
+            },
+            "trash": {
+              "sub": "It has to go out tonight \u2014 on an improv Tuesday, before you leave."
+            }
+          },
+          "midday": {
+            "dog": {
+              "sub": "30 min. First on purpose \u2014 it carries the transition."
+            },
+            "groceries": {
+              "sub": "45 min, if needed \u2014 you're already out."
+            },
+            "gym": {
+              "sub": "45 min. Floor of 3 a week; Saturday's trainer counts."
+            }
+          },
+          "morning": {
+            "breakfast": {
+              "sub": "Protein floor \u2014 easiest first thing."
+            },
+            "meds": {
+              "sub": "Right after you are up. Most time-sensitive item of the day."
+            },
+            "sync": {
+              "sub": "Open Claude Code, run /ordo. Before the first work session."
+            },
+            "weight": {
+              "sub": "Before breakfast, and before anything to drink."
+            }
+          },
+          "vespers": {
+            "dog_2": {
+              "sub": "Improv Tuesdays only \u2014 before you leave, because 5:30 is departure prep and 9:30 is late for him."
+            }
+          }
+        },
+        "commitments": {
+          "sunday_leisure": {
+            "short": "leisure"
+          },
+          "sunday_sitting": {
+            "short": "the sitting"
+          },
+          "ttrpg": {
+            "short": "the game"
+          }
+        },
+        "examen": {
+          "gratitude": {
+            "prompt": "One thing. First, always.",
+            "title": "Gratitude"
+          },
+          "review": {
+            "prompt": "What happened, plainly. Drinks are already counted \u2014 nothing to judge.",
+            "title": "Review"
+          },
+          "shame_check": {
+            "prompt": "Name the feeling. Then: is that the act, or the person? Judge the act. Pardon the person.",
+            "store": "shame",
+            "title": "The shame check"
+          },
+          "tomorrow": {
+            "prompt": "One intention, in if-then form.",
+            "title": "Tomorrow"
+          },
+          "wins": {
+            "prompt": "What you did. Actions, not outcomes.",
+            "title": "Wins"
+          }
+        },
+        "exit_rite": [
+          "Write where you pick up",
+          "Stand and leave the room",
+          "Water",
+          "Say the next item aloud"
+        ]
+      },
+      "doc_id": "gloss"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "drink": {
+          "max_per_day": 2,
+          "model": "budget",
+          "no_stock_in_house": true,
+          "over_ration_response": "Show the number. Nothing else. No colour change, no warning, no comment. Going over is information; a scolding is the mechanism that turns it into a relapse [MARLATT-1985].\n",
+          "ration_per_week": 8,
+          "week_starts": "sun"
+        },
+        "gated": {
+          "confirmed": [
+            "sleep",
+            "coding",
+            "gaming"
+          ],
+          "watching": [
+            "media",
+            "drinking"
+          ]
+        },
+        "groceries": {
+          "trigger": "you noticed you are out of something"
+        },
+        "protein": {
+          "anchor": "breakfast",
+          "floor_grams_per_day": 120
+        }
+      },
+      "doc_id": "ledger"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "anchors": [
+          {
+            "bell": "07:00",
+            "breaks": "sleep",
+            "items": [
+              {
+                "do": "Morning medication",
+                "guard": "bell",
+                "id": "meds",
+                "kind": "office",
+                "log": "required",
+                "minutes": 2,
+                "note": "First thing, before anything else. Most time-sensitive item in the day. Logged every morning \u2014 without the dose recorded, a \"failed to exit\" entry is uninterpretable where a medication bears on the disengagement the gated list measures. hypomnemata \u203a gated.\n",
+                "required": true
+              },
+              {
+                "after": [
+                  "meds"
+                ],
+                "do": "Weigh in",
+                "guard": "bell",
+                "id": "weight",
+                "kind": "office",
+                "minutes": 2,
+                "note": "BEFORE breakfast, and before anything to drink, because the only way a daily number means anything is if it is taken under the same conditions every time \u2014 same hour, same state, same scale. README.md, \"Drinking and weight\". Recorded, never scored. A single day's weight moves two pounds on water alone, so the page shows the number and nothing else: no arrow, no difference from yesterday, no colour. A trend is a weekly-review object.\n",
+                "value": {
+                  "step": 0.2,
+                  "type": "number",
+                  "unit": "lb"
+                }
+              },
+              {
+                "after": [
+                  "meds"
+                ],
+                "children": [
+                  {
+                    "do": "Prepared",
+                    "id": "breakfast_prepared",
+                    "minutes": 15
+                  },
+                  {
+                    "do": "Ate",
+                    "id": "breakfast_ate",
+                    "minutes": 15
+                  }
+                ],
+                "do": "Breakfast",
+                "guard": "bell",
+                "id": "breakfast",
+                "kind": "office",
+                "minutes": 30,
+                "note": "Protein floor lives here (README.md, \"Drinking and weight\"). Stays immediately after the medication: first thing is when the floor is easiest to meet, and breakfast is what carries it."
+              },
+              {
+                "after": [
+                  "breakfast"
+                ],
+                "do": "Sync the day",
+                "guard": "bell",
+                "id": "sync",
+                "kind": "office",
+                "minutes": 5,
+                "note": "Open Claude Code and run /ordo. The page is a copy: a fixture added to the calendar, a meeting, a notebook's frontier reach it only when carried there, and this is the carrying. Before the first work session, so the work is ordered from what is true today. It may be run again at any time.\n"
+              },
+              {
+                "do": "Focus session 1",
+                "gated": true,
+                "id": "focus_1",
+                "kind": "work"
+              }
+            ],
+            "key": "morning",
+            "name": "Lauds"
+          },
+          {
+            "bell": "11:00",
+            "breaks": "focus_1",
+            "items": [
+              {
+                "do": "Walk and feed the dog",
+                "guard": "bell",
+                "id": "dog",
+                "kind": "office",
+                "minutes": 30,
+                "note": "First on purpose: the item you never skip carries the transition. hypomnemata \u203a bell",
+                "required": true
+              },
+              {
+                "children": [
+                  {
+                    "do": "Brush",
+                    "id": "brush"
+                  },
+                  {
+                    "do": "Floss",
+                    "id": "floss"
+                  },
+                  {
+                    "do": "Rinse",
+                    "id": "rinse"
+                  }
+                ],
+                "do": "Teeth",
+                "guard": "bell",
+                "id": "teeth",
+                "kind": "office",
+                "minutes": 5
+              },
+              {
+                "do": "Gym",
+                "guard": "plan",
+                "id": "gym",
+                "kind": "office",
+                "minutes": 45,
+                "mode": "walking",
+                "note": "Saturday's trainer counts toward the floor of 3, and meets at the trainer's gym instead of the usual one (commitments.trainer): on Saturday, this row is the trainer session, and you tick it for that.\n",
+                "skip_weekday": [
+                  "sun",
+                  "wed"
+                ],
+                "to": "The gym, 6 Market St, Springfield",
+                "when": {
+                  "floor_per_week": 3
+                }
+              },
+              {
+                "after": [
+                  "gym"
+                ],
+                "do": "Grocery store",
+                "guard": "none",
+                "id": "groceries",
+                "kind": "office",
+                "minutes": 45,
+                "note": "After the gym, before the shower \u2014 you are already out.",
+                "skip_weekday": [
+                  "sun",
+                  "wed"
+                ],
+                "when": {
+                  "ledger": "groceries"
+                }
+              },
+              {
+                "after": [
+                  "gym",
+                  "groceries"
+                ],
+                "do": "Shower",
+                "guard": "bell",
+                "id": "shower",
+                "kind": "office",
+                "minutes": 15
+              },
+              {
+                "after": [
+                  "shower"
+                ],
+                "children": [
+                  {
+                    "do": "Prepared",
+                    "id": "lunch_prepared",
+                    "minutes": 15
+                  },
+                  {
+                    "do": "Ate",
+                    "id": "lunch_ate",
+                    "minutes": 15
+                  }
+                ],
+                "do": "Lunch",
+                "guard": "bell",
+                "id": "lunch",
+                "kind": "office",
+                "minutes": 30
+              },
+              {
+                "do": "Focus session 2",
+                "gated": true,
+                "id": "focus_2",
+                "kind": "work",
+                "skip_weekday": [
+                  "sun"
+                ]
+              }
+            ],
+            "key": "midday",
+            "name": "Sext"
+          },
+          {
+            "bell": "16:00",
+            "breaks": "focus_2",
+            "breaks_by_weekday": {
+              "sun": "ttrpg"
+            },
+            "items": [
+              {
+                "children": [
+                  {
+                    "do": "Prepared",
+                    "id": "dinner_prepared",
+                    "minutes": 30
+                  },
+                  {
+                    "do": "Ate",
+                    "id": "dinner_ate",
+                    "minutes": 15
+                  }
+                ],
+                "do": "Dinner",
+                "guard": "bell",
+                "id": "dinner",
+                "kind": "office",
+                "minutes": 45
+              },
+              {
+                "do": "Walk the dog (second)",
+                "guard": "bell",
+                "id": "dog_2",
+                "kind": "office",
+                "minutes": 30,
+                "note": "Improv Tuesdays only. The 17:30 block is 41 minutes of departure prep and cannot hold a walk; the alternative is 21:30 after class, so the dog goes out before you leave instead. Keyed to the class, not the weekday, so it goes back to Compline when the class's `until` passes.\n",
+                "required": true,
+                "when": {
+                  "commitment": "improv"
+                }
+              },
+              {
+                "do": "Focus session 3",
+                "gated": true,
+                "id": "focus_3",
+                "kind": "work",
+                "note": "Resolves the open question left when Vespers was added. Four bells, four slots, one of which is always sleep \u2014 so the 16:00-20:00 stretch is the third focus slot. Short on Tuesday (improv at 17:30). On Sunday it runs from the end of dinner to Compline and a meeting spends it: leisure after the game (commitments.sunday_leisure). Not the Great Silence, which follows the Examen.\n"
+              }
+            ],
+            "key": "vespers",
+            "name": "Vespers"
+          },
+          {
+            "bell": "20:00",
+            "breaks": "focus_3",
+            "items": [
+              {
+                "do": "Walk the dog (second)",
+                "guard": "bell",
+                "id": "dog_2",
+                "kind": "office",
+                "minutes": 30,
+                "required": true,
+                "unless": {
+                  "commitment": "improv"
+                }
+              },
+              {
+                "do": "Dishes and kitchen reset",
+                "guard": "bell",
+                "id": "dishes",
+                "kind": "office",
+                "minutes": 20,
+                "note": "Moved here from midday to balance the blocks. hypomnemata \u203a kinds \u2014 under review.",
+                "nullable": true
+              },
+              {
+                "do": "Trash to curb",
+                "guard": "bell",
+                "id": "trash",
+                "kind": "office",
+                "minutes": 5,
+                "note": "On an improv Tuesday this comes first \u2014 it has to go out before you leave anyway.",
+                "when": {
+                  "weekday": [
+                    "tue"
+                  ]
+                }
+              },
+              {
+                "do": "Freshen up and change",
+                "id": "freshen_up",
+                "kind": "fixture",
+                "note": "Departure prep. See commitments.improv.",
+                "when": {
+                  "commitment": "improv"
+                }
+              },
+              {
+                "commitment": "improv",
+                "do": "Leave for improv",
+                "id": "depart",
+                "kind": "fixture",
+                "when": {
+                  "commitment": "improv"
+                }
+              },
+              {
+                "do": "Recycling to curb",
+                "guard": "bell",
+                "id": "recycling",
+                "kind": "office",
+                "minutes": 5,
+                "when": {
+                  "weekday": [
+                    "thu"
+                  ]
+                }
+              },
+              {
+                "do": "Water the garden",
+                "guard": "bell",
+                "id": "garden",
+                "kind": "office",
+                "minutes": 10,
+                "nullable": true,
+                "when": {
+                  "not_winter": true
+                }
+              },
+              {
+                "do": "The Examen, five steps",
+                "examen": true,
+                "guard": "bell",
+                "id": "examen",
+                "kind": "office",
+                "minutes": 10,
+                "note": "Ends the day. Everything after is declared leisure, not unfinished day.",
+                "required": true
+              },
+              {
+                "do": "The Great Silence \u2014 the day's business is closed",
+                "guard": "bell",
+                "id": "great_silence",
+                "note": "Compline means completion. The device for the 21:00-23:00 drift: the difference between leisure you chose and an evening you lost is entirely whether it was declared. hypomnemata \u203a examen.\n"
+              },
+              {
+                "do": "Lights out",
+                "guard": "alarm",
+                "id": "sleep",
+                "required": true,
+                "target": "22:00"
+              }
+            ],
+            "key": "evening",
+            "name": "Compline"
+          }
+        ],
+        "kinds": [
+          "office",
+          "fixture",
+          "work"
+        ],
+        "meta": {
+          "clock": {
+            "resolution_minutes": 1,
+            "show_countdown": "on_demand"
+          },
+          "day_starts": "04:00",
+          "lights_out": {
+            "acceptable": [
+              "21:00",
+              "23:00"
+            ],
+            "target": "22:00"
+          },
+          "timezone": "America/New_York",
+          "warning_bell_minutes": 10,
+          "winter": {
+            "end": "03-15",
+            "start": "11-15"
+          }
+        },
+        "variations": [
+          {
+            "change": "Evening bell moves to 17:30, derived from the commitment (see commitments.improv). Order changes too, because the block ends in a departure: exit rite, TRASH TO CURB (it has to go out before you leave anyway), freshen up, leave by 18:11. Dishes and the Examen happen after class, before sleep.\n",
+            "commitment": "improv",
+            "item_order": [
+              "exit_focus_2",
+              "trash",
+              "freshen_up",
+              "depart",
+              "dishes",
+              "examen",
+              "great_silence",
+              "sleep"
+            ],
+            "name": "tuesday"
+          },
+          {
+            "change": "No change to the Office and no item order of its own. The trainer (09:00-09:30, leave by 08:52) is a departure inside focus 1 \u2014 the focus slot Saturday loses (rule/policy \u203a docket) \u2014 and Saturday's Gym row is that session, ticked toward the floor of 3. The afternoon is an ordinary focus slot; household projects will take one if they promote (the backlog). Evening bell at 20:00, as every day.\n",
+            "name": "saturday"
+          },
+          {
+            "change": "TTRPG 13:00-17:30. ONE variation: Vespers moves 16:00 -> 18:30, derived from the game's end (17:30 + 21 travel + 39 settle). It closes the game, and dinner sits where dinner belongs. Compline stays at 20:00, as every other day. Focus 2 is dropped (the midday block is 84 minutes before the game's prep). Focus 1 and focus 3 are both spent by meetings: the sitting at 09:00, and leisure from the end of dinner to Compline.\n",
+            "name": "sunday"
+          }
+        ]
+      },
+      "doc_id": "office"
+    },
+    {
+      "collection": "rule",
+      "data": {
+        "docket": {
+          "focus_slots_per_day": 3,
+          "realistic_per_week": 20,
+          "rule": "At the bell, the suggested project is the one FURTHEST BEHIND its allocation, unless an overdue periodic item is marked to outrank it. Arithmetic, not appetite. Behind is measured as a share: the smallest fraction of its allocation used, ties to the larger allocation, the same measure the sort uses for periodic items, so a short week falls on every project in proportion and not all on the smallest. A project with no allocation this week is behind nothing; it comes last, as slack. Overdue means past its due day: on the day itself the item waits in its project's own sort. Several overdue at once go furthest past due first, as a fraction of their cadence. A meeting spends a slot without being chosen for it: a project's used count is its sessions worked and its meetings together. One that did not happen \u2014 a cancelled week, marked on the page the day of \u2014 spends nothing: that session is an ordinary one, and the meeting counts for nothing. A session counts for every project it worked, whether the bell named the project or only one of its items (a review is ordo's slot); a follow-up counts for none. A slot is one slot of supply, so one shared by n projects charges each 1/n, and the counts never outrun the slots worked.\n",
+          "set_at": "the Sunday sitting",
+          "sort": "Within the project the work is taken in order from three queues, which are three tiers of priority, never a matrix (hypomnemata \u203a allocation). First, the meetings of the session: each takes its session outright, and the order always shows them. Second, periodic items and TODO items together, by one measure: how far overdue each is as a fraction of its cadence. A TODO item with a date is due on it, counted from its capture; one without is due fourteen days after it was captured, so it rises as it ages. A periodic item not yet due waits below. Third, canon: the project's frontier hypomnemata by pressure, then dictations waiting to be dictated, oldest first. A blocker takes the tier and the rank of what it stops and stands just before it, and the page draws the two as bound; one that stops an Office item or a fixture stands in the second tier at that thing's next day, which is the only way the Office enters the order. There is no scoring by leverage and no rule of one in progress.\n",
+          "starvation_is_data": "A project far under at week's end usually means the allocation was wrong, or another project pulls harder than you admitted. Change the number, never scold. Read it as a share: a short week leaves every project at about the same fraction, so the outlier is the signal.\n"
+        },
+        "todo": {
+          "capture": "Say it whenever you think of it, in your own words; it lands in the project's TODO list with its details, and a next step. A name alone keeps costing attention; a plan discharges it.\n",
+          "default_project": "ordo",
+          "due_after_days": 14,
+          "eject_after_reviews": 8,
+          "fields": {
+            "blocks": "what it stops: an Office item, a fixture or meeting, a periodic item, another TODO item, or a question on a frontier (q:<project>:<question>). It takes the tier and the rank of what it stops and stands just before it; one that stops an Office item or a fixture stands at that thing's next day. Whatever it names is blocked, not missed, while it is open: an Office item keeps its row, blocked; a periodic item waits past its due date, blocked rather than overdue, just after its repair.\n",
+            "by": "the date it is due \u2014 a deadline, a fine, a thing getting worse. Overdue counts from capture to this date. Without one an item is due `due_after_days` after it was captured, so it rises as it ages.\n",
+            "dictation": "the item's details in your own prose: what it is, why, and anything the order cannot read",
+            "next_step": "where you pick up; the page edits it, the bell records it",
+            "sessions_used": "a repair's diagnostic sessions so far, against timebox.max_sessions; 0 at capture"
+          },
+          "reviewed": "at the Sunday sitting, with everything else",
+          "third_time": "A thing that breaks a third time is not a breakdown any more \u2014 it is a standing fault, and belongs in the backlog as a replacement, with a cue, a slot and a cost.\n",
+          "timebox": {
+            "at_the_bell": "resolved / money / back to the sort \u2014 pick one, out loud",
+            "diagnostic_minutes": 25,
+            "escalation": "\"This is a money problem, not a time problem\" is a legitimate and frequently correct answer. The Rule does not require you to be your own repairman [RB-31]. After two diagnostic sessions, calling someone is the default, not the failure.\n",
+            "max_sessions": 2
+          }
+        }
+      },
+      "doc_id": "policy"
     }
   ]
 }

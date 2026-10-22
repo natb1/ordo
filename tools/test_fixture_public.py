@@ -92,7 +92,7 @@ def findings(name, value):
         for m in PHONE.finditer(text):
             if not (m.group(2) == "555" and m.group(3).startswith("01")):
                 out.append((where, f"phone number {m.group(0)!r} is not a 555-01xx one"))
-        if field in ("from", "to"):
+        if field in ("from", "to") and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):   # a date: a counted period's end
             if not PLACE.match(text):
                 out.append((where, f"address {text!r} is not '<place>, <n> <street>, Springfield'"))
         else:
