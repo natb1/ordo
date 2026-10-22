@@ -39,6 +39,10 @@ ENV = "ORDO_RULE"
 
 # The documents of `rule` every load needs, and the collections of one document each.
 SINGLE = ("office", "examen", "exit_rite", "ledger", "policy", "gloss", "gate")
+# Where the Rule is beside `rule`: in OWNED the document is the Rule's; in NESTED the
+# page writes beside it, and the Rule is the one field `rule`.
+OWNED = ("commitments", "backlog")
+NESTED = ("projects",)
 FIXTURE = Path(__file__).resolve().parent / "fixture" / "rule"
 # A collection or a document id as the store takes one: a single path segment.
 NAME = re.compile(r"[A-Za-z0-9_.~:@+-]{1,200}")
@@ -154,6 +158,19 @@ def assemble(docs):
     backlog["items"] = _each(docs, "backlog")
     return SimpleNamespace(anchors=anchors, docket=docket, todo={"policy": policy.get("todo") or {}},
                            backlog=backlog, ledger=docs[("rule", "ledger")], gloss=docs[("rule", "gloss")])
+
+
+def raw(docs):
+    """The Rule's own documents out of an export, the page's fields left behind: what
+    the gate checks and a snapshot holds (tools/gate.py), and what the counts compare
+    a snapshot with (tools/counts.py)."""
+    out = {}
+    for (c, i), data in docs.items():
+        if c == "rule" and i in SINGLE or c in OWNED:
+            out[(c, i)] = data
+        elif c in NESTED and data.get("rule") is not None:
+            out[(c, i)] = {"id": i, "rule": data["rule"]}
+    return out
 
 
 def load(path):

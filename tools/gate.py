@@ -59,10 +59,9 @@ import compiler
 import items
 
 TOOLS = Path(__file__).resolve().parent
-# Where the Rule is. In these the document is the Rule's; in NESTED the page writes
-# beside it, and the Rule is the one field `rule`.
-OWNED = ("commitments", "backlog")
-NESTED = ("projects",)
+# Where the Rule is (ruledir.raw()): in these the document is the Rule's; in NESTED
+# the page writes beside it, and the Rule is the one field `rule`.
+OWNED, NESTED = ruledir.OWNED, ruledir.NESTED
 COMPILED, SNAPSHOT = ("rule", "compiled"), ("snapshots", "last")
 DELETE = {"__delete__": True}
 MOST = 50   # entries in one ArtifactData batch
@@ -73,15 +72,9 @@ MOST = 50   # entries in one ArtifactData batch
 Refused = items.Refused
 
 
-def raw(docs):
-    """The Rule's own documents out of an export, the page's fields left behind."""
-    out = {}
-    for (c, i), data in docs.items():
-        if c == "rule" and i in ruledir.SINGLE or c in OWNED:
-            out[(c, i)] = data
-        elif c in NESTED and data.get("rule") is not None:
-            out[(c, i)] = {"id": i, "rule": data["rule"]}
-    return out
+# The Rule's own documents out of an export: held in tools/ruledir.py, which the
+# counts read it from too.
+raw = ruledir.raw
 
 
 def merged(old, new):

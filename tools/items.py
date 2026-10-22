@@ -230,6 +230,23 @@ def open_on(x, day, today):
     return True
 
 
+def blocks_of(x):
+    """The ids a todo item names in `blocks`, as a list: a lone id an older writer
+    left is one, and anything else none."""
+    names = x.get("blocks") or []
+    return names if isinstance(names, list) else [names] if isinstance(names, str) else []
+
+
+def blocked_on(todos, day, today):
+    """The ids the todo items open on a day block (open_on, blocks_of): blocked, not
+    missed, as the page's blockedBy and the record gate read it."""
+    out = set()
+    for x in todos:
+        if open_on(x, day, today):
+            out.update(blocks_of(x))
+    return out
+
+
 def lists_from(docs, now=None):
     """The three lists and today on the Rule's clock (`now` pins the instant), from
     an export as tools/ruledir.py reads one."""
