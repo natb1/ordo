@@ -44,8 +44,16 @@ fact written twice is written once, and two numbers under one key are refused. A
 todo or periodic document names an active project, blocks only ids the page
 carries, keeps its dates as YYYY-MM-DD, its cadence a whole number of days and its
 `then` as {what, sessions} (tools/items.py). An item its owner holds — one with a
-`source` — is closed by its owner, never by a close here. A document the store holds is updated, pinned; one it
-does not is set, a day as the page's blank() with the fact's leaves.
+`source` — is closed by its owner, never by a close here, and a dictation is let go
+on its card, never closed here. A restore is of an item removed; one not removed is
+left as it is, and said. A synclog's text is added to the day's, a second run after
+a blank line. A document the store holds is updated, pinned; one it does not is set,
+a day as the page's blank() (items.blank_day) with the fact's leaves.
+
+Each fact is checked against the record as this run leaves it: the export with the
+writes of the facts before it in the batch. A pour's key and a correction's bound
+count the pours gathered before it, an item captured earlier may be named in
+`blocks`, and a close earlier in the batch unblocks the tick after it.
 
 What it cannot hold is the skill's: which key names a pour's fact, whether a
 `ledger` or `floor` condition was on (both are taken as on), which project an item
@@ -66,23 +74,16 @@ import items  # noqa: E402
 import rule  # noqa: E402
 import ruledir  # noqa: E402
 
-Refused = gate.Refused
+Refused = items.Refused   # gate.Refused is the same class: one `except` takes both
+
+# A second sync of the day is added to the day's text, after a blank line.
+SYNCLOG_JOIN = "\n\n"
 
 FACTS = ("tick", "pour", "close", "restore", "todo", "periodic", "periodic-done", "synclog")
 
 
-def blank(date):
-    """A day as the page makes one (cadence.html blank())."""
-    return {"date": date, "items": {}, "times": {}, "bells": {}, "focus": {}, "examen": {},
-            "na": {}, "pours": {}, "cancelled": {}}
-
-
-def ymd(v, what):
-    """A date YYYY-MM-DD, by the item contract's one rule for it."""
-    try:
-        return items.ymd(v, what)
-    except items.Refused as e:
-        raise Refused(str(e))
+blank = items.blank_day   # a day as the page makes one, held once in the item contract
+ymd = items.ymd           # a date YYYY-MM-DD, by the item contract's one rule for it
 
 
 class Record:
@@ -109,10 +110,23 @@ class Record:
 
     # ---- what the record holds --------------------------------------------
     def doc(self, c, i):
+        """The document as the export holds it: what decides set or update."""
         return self.docs.get((c, i))
 
+    def held(self, c, i):
+        """The document as this run leaves it so far: the export's, with the writes
+        of the facts before this one merged in; None where neither has it."""
+        d, p = self.docs.get((c, i)), self.writes.get((c, i))
+        if p is None:
+            return d
+        out = copy.deepcopy(d) if d is not None else {}
+        _merge(out, p)
+        return out
+
     def of(self, c):
-        return {i: d for (cc, i), d in self.docs.items() if cc == c}
+        """A collection as this run leaves it so far."""
+        ids = {i for (cc, i) in self.docs if cc == c} | {i for (cc, i) in self.writes if cc == c}
+        return {i: self.held(c, i) for i in ids}
 
     def patch(self, c, i, p):
         cur = self.writes.setdefault((c, i), {})
@@ -187,7 +201,7 @@ class Record:
         b = self.blocker_of(item_id, parent["id"] if parent else None, d)
         if b:
             raise Refused(f"{item_id} was blocked on {d} by {b.get('id')} ({b.get('what')}): blocked, not missed")
-        day = self.doc("days", d) or {}
+        day = self.held("days", d) or {}
         p = {"date": d, "items": {}}
         time = f.get("time")
         if time is not None and not (isinstance(time, str) and rule.CLOCK12.fullmatch(time)):
@@ -227,7 +241,7 @@ class Record:
         if not isinstance(key, str) or not key.strip():
             raise Refused("a pour needs its key: what, which day, and when it was told, so the same fact is the same leaf")
         leaf = "b:" + key.strip()
-        day = self.doc("days", d) or {}
+        day = self.held("days", d) or {}
         pours = day.get("pours") or {}
         if leaf in pours:
             if pours[leaf] == n:
@@ -251,18 +265,15 @@ class Record:
     def item_doc(self, f, collection):
         doc = f.get("doc")
         i = doc.get("id") if isinstance(doc, dict) else None
-        held = self.doc(collection, i) if isinstance(i, str) else None
+        held = self.held(collection, i) if isinstance(i, str) else None
         owner = items.owner_of(held) or items.owner_of(doc if isinstance(doc, dict) else None)
         if owner and (held is None or set(doc) - {"id", "next"}):
             raise Refused(f"{collection}/{i} is {owner}'s, written by its owner under the item contract; "
                           "a run here writes only its next step")
-        try:
-            doc = items.check(collection, doc, held=held, today=self.today,
-                              projects=[p["id"] for p in self.r.docket["projects"] if p.get("active", True)],
-                              default_project=(self.r.todo["policy"] or {}).get("default_project"),
-                              known=self.known_ids(except_id=i))
-        except items.Refused as e:
-            raise Refused(str(e))
+        doc = items.check(collection, doc, held=held, today=self.today,
+                          projects=[p["id"] for p in self.r.docket["projects"] if p.get("active", True)],
+                          default_project=(self.r.todo["policy"] or {}).get("default_project"),
+                          known=self.known_ids(except_id=i))
         doc.setdefault("at", self.at)
         if "next" in doc and doc["next"]:
             doc.setdefault("nextAt", doc["at"])
@@ -270,7 +281,7 @@ class Record:
 
     def close(self, f):
         i = f.get("id")
-        x = self.doc("todo", i)
+        x = self.held("todo", i)
         if x is None:
             raise Refused(f"todo/{i} is not in the export; a close needs the document read")
         d = self.date(f.get("date"), "a close's date") if f.get("date") else self.today
@@ -280,8 +291,10 @@ class Record:
         if items.owner_of(x):
             raise Refused(f"todo/{i} is {items.owner_of(x)}'s, and its owner closes it; "
                           "if it is not wanted, say so on the page")
+        if x.get("kind") == "dictation":
+            raise Refused(f"todo/{i} is a dictation, never closed here: it is let go on its card")
         self.patch("todo", i, {"id": i, "done": True, "doneAt": d, "at": self.at})
-        b = self.doc("breakdowns", i)
+        b = self.held("breakdowns", i)
         if b is not None and b.get("open") is not False:
             self.patch("breakdowns", i, {"open": False, "closed": d})
 
@@ -289,8 +302,13 @@ class Record:
         c, i = f.get("collection"), f.get("id")
         if c not in ("todo", "periodic"):
             raise Refused(f"a restore is of a todo or a periodic item, not {c!r}")
-        if self.doc(c, i) is None:
+        x = self.held(c, i)
+        if x is None:
             raise Refused(f"{c}/{i} is not in the export; a restore needs the document read")
+        if not x.get("removed"):
+            self.said.append(f"{c}/{i} was not removed; a restore is only of a Remove not meant, "
+                             "so it is left as it is")
+            return
         p = {"id": i, "removed": False, "at": self.at}
         if c == "todo":
             p["done"] = False
@@ -299,7 +317,7 @@ class Record:
 
     def periodic_done(self, f):
         i = f.get("id")
-        x = self.doc("periodic", i)
+        x = self.held("periodic", i)
         if x is None:
             raise Refused(f"periodic/{i} is not in the export; a done needs the document read")
         d = self.date(f.get("date"), "a done's date") if f.get("date") else self.today
@@ -309,7 +327,7 @@ class Record:
             # its dates over into the map
             p["history"] = {**{h: True for h in x["history"] if isinstance(h, str)}, d: True}
         if x.get("then") and d == self.today:
-            day = self.doc("days", d) or {}
+            day = self.held("days", d) or {}
             if not (day.get("items") or {}).get(i):
                 focus = f.get("focus")
                 if not isinstance(focus, str) or not focus:
@@ -321,7 +339,9 @@ class Record:
         d = self.date(f.get("date"), "a synclog's date")
         if not isinstance(f.get("text"), str):
             raise Refused("a synclog carries text")
-        self.patch("synclog", d, {"date": d, "text": f["text"]})
+        before = (self.held("synclog", d) or {}).get("text")
+        text = f["text"] if not (isinstance(before, str) and before.strip()) else before + SYNCLOG_JOIN + f["text"]
+        self.patch("synclog", d, {"date": d, "text": text})
 
     # ---- the run ------------------------------------------------------------------
     def take(self, facts):

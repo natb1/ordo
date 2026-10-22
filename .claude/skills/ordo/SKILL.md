@@ -113,9 +113,10 @@ page is shared with) is not checked. `snapshots/last` is the way back, until the
 next gated write replaces it with the Rule as it then stands: after an export,
 `gate.py <out_dir> --restore <out_dir>/snapshots/last.json` in place of `--change`,
 and send the batch. A dated `snapshots/<date>` restores the same way. A restore is
-checked like any change, so a snapshot taken before the Office items named their
-guards is refused item by item: add each item's `guard` to the snapshot file first
-(copied from the current `rule/office`, or asked as above), then restore.
+checked like any change. A snapshot taken before the Office items named their
+guards gives an item none: the gate carries each over from the current
+`rule/office`, by id, and says which (`said`); an item the current Office does not
+hold either is refused, and its guard is asked as above.
 
 ## The notifiers, the calendars and the kinds
 
@@ -423,7 +424,7 @@ change changes nothing.
    see the phone). This is how the user learns an alarm needs changing; never leave
    it out because it was said yesterday. When nothing did: `in sync`. Write the same to
    `synclog/<today>` with the time: `{date, text}`, a second run of the day added
-   to the text. Then tick the `sync` item in the store (§"Writing the record"),
+   to the text after a blank line (the record gate's `synclog` fact adds it). Then tick the `sync` item in the store (§"Writing the record"),
    unless the page already has.
 
 For the days a fixture covers, the Office items and the work sessions fit around
@@ -485,8 +486,10 @@ stderr and leaves the file empty, so read the terminal, not the file), then
 --versions <versions.json> --out <dir>` with no change and send the batch: it writes
 `snapshots/<today>`, the Rule as it stands going into the review, carrying the counts
 it is read against (hypomnemata › record, the change ledger; the counts' `as_of` is
-the snapshot's date, so a stale file is refused; a second run on one day replaces
-it, and needs its version in the versions file). Then `list`
+the snapshot's date, so a stale file is refused). It writes `snapshots/last` too,
+so the counts ride on it, pinned like any write. A second run on one day replaces
+`snapshots/<today>`: the export's `snapshots` holds it, so its version goes in the
+versions file and the write is pinned to it (the gate refuses a held one with none). Then `list`
 `snapshots` with `out_dir`, so that the names and versions come back and not a dozen
 copies of the Rule, and delete the dated ones beyond the newest twelve, each pinned.
 

@@ -17,8 +17,13 @@ DIR       the export: <collection>/<doc_id>.json, as ArtifactData leaves it
           writes todo/<id> and periodic/<id> directly.
 --snapshot DATE  also write snapshots/<DATE>, the Rule as it stands: the weekly
           review's copy, kept apart from snapshots/last, which every write replaces
+          and a --snapshot run writes too, with no change, so that --counts ride on
+          it. A second run of one date replaces snapshots/<DATE>: the export lists
+          `snapshots`, and both are pinned to the versions it gave
 --restore FILE  make the Rule what a snapshot holds (FILE is a snapshots/<id>
-          document as exported), in place of --change: checked like any change
+          document as exported), in place of --change: checked like any change. An
+          Office item the snapshot gives no guard takes the one rule/office gives it
+          now, by id, and the run says which
 --counts FILE  the counts read at this review, as tools/counts.py --json prints
           them: carried on snapshots/last and on the dated snapshot, so that a later
           reading can tell what a change did (hypomnemata › record, the change ledger).
@@ -51,6 +56,7 @@ from pathlib import Path
 
 import ruledir
 import compiler
+import items
 
 TOOLS = Path(__file__).resolve().parent
 # Where the Rule is. In these the document is the Rule's; in NESTED the page writes
@@ -62,8 +68,9 @@ DELETE = {"__delete__": True}
 MOST = 50   # entries in one ArtifactData batch
 
 
-class Refused(Exception):
-    pass
+# One refusal for every gate: the item contract's, so that tools/record.py, which
+# calls both, catches either with one `except`.
+Refused = items.Refused
 
 
 def raw(docs):
@@ -212,19 +219,46 @@ def check(cand):
     return compiler.stored(consts)
 
 
-def restored(snap):
-    """The Rule a snapshot holds, as raw() gives one."""
+def restored(snap, current=None, said=None):
+    """The Rule a snapshot holds, as raw() gives one. A snapshot taken before the
+    Office items named their guards (hypomnemata › unprompted, the guard on each
+    item) gives an item none: it takes the guard `current` (rule/office as the store
+    holds it now) gives the same id, and each so carried is said."""
     try:
-        return raw({(d["collection"], d["doc_id"]): d["data"] for d in snap["docs"]})
+        out = raw({(d["collection"], d["doc_id"]): copy.deepcopy(d["data"]) for d in snap["docs"]})
     except (KeyError, TypeError, AttributeError):
         raise Refused("that is not a snapshot: it has no docs")
+    guards = {it["id"]: it["guard"] for it in office_items(current) if "guard" in it}
+    for it in office_items(out.get(("rule", "office"))):
+        if "guard" not in it and it["id"] in guards:
+            it["guard"] = guards[it["id"]]
+            if said is not None:
+                said.append(f"{it['id']}: the snapshot names no guard; carried over from rule/office: {guards[it['id']]}")
+    return out
 
 
-def gate(docs, changes=(), now=None, restore=None, keep=None, counts=None):
+def office_items(office):
+    """Every item of a rule/office document and each of their parts, as they stand
+    in it (a change to one is a change to the document)."""
+    out = []
+    if not isinstance(office, dict) or not isinstance(office.get("anchors"), list):
+        return out
+    for an in office["anchors"]:
+        for it in (an.get("items") if isinstance(an, dict) else None) or []:
+            if isinstance(it, dict) and isinstance(it.get("id"), str):
+                out.append(it)
+                out += [k for k in it.get("children") or [] if isinstance(k, dict) and isinstance(k.get("id"), str)]
+    return out
+
+
+def gate(docs, changes=(), now=None, restore=None, keep=None, counts=None, said=None):
     """The writes that carry a checked change: [(op, (collection, doc_id), data)].
     `restore` is a snapshot to go back to, in place of changes; `keep` names a
-    snapshot to write beside snapshots/last (the weekly one, by its date); `counts`
-    is what the counts tool read at this review, carried on every snapshot written."""
+    snapshot to write beside snapshots/last (the weekly one, by its date), which is
+    written with it; `counts` is what the counts tool read at this review, carried
+    on every snapshot written. What is done that is not a refusal is added to `said`."""
+    if keep is not None and not (isinstance(keep, str) and compiler.YMD.fullmatch(keep)):
+        raise Refused(f"a snapshot is kept by its date, YYYY-MM-DD, not {keep!r}")
     if counts is not None:
         if not isinstance(counts, dict) or not {"as_of", "under_review"} <= set(counts):
             raise Refused("--counts is what tools/counts.py --json prints: a JSON object naming as_of and under_review")
@@ -232,7 +266,7 @@ def gate(docs, changes=(), now=None, restore=None, keep=None, counts=None):
             raise Refused(f"--counts were read as of {counts.get('as_of')} and the snapshot is dated {keep}: "
                           "run tools/counts.py again, at this sitting")
     before = raw(docs)
-    cand = restored(restore) if restore is not None else apply(before, changes)
+    cand = restored(restore, before.get(("rule", "office")), said) if restore is not None else apply(before, changes)
     sound(cand)
     compiled = check(cand)
     writes = []
@@ -251,11 +285,11 @@ def gate(docs, changes=(), now=None, restore=None, keep=None, counts=None):
     if docs.get(COMPILED) != compiled:
         writes.append(("set", COMPILED, compiled))
     at = now or datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
-    if writes:
+    if writes or keep:
         writes.append(("set", SNAPSHOT, snapshot(cand, at, counts)))
     if keep:
-        if not compiler.YMD.fullmatch(keep):
-            raise Refused(f"a snapshot is kept by its date, YYYY-MM-DD, not {keep!r}")
+        if ("snapshots", keep) in docs and said is not None:
+            said.append(f"snapshots/{keep} is held already: this run replaces it")
         writes.append(("set", ("snapshots", keep), snapshot(cand, at, counts)))
     return writes
 
@@ -343,13 +377,19 @@ def main(argv=None):
             # Every export gives each document its version. A document of the Rule
             # with none was not in this export: a file an earlier one left in the
             # directory (out_dir removes nothing), or a version not copied.
-            unread = sorted("/".join(k) for k in set(raw(docs)) | ({COMPILED} & set(docs))
+            # snapshots/last and a dated snapshot of this date are replaced whole, so
+            # each the export holds is pinned too.
+            pinned = {COMPILED, SNAPSHOT} | ({("snapshots", args.snapshot)} if args.snapshot else set())
+            unread = sorted("/".join(k) for k in set(raw(docs)) | (pinned & set(docs))
                             if "/".join(k) not in versions)
             if unread:
                 raise Refused("--versions does not name " + ", ".join(unread) + ": export into a new "
                               "directory, and give every document's version")
         whole(docs)
-        writes = gate(docs, changes, restore=snap, keep=args.snapshot, counts=counts)
+        said = []
+        writes = gate(docs, changes, restore=snap, keep=args.snapshot, counts=counts, said=said)
+        for line in said:
+            print("said    " + line)
         if not writes:
             print("ok  nothing to write: the store holds this Rule, compiled"
                   + ("; the counts ride on no snapshot" if counts is not None else ""))

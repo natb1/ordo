@@ -9,6 +9,7 @@ clock is pinned: NOW is 08:00 on Thursday 2026-10-15 in New York.
 import contextlib
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -16,6 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import gate  # noqa: E402
+import items  # noqa: E402
 import record  # noqa: E402
 import ruledir  # noqa: E402
 
@@ -243,11 +246,24 @@ class Items(unittest.TestCase):
         done = export(**{"todo/i1": {"id": "i1", "what": "x", "done": True, "doneAt": "2026-10-01"}})
         w, said = gated(done, {"fact": "close", "id": "i1"})
         self.assertEqual((w, bool(said)), ({}, True))
-        w, _ = gated(done, {"fact": "restore", "collection": "todo", "id": "i1"})
+        # done and not removed: a restore is only of a Remove not meant, so it is left as it is
+        w, said = gated(done, {"fact": "restore", "collection": "todo", "id": "i1"})
+        self.assertEqual(w, {})
+        self.assertTrue(any("not removed" in x for x in said))
+        removed = export(**{"todo/i1": {"id": "i1", "what": "x", "done": True, "doneAt": "2026-10-01", "removed": True}})
+        w, _ = gated(removed, {"fact": "restore", "collection": "todo", "id": "i1"})
         self.assertEqual(w["todo/i1"][1], {"id": "i1", "removed": False, "at": "2026-10-15T12:00:00Z", "done": False,
                                            "doneAt": None})
+        w, _ = gated(export(**{"periodic/p1": {"id": "p1", "what": "x", "cadence": 7, "removed": True}}),
+                     {"fact": "restore", "collection": "periodic", "id": "p1"})
+        self.assertEqual(w["periodic/p1"][1], {"id": "p1", "removed": False, "at": "2026-10-15T12:00:00Z"})
         with self.assertRaisesRegex(record.Refused, "not in the export"):
             gated(export(), {"fact": "close", "id": "nobody"})
+
+    def test_a_dictation_is_never_closed_here(self):
+        docs = export(**{"todo/d1": {"id": "d1", "what": "x", "project": "ordo", "kind": "dictation"}})
+        with self.assertRaisesRegex(record.Refused, "dictation, never closed here"):
+            gated(docs, {"fact": "close", "id": "d1"})
 
     def test_an_owned_item_carries_its_source_and_is_closed_by_its_owner(self):
         src = {"owner": "garden", "url": "https://github.com/natb1/garden/blob/main/plan/beds.toml"}
@@ -266,6 +282,68 @@ class Items(unittest.TestCase):
         done = export(**{"todo/garden-beds_2026": dict(docs[("todo", "garden-beds_2026")], done=True, doneAt="2026-10-14")})
         w, said = gated(done, {"fact": "close", "id": "garden-beds_2026"})
         self.assertEqual((w, bool(said)), ({}, True))
+
+
+class Batch(unittest.TestCase):
+    """Each fact is checked against the record as the facts before it leave it."""
+
+    def test_one_key_takes_one_number_across_the_batch(self):
+        k = {"fact": "pour", "date": TODAY, "key": "k"}
+        with self.assertRaisesRegex(record.Refused, "second number"):
+            gated(export(), dict(k, n=2), dict(k, n=3))
+        w, said = gated(export(), dict(k, n=2), dict(k, n=2))
+        self.assertEqual(w["days/" + TODAY][1]["pours"], {"b:k": 2})
+        self.assertTrue(said)
+
+    def test_corrections_count_the_ones_before_them(self):
+        docs = export(**{"days/" + TODAY: {"date": TODAY, "pours": {"b:k": 1}}})
+        c = {"fact": "pour", "date": TODAY, "n": -1}
+        with self.assertRaisesRegex(record.Refused, "more than that"):
+            gated(docs, dict(c, key="first"), dict(c, key="second"))
+        # a pour earlier in the batch is held, so a correction after it may take it away
+        w, _ = gated(export(), {"fact": "pour", "date": TODAY, "n": 2, "key": "a"}, dict(c, key="b"))
+        self.assertEqual(w["days/" + TODAY][1]["pours"], {"b:a": 2, "b:b": -1})
+
+    def test_an_item_captured_earlier_may_be_blocked_on(self):
+        w, _ = gated(export(), {"fact": "todo", "doc": {"id": "i1", "what": "x"}},
+                     {"fact": "todo", "doc": {"id": "i2", "what": "y", "blocks": ["i1"]}})
+        self.assertEqual(w["todo/i2"][1]["blocks"], ["i1"])
+        # and a second fact of one item in the batch is its update, not a second capture
+        w, _ = gated(export(), {"fact": "todo", "doc": {"id": "i1", "what": "x"}},
+                     {"fact": "todo", "doc": {"id": "i1", "what": "x", "next": "step"}})
+        self.assertEqual(w["todo/i1"], ("set", w["todo/i1"][1]))
+        self.assertEqual((w["todo/i1"][1]["captured"], w["todo/i1"][1]["next"]), (TODAY, "step"))
+
+    def test_a_close_earlier_unblocks_the_tick_after_it(self):
+        docs = export(**{"todo/i1": Blocked.WASHER})
+        w, _ = gated(docs, {"fact": "close", "id": "i1"}, {"fact": "tick", "date": TODAY, "item": "gym"})
+        self.assertIn("gym", w["days/" + TODAY][1]["items"])
+
+    def test_a_second_sync_of_the_day_is_added_to_its_text(self):
+        docs = export(**{"synclog/" + TODAY: {"date": TODAY, "text": "08:00 in sync"}})
+        w, _ = gated(docs, {"fact": "synclog", "date": TODAY, "text": "14:00 dentist added"})
+        self.assertEqual(w["synclog/" + TODAY], ("update", {"date": TODAY, "text": "08:00 in sync\n\n14:00 dentist added"}))
+        w, _ = gated(export(), {"fact": "synclog", "date": TODAY, "text": "a"}, {"fact": "synclog", "date": TODAY, "text": "b"})
+        self.assertEqual(w["synclog/" + TODAY], ("set", {"date": TODAY, "text": "a\n\nb"}))
+
+
+class Contract(unittest.TestCase):
+    def test_a_new_day_is_the_pages_blank(self):
+        # the page's blank() and the item contract's are one shape; the gate sets it
+        page = (Path(__file__).resolve().parent.parent / "web" / "cadence.html").read_text(encoding="utf-8")
+        m = re.search(r"function blank\(date\)\{return \{(.*?)\};\}", page)
+        self.assertIsNotNone(m, "the page's blank() is not where this test reads it")
+        values = {"{}": {}, "null": None, "date": "D"}
+        theirs = {k: values[v] for k, v in (kv.split(":", 1) for kv in m.group(1).split(","))}
+        self.assertEqual(theirs, items.blank_day("D"))
+        self.assertIs(record.blank, items.blank_day)
+
+    def test_one_refusal(self):
+        # an item contract refusal and a gate refusal are caught by one except
+        self.assertIs(record.Refused, items.Refused)
+        self.assertIs(gate.Refused, items.Refused)
+        with self.assertRaisesRegex(record.Refused, "not a date"):
+            gated(export(), {"fact": "synclog", "date": "soon", "text": "x"})
 
 
 class Run(unittest.TestCase):

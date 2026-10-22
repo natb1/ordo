@@ -170,6 +170,12 @@ class Projects(unittest.TestCase):
         with self.assertRaisesRegex(gate.Refused, "not after meta.day_starts"):
             gate.gate(store(), [late])
 
+    def test_day_starts_is_read_as_the_clock_reads_it(self):
+        office = copy.deepcopy(store()[("rule", "office")])
+        office["meta"]["day_starts"] = 400
+        with self.assertRaisesRegex(gate.Refused, r"meta day_starts: 400 is not a quoted \"HH:MM\""):
+            gate.gate(store(), [{"op": "set", "collection": "rule", "doc_id": "office", "data": office}], now=NOW)
+
     def test_one_default_project_named_alike_in_the_policy(self):
         # two marked default, or the mark on a project the policy does not name, or on a
         # shelved one: the page and the record gate would file an unnamed item apart
@@ -203,10 +209,12 @@ class Projects(unittest.TestCase):
 
 
 class Snapshots(unittest.TestCase):
-    def test_the_weekly_snapshot_is_kept_by_its_date_and_changes_nothing_else(self):
+    def test_the_weekly_snapshot_is_kept_by_its_date_and_as_last(self):
+        # with no change: snapshots/last is written too, so the counts ride on it
         w = gate.gate(store(), keep="2026-10-18", now=NOW)
-        self.assertEqual(ops(w), [("set", "snapshots/2026-10-18")])
-        self.assertEqual({(d["collection"], d["doc_id"]): d["data"] for d in w[0][2]["docs"]}, RULE)
+        self.assertEqual(ops(w), [("set", "snapshots/last"), ("set", "snapshots/2026-10-18")])
+        for _, _, data in w:
+            self.assertEqual({(d["collection"], d["doc_id"]): d["data"] for d in data["docs"]}, RULE)
         with self.assertRaises(gate.Refused):
             gate.gate(store(), keep="last week")
 
@@ -223,6 +231,25 @@ class Snapshots(unittest.TestCase):
         self.assertEqual(ops(w), [("delete", "commitments/dentist"), ("update", "projects/canondb"),
                                   ("set", "rule/compiled"), ("set", "snapshots/last")])
         self.assertEqual(w[1][2], {"rule": {"added": gate.DELETE, "allocation": 7}})
+
+    def test_a_restore_carries_each_guard_the_snapshot_lacks(self):
+        # a snapshot taken before the Office items named their guards
+        snap = copy.deepcopy(store()[gate.SNAPSHOT])
+        office = next(d["data"] for d in snap["docs"] if (d["collection"], d["doc_id"]) == ("rule", "office"))
+        meds = office["anchors"][0]["items"][0]
+        self.assertEqual(meds["id"], "meds")
+        guard = meds.pop("guard")
+        said = []
+        w = gate.gate(store(), restore=snap, now=NOW, said=said)
+        self.assertEqual(ops(w), [])     # the Rule as it stands: nothing to write
+        self.assertEqual(said, [f"meds: the snapshot names no guard; carried over from rule/office: {guard}"])
+        # one the current Office does not hold either is refused, to be asked
+        s = store()
+        cur = copy.deepcopy(s[("rule", "office")])
+        del cur["anchors"][0]["items"][0]["guard"]
+        s[("rule", "office")] = cur
+        with self.assertRaisesRegex(gate.Refused, "item meds: names no guard"):
+            gate.gate(s, restore=snap, now=NOW)
 
     def test_a_snapshot_that_cannot_be_kept_is_refused(self):
         snap = dict(store()[gate.SNAPSHOT])
@@ -377,6 +404,25 @@ class Run(unittest.TestCase):
             code, said = self.run_gate(argv)
             self.assertEqual(code, 1)
             self.assertIn("--versions does not name commitments/gone", said)
+
+    def test_a_second_snapshot_of_one_date_is_pinned(self):
+        with tempfile.TemporaryDirectory() as t:
+            t = Path(t)
+            docs = store()
+            docs[("snapshots", "2026-10-18")] = docs[gate.SNAPSHOT]
+            argv = self.exported(t, docs)
+            code, said = self.run_gate(argv + ["--snapshot", "2026-10-18"])
+            self.assertEqual(code, 0, said)
+            self.assertIn("snapshots/2026-10-18 is held already", said)
+            batch = json.loads((t / "out" / "batch.json").read_text())
+            self.assertEqual([(e["op"], e["collection"] + "/" + e["doc_id"], e.get("if_version")) for e in batch],
+                             [("set", "snapshots/last", 1), ("set", "snapshots/2026-10-18", 1)])
+            # held, and the versions do not name it: refused, never an unpinned set
+            versions = {"/".join(k): 1 for k in docs if k != ("snapshots", "2026-10-18")}
+            (t / "versions.json").write_text(json.dumps(versions))
+            code, said = self.run_gate(argv + ["--snapshot", "2026-10-18"])
+            self.assertEqual(code, 1, said)
+            self.assertIn("--versions does not name snapshots/2026-10-18", said)
 
     def test_a_collection_the_export_left_out(self):
         # one not listed reads as empty, and would be compiled as none
