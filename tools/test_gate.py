@@ -787,7 +787,7 @@ class Page(unittest.TestCase):
             out([shown("\n\n  Quote by Saturday.\r\nThen <b>call</b>.  \n"), shown(" \n\t"), shown(""), shown(null), shown(["a"])]);""",
             pre="var fieldSeq=0, document={createElement:function(t){ return {tagName:t.toUpperCase(), kids:[], setAttribute:function(){}, appendChild:function(c){ this.kids.push(c); return c; }}; }};\n"
                 + js_block("el", PAGE_SRC.split("<script>")[2]))
-        self.assertEqual(got, [[["fld", "Notes"], ["inotes", "  Quote by Saturday.\r\nThen <b>call</b>."]], [], [], [], []])
+        self.assertEqual(got, [[["fld", "Notes"], ["inotes", "  Quote by Saturday.\nThen <b>call</b>."]], [], [], [], []])
 
 
 if __name__ == "__main__":

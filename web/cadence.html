@@ -3903,7 +3903,7 @@ function todoItem(host,p,x,dr){
    Its trailing space goes by trimEnd, not a /\s+$/, which backtracks across every
    run of spaces: one long run would stall each paint of the open card. */
 function notesOf(host,x){
-  var t=typeof x.notes==="string" ? x.notes.replace(/^\s*\n/,"").trimEnd() : "";
+  var t=typeof x.notes==="string" ? x.notes.replace(/\r\n?|[\v\u2028\u2029]/g,"\n").replace(/^\s*\n/,"").trimEnd() : "";
   if(t) field(host,"Notes",el("div","inotes",t));
 }
 /* An item another tool owns (hypomnemata › undertaking): its source is one link, its
