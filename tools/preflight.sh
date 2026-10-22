@@ -20,6 +20,8 @@ run python3 -m unittest -q tools/test_record.py
 run python3 -m unittest -q tools/test_items.py
 # The horizon counts, over the frozen Rule and the frozen record beside it.
 run python3 -m unittest -q tools/test_counts.py
+# The shell: how it measures, opens and listens (behaviour under node, where present).
+run python3 -m unittest -q tools/test_layout.py
 run python3 tools/sync_assets.py --check
 # Every citation, in the markdown and in the Rule: the frozen copy stands in for the store.
 run env ORDO_RULE=tools/fixture/rule python3 tradition/check.py
