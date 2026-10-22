@@ -25,9 +25,6 @@ DOW = {"monday": "mon", "tuesday": "tue", "wednesday": "wed", "thursday": "thu",
        "friday": "fri", "saturday": "sat", "sunday": "sun"}
 # Google's code for a travel mode, in a directions link built from a fixture's addresses.
 MODE = {"driving": 0, "bicycling": 1, "walking": 2, "transit": 3}
-# A time of day as the page reads it: text, never a number. Given a number, the
-# page's hm() dies on it with no Today at all.
-CLOCK = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
 # A plain date as the page does arithmetic on it (ymd()).
 YMD = items.YMD   # the date rule is held once, in the item contract
 # A project's repo: owner/name on GitHub, or an absolute path on a named device
@@ -57,9 +54,12 @@ def glossed(section, ids, allowed, entries):
 
 
 def clock(v, where):
-    """A time the page or the checker reads, held to a quoted "HH:MM"."""
-    if not (isinstance(v, str) and CLOCK.fullmatch(v)):
-        errors.append(f"{where}: {v!r} is not a quoted \"HH:MM\"")
+    """A time the page or the checker reads, held to a quoted "HH:MM" (rule.hm: text,
+    never a number, which the page's hm() dies on with no Today at all)."""
+    try:
+        rule.hm(v, where)
+    except rule.RuleError as e:
+        errors.append(str(e))
     return v
 
 
@@ -562,10 +562,12 @@ def day_starts(a):
     """When the page's day begins, by the wall clock (rule/office › meta.day_starts).
     Quoted HH:MM, and before every bell: a bell before it would be rung on the
     previous day."""
-    v = a["meta"].get("day_starts")
-    if not isinstance(v, str) or not CLOCK.fullmatch(v):
-        errors.append(f"rule/office: meta.day_starts is {v!r}; it must be a quoted \"HH:MM\"")
+    try:
+        starts = rule.day_starts(a)    # as the record gate's clock reads it: midnight where unset
+    except rule.RuleError as e:
+        errors.append(f"rule/office: {e}")
         return "00:00"
+    v = rule.clock(starts)
     for key, anchor in a["anchors"].items():
         if str(anchor.get("bell")) <= v:
             errors.append(f"rule/office: {key} rings at {anchor.get('bell')}, not after meta.day_starts {v}")

@@ -15,8 +15,10 @@ the active projects, the policy's default project, and the ids an item may name 
 the store, as tools/record.py reads one. `check` takes those lists and a JSON list of
 {"collection", "doc", "held"?} — `held` is the document as the store holds it, or
 absent for a capture — and prints each document as it is to be written, or REFUSED
-and nothing. The batch's own ids count as known, so one item may block another
-captured with it. Each is stamped `at`, the instant (--now, else the clock), as the
+and nothing. A capture is of an id the lists do not know: one they know is held,
+and its write is an update, with `held` given. An id is written once in a batch.
+The batch's own ids count as known, so one item may block another captured with
+it. Each is stamped `at`, the instant (--now, else the clock), as the
 record gate stamps its own. With --owner the writes are that owner's, and the
 protocol below is checked as well. An owner needs only `lists`' output and `check`:
 never the Rule, the fixture or anything else of this repository's.
@@ -68,7 +70,16 @@ NEVER_BY_OWNER = ("removed", "next", "nextAt")
 
 
 class Refused(Exception):
-    """An item the contract does not let through; nothing is written."""
+    """An item the contract does not let through; nothing is written. The one
+    refusal of the gates: tools/gate.py and tools/record.py raise this class too."""
+
+
+def blank_day(date):
+    """A day as the page makes one (web/cadence.html blank()): the shape of a
+    `days/<date>` document the store does not yet hold, held here once for every
+    writer of one (tools/test_record.py holds it to the page's)."""
+    return {"date": date, "items": {}, "times": {}, "bells": {}, "focus": {}, "examen": {},
+            "na": {}, "pours": {}, "cancelled": {}, "drinks": None, "meds": None}
 
 
 def ymd(v, what):
@@ -219,11 +230,14 @@ def open_on(x, day, today):
     return True
 
 
-def lists_from(docs, today):
-    """The three lists and today, from an export as tools/ruledir.py reads one."""
+def lists_from(docs, now=None):
+    """The three lists and today on the Rule's clock (`now` pins the instant), from
+    an export as tools/ruledir.py reads one."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import ruledir  # noqa: E402  only the export needs the Rule; check() does not
+    import rule  # noqa: E402  only the export needs the Rule; check() does not
+    import ruledir  # noqa: E402
     r = ruledir.assemble(docs)
+    today = rule.today(r.anchors, now)
     known = set()
     for an in r.anchors["anchors"].values():
         for it in an.get("items") or []:
@@ -251,11 +265,8 @@ def main(argv=None):
     try:
         if args.cmd == "lists":
             sys.path.insert(0, str(Path(__file__).resolve().parent))
-            import rule  # noqa: E402
             import ruledir  # noqa: E402
-            docs = ruledir.read(args.dir)
-            today = rule.today(ruledir.assemble(docs).anchors, args.now)
-            print(json.dumps(lists_from(docs, today), indent=2))
+            print(json.dumps(lists_from(ruledir.read(args.dir), args.now), indent=2))
             return 0
         lists = json.loads(Path(args.lists).read_text())
         items = json.loads(Path(args.docs).read_text())
@@ -264,11 +275,19 @@ def main(argv=None):
         if not all(isinstance(x, dict) for x in items):
             raise Refused("each item is {collection, doc, held?}")
         at = args.now or datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
-        known = set(lists["known"]) | {(x.get("doc") or {}).get("id") for x in items
-                                       if isinstance(x.get("doc"), dict)} - {None}
+        ids = [(x.get("doc") or {}).get("id") if isinstance(x.get("doc"), dict) else None for x in items]
+        known = set(lists["known"]) | set(ids) - {None}
         out = []
         for n, x in enumerate(items):
             try:
+                i = ids[n]
+                if i is not None and ids.index(i) != n:
+                    raise Refused(f"{i} is written twice in one batch; say it once")
+                if x.get("held") is None and i in set(lists["known"]):
+                    # a set would replace the held document whole, past the protocol's
+                    # guards: removed, another owner's, captured once
+                    raise Refused(f"{i} is one the store holds (or the Rule names); a write to it is an update: "
+                                  "give held, the document as the store holds it")
                 out.append({"collection": x.get("collection"),
                             "op": "set" if x.get("held") is None else "update",
                             "doc": check(x.get("collection"), x.get("doc"), held=x.get("held"), owner=args.owner,

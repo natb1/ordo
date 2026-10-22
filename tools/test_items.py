@@ -126,7 +126,8 @@ class Lists(unittest.TestCase):
     def test_the_lists_from_the_frozen_rule(self):
         docs = ruledir.read(ruledir.FIXTURE)
         docs[("todo", "i9")] = {"id": "i9", "what": "x"}
-        l = items.lists_from(docs, TODAY)
+        l = items.lists_from(docs, now="2026-10-15T12:00:00Z")   # 08:00 in New York
+        self.assertEqual(l["today"], TODAY)
         self.assertIn("ordo", l["projects"])
         self.assertEqual(l["default_project"], "ordo")
         for i in ("gym", "brush", "improv", "i9"):
@@ -162,6 +163,39 @@ class Lists(unittest.TestCase):
                                    "--owner", "garden"])
             self.assertEqual(code, 1)
             self.assertIn("REFUSED", out.getvalue())
+
+    def cli(self, t, docs, owner="garden"):
+        (t / "lists.json").write_text(json.dumps(LISTS))
+        (t / "docs.json").write_text(json.dumps(docs))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = items.main(["check", "--lists", str(t / "lists.json"), "--docs", str(t / "docs.json"),
+                               "--owner", owner, "--now", "2026-10-15T12:00:00Z"])
+        return code, out.getvalue()
+
+    def test_a_held_id_is_never_captured_again(self):
+        # a set would replace it whole, past the protocol: removed, another owner's, captured once
+        with tempfile.TemporaryDirectory() as t:
+            t = Path(t)
+            code, out = self.cli(t, [{"collection": "todo", "doc": {
+                "id": "garden-beds_2026", "what": "Plant the beds", "source": SRC}}])
+            self.assertEqual(code, 1, out)
+            self.assertIn("give held", out)
+            held = Protocol.held
+            code, out = self.cli(t, [{"collection": "todo", "held": held, "doc": {
+                "id": "garden-beds_2026", "what": "Plant the beds", "source": SRC}}])
+            self.assertEqual(code, 0, out)
+            self.assertEqual(json.loads(out)[0]["op"], "update")
+            code, out = self.cli(t, [{"collection": "todo", "held": dict(held, removed=True), "doc": {
+                "id": "garden-beds_2026", "what": "Plant the beds", "source": SRC}}])
+            self.assertIn("removed on the page", out)
+
+    def test_an_id_is_written_once_in_a_batch(self):
+        with tempfile.TemporaryDirectory() as t:
+            doc = {"collection": "todo", "doc": {"id": "garden-x", "what": "x", "source": SRC}}
+            code, out = self.cli(Path(t), [doc, doc])
+            self.assertEqual(code, 1, out)
+            self.assertIn("written twice", out)
 
 
 if __name__ == "__main__":
