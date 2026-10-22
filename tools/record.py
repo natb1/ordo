@@ -179,9 +179,7 @@ class Record:
         for i, x in self.of("todo").items():
             if not open_on(x, d, self.today):
                 continue
-            names = x.get("blocks") or []
-            if not isinstance(names, list):
-                names = [names] if isinstance(names, str) else []
+            names = items.blocks_of(x)
             if item_id in names or (group_id and group_id in names):
                 return x
         return None

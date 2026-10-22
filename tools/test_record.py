@@ -133,6 +133,11 @@ class Blocked(unittest.TestCase):
         with self.assertRaisesRegex(record.Refused, "blocked, not missed"):
             gated(export(**{"todo/i1": self.WASHER}), {"fact": "tick", "date": TODAY, "item": "gym"})
 
+    def test_a_lone_id_an_older_writer_left_in_blocks_blocks_too(self):
+        lone = dict(self.WASHER, blocks="gym")   # read as the page and the counts read it (items.blocks_of)
+        with self.assertRaisesRegex(record.Refused, "blocked, not missed"):
+            gated(export(**{"todo/i1": lone}), {"fact": "tick", "date": TODAY, "item": "gym"})
+
     def test_blocked_on_that_day_not_today(self):
         shut = dict(self.WASHER, done=True, doneAt="2026-10-13")
         # closed on the 13th: the 15th is free, the 11th was blocked
