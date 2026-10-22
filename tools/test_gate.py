@@ -151,6 +151,12 @@ class Projects(unittest.TestCase):
         self.assertEqual((p["what"], p["repo"], p["checkout"]),
                          ("ordo — the Rule", "https://github.com/natb1/ordo", "natb1/ordo"))
 
+    def test_the_default_project_is_marked_for_the_page(self):
+        # an item that names no project is filed under the one the Rule marks default
+        ps = self.compiled(self.rule("garden", what="Allotment"))
+        self.assertTrue(ps["ordo"]["default"])
+        self.assertNotIn("default", ps["garden"])
+
     def test_with_no_what_a_project_is_named_after_its_repo(self):
         ps = self.compiled(self.rule("ordo", what=gate.DELETE), self.rule("garden", what=gate.DELETE))
         self.assertEqual(ps["ordo"]["what"], "ordo")

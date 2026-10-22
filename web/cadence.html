@@ -1958,8 +1958,10 @@ function workProject(id){
   if(id.indexOf("canon:")===0) return id.slice(6);
   if(id.indexOf("q:")===0) return id.split(":")[1];
   var o=anyWork(id);
-  return (o && o.project) || (projById("private") ? "private" : null);
+  return (o && o.project) || defaultProject();
 }
+/* The project an item that names none belongs to: the one the Rule marks default. */
+function defaultProject(){ for(var i=0;i<PROJECTS.length;i++) if(PROJECTS[i].default) return PROJECTS[i].id; return null; }
 function meetingCounts(){
   var sun=parseYmd(logicalToday());
   sun.setDate(sun.getDate()-sun.getDay());
@@ -3416,7 +3418,7 @@ function paintBlocked(host){
     btn.type="button";
     btn.addEventListener("click",function(){ closeTodo(x.id,logicalToday()); render(); });
     var edit=el("button","no","Open in the TODO list"); edit.type="button";
-    edit.addEventListener("click",function(){ openTodo(x.project||"private",x.id); });
+    edit.addEventListener("click",function(){ openTodo(x.project||defaultProject(),x.id); });
     /* An owned item is closed by its owner, never here (hypomnemata › undertaking). */
     if(ownerOf(x)) acts.appendChild(el("span","why",ownerOf(x)+" closes it."));
     else acts.appendChild(btn);
@@ -4410,7 +4412,7 @@ function adoptBreakdowns(list,shared){
       return;
     }
     if(had && !(shared && had.at===new Date(0).toISOString())) return;
-    var it={project:"private",what:b.what,blocks:b.blocks||[],captured:b.opened||logicalToday(),sessions:b.sessions_used||0};
+    var it={project:defaultProject(),what:b.what,blocks:b.blocks||[],captured:b.opened||logicalToday(),sessions:b.sessions_used||0};
     if(shared){ putDoc(todoStore,"todo","todo",b.id,it); return; }
     it.id=b.id; it.at=new Date(0).toISOString();
     todoStore[b.id]=it; changed=true;

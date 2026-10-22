@@ -396,6 +396,8 @@ def projects(d, active=True):
             errors.append(f"project {p['id']} has what {what!r}; a project's name is text, or left out")
         e = {"id": p["id"], "what": what, "allocation": p["allocation"], "repo": link, "checkout": r,
              "calendar": p.get("calendar"), "notebook": h.get("notebook")}
+        if p.get("default"):
+            e["default"] = True
         if "next_step" in p:
             errors.append(f"project {p['id']} has next_step:; a project's next step lives in the page's store")
         out.append(e)
