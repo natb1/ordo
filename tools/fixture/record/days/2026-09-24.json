@@ -2,8 +2,8 @@
   "bells": {
     "evening": {
       "answeredAt": "8:00 PM",
+      "closes": "focus_3",
       "delay": 0,
-      "early": 0,
       "projects": [
         "nix_config"
       ],
@@ -15,8 +15,8 @@
     },
     "midday": {
       "answeredAt": "11:01 AM",
+      "closes": "focus_1",
       "delay": 0,
-      "early": 0,
       "projects": [
         "canondb"
       ],
@@ -28,8 +28,8 @@
     },
     "morning": {
       "answeredAt": "7:03 AM",
+      "closes": "sleep",
       "delay": 0,
-      "early": 0,
       "projects": [],
       "threads": {},
       "ticked": true,
@@ -37,8 +37,8 @@
     },
     "vespers": {
       "answeredAt": "4:02 PM",
+      "closes": "focus_2",
       "delay": 0,
-      "early": 0,
       "projects": [
         "ordo"
       ],
@@ -74,25 +74,30 @@
     }
   },
   "items": {
-    "breakfast": true,
-    "dinner": true,
+    "breakfast_ate": true,
+    "breakfast_prepared": true,
+    "brush": true,
+    "dinner_ate": true,
+    "dinner_prepared": true,
     "dishes": true,
     "dog": true,
     "dog_2": true,
     "examen": true,
+    "floss": true,
     "focus_1": true,
     "focus_2": true,
     "focus_3": true,
     "garden": true,
     "great_silence": true,
     "gym": true,
-    "lunch": true,
+    "lunch_ate": true,
+    "lunch_prepared": true,
     "meds": true,
     "recycling": true,
+    "rinse": true,
     "shower": true,
     "sleep": true,
     "sync": true,
-    "teeth": true,
     "weight": true
   },
   "meds": null,

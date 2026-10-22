@@ -472,12 +472,15 @@ def takes(a, c, today=None):
     return classify(a, c, today)[2]
 
 
-def project(c, d):
-    """The project a meeting spends a session of: the one it names, else the one
-    whose calendar holds every unassigned event, the default."""
-    if c.get("project"):
-        return c["project"]
+def default_project(d):
+    """The project the docket marks default, or None: the one whose calendar holds
+    every unassigned event, and the one anything unplaced is charged to."""
     return next((p["id"] for p in d["projects"] if p.get("default")), None)
+
+
+def project(c, d):
+    """The project a meeting spends a session of: the one it names, else the default."""
+    return c.get("project") or default_project(d)
 
 
 def main():

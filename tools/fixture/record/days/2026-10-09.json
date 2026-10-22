@@ -4,8 +4,8 @@
     "evening": {
       "answeredAt": "8:00 PM",
       "backfilled": true,
+      "closes": "focus_3",
       "delay": 0,
-      "early": 0,
       "projects": [
         "ordo"
       ],
@@ -16,8 +16,8 @@
     "midday": {
       "answeredAt": "11:01 AM",
       "backfilled": true,
+      "closes": "focus_1",
       "delay": 0,
-      "early": 0,
       "projects": [
         "canondb"
       ],
@@ -28,8 +28,8 @@
     "morning": {
       "answeredAt": "7:03 AM",
       "backfilled": true,
+      "closes": "sleep",
       "delay": 0,
-      "early": 0,
       "projects": [],
       "threads": {},
       "ticked": true,
@@ -55,22 +55,27 @@
     }
   },
   "items": {
-    "breakfast": true,
-    "dinner": true,
+    "breakfast_ate": true,
+    "breakfast_prepared": true,
+    "brush": true,
+    "dinner_ate": true,
+    "dinner_prepared": true,
     "dishes": true,
     "dog": true,
     "dog_2": true,
     "examen": true,
+    "floss": true,
     "focus_1": true,
     "focus_3": true,
     "garden": true,
     "great_silence": true,
-    "lunch": true,
+    "lunch_ate": true,
+    "lunch_prepared": true,
     "meds": true,
+    "rinse": true,
     "shower": true,
     "sleep": true,
     "sync": true,
-    "teeth": true,
     "weight": true
   },
   "meds": null,

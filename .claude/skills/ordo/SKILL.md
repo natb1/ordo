@@ -249,8 +249,8 @@ no `postMessage` bridge any more: never ask for a tab to be opened.
   `limit: 14`, the most recent days, newest first. A review that looks further back
   asks by date, not by count — the sitting's own day is a document too, so a count
   comes up one short at the far end: `where: [["date", ">=", "<first day>"]]` with a
-  `limit` above the span (the gate's window starts 34 days before the Saturday that
-  ended the week under review; a TODO item never wanted reads 90 days back).
+  `limit` above the span (the counts' window starts on the date `tools/counts.py
+  --window` prints, from the Rule; a TODO item never wanted reads 90 days back).
 - `todo`, `periodic`, `projects`, `breakdowns`: `list` each. A `list` returns one
   page (100 by default): while the result gives a `next_cursor`, `list` again with it.
   `todo` keeps every item ever captured, closed ones included, so it outgrows a page.
@@ -379,8 +379,14 @@ change changes nothing.
      refuses it, because a commitment is created on the calendar first and only
      then copied here. A new one the user names at the desk goes on the calendar
      first (with their agreement), and its id comes back with it.
-   - **A `date:` or a `last:` that has passed:** delete the document. Its days in the
-     store keep what was recorded.
+   - **A `date:` or a `last:` that has passed:** keep the document until its last day
+     is before the window the counts read, then delete it. The counts read a past day
+     by the Rule's events on it — a whole day is not expected, a one-off meeting took
+     its slot — so one deleted sooner turns its days into misses at the next sitting.
+     The window's first day is what `ORDO_RULE=<out_dir> python3 tools/counts.py
+     --window` prints (34 days before the last Saturday, while `rule/gate` reads four
+     weeks). A passed event in the Rule shows on no day ahead; the capacity check
+     notes it and checks without it. Its days in the store keep what was recorded.
 3. **Read each notebook's frontier, only if it changed.** For each project whose
    `rule.hypomnemata` names a notebook, read the notebook's author
    tabs where they stand (the principal plugin's tools; the notebook's tab list
@@ -483,9 +489,10 @@ collection, which is the authoritative record of what was actually ticked, and t
 week's `synclog` documents. Where a day is missing, that is a gap, not a miss.
 
 **First, the counts, then the snapshot.** The export for a review lists, beside the
-Rule, the record the counts read: `days` from 34 days before the Saturday that ended
-the week under review (by date, as above), `snapshots`, and the `todo` and `periodic`
-items. Run `mkdir -p <dir> && ORDO_RULE=<out_dir> python3 tools/counts.py --json >
+Rule, the record the counts read: `days` from the date `ORDO_RULE=<out_dir> python3
+tools/counts.py --window` prints over the exported Rule (the first day of the weeks
+`rule/gate` reads and one before them; the report says it again as `needs_from`), by
+date as above, `snapshots`, and the `todo` and `periodic` items. Run `mkdir -p <dir> && ORDO_RULE=<out_dir> python3 tools/counts.py --json >
 <dir>/counts.json` (hypomnemata › horizon, the horizon counts; an error is said on
 stderr and leaves the file empty, so read the terminal, not the file), then
 `python3 tools/gate.py <out_dir> --snapshot <today> --counts <dir>/counts.json
@@ -510,12 +517,19 @@ count below with its denominator and the period before it, so every one is read 
 a trend. Its `record` section gives the anchors, each floor item against its floor,
 the drinks, the resume lines written and kept, and the bedtime; its `day` and `week`
 sections the plans taken and held and each project's sessions against its allocation
-(§"The docket and the weekly review"); its `items` section how often each Office item
-held where its guard reached it and where it did not (hypomnemata › unprompted),
-which is the only evidence a guard is retired on — a day an item was blocked, marked
-not needed, or owed nothing (a floor item, a ledger item) is left out of it. What it
-does not count (what was captured, owned items, dictations, blockers, a fixture
-ending) is read off the documents as below.
+(§"The docket and the weekly review") — the meetings every one of the week's, recorded
+day or not, as the page's counts spend them; the allocation the one edited on the
+project card for that week, where one was, as the page ranks by it; and a session a
+bell recorded on a whole day charged like any other; its `items` section how often
+each Office item held where its guard reached it and where it did not (hypomnemata ›
+unprompted), which is the only evidence a guard is retired on — a day an item was
+blocked, marked not needed, or owed nothing (a ledger item; a floor item on a day
+its floor could wait, met by the days before it or in reach on the days left, as the
+page's floor reads it) is left out of it. Each week before the one under review is
+read against the Rule the dated snapshot of the sitting after it holds, the Rule that
+week was lived under, and the week under review against the export: `read_by` says
+which. What it does not count (what was captured, owned items, dictations, blockers,
+a fixture ending) is read off the documents as below.
 
 Report, in this order, as counts and nothing else:
 
@@ -566,10 +580,11 @@ Report, in this order, as counts and nothing else:
 - Meetings that did not happen — a day's `cancelled: {<meeting id>: true}`: that
   session was an ordinary one, and the meeting is not counted as used
 - Resume lines — of the bells that closed a focus session (`bells.<key>.closes` is
-  a focus slot) with anything picked (`projects` or `undertakings`), how many carry
-  a line: a line written is a key of the bell's `threads`, a carried line kept as
-  still right is in its `kept`. A focus bell with nothing picked is left out: the
-  card asks for a line only on what was picked. Count them
+  a focus slot) with anything picked that the card asks a next step of (a project,
+  or an item: never a follow-up `then:`, a frontier question `q:` or a dictation),
+  how many carry a line: a line written is a key of the bell's `threads`, a carried
+  line kept as still right is in its `kept`. A focus bell with nothing so picked is
+  left out: the card asks for a line only on that. Count them
   apart — both are the rite done — as the tool's `written` and `kept` beside `with_line`
 - Any activity that failed to exit within 10 minutes of the bell twice or more →
   name it as a **candidate for the gated list** (hypomnemata › gated), and move
@@ -631,14 +646,17 @@ note how long something has been parked.
 1. List the parked items by name. Nothing else about them — no elaboration on what
    they'd involve, which rekindles exactly the enthusiasm the gate filters out.
 2. Run `ORDO_RULE=<out_dir> python3 tools/counts.py --json` over an export that lists
-   `days` from 34 days before the Saturday that ended the week under review (by date,
-   §"Reading the record"; four consecutive weeks need five weeks of the store),
-   `snapshots`, and the `todo` and `periodic` items, and report each of the five
+   `days` from the date `tools/counts.py --window` prints (by date, §"Reading the
+   record"; the consecutive weeks `rule/gate` names and one before them, five weeks
+   of the store for four), `snapshots`, and the `todo` and `periodic` items, and
+   report each of the five
    `gate.criteria` as the line of facts its `month` section gives: met or not met
    where the tool says so, and read at the sitting where it marks the criterion so —
    whether the named slot is free, whether this is a good week's high or a bad week's
    low, which it shows beside the weeks before, and a week a gap or a whole day could
-   decide, which it names as undecided. The numbers it holds a criterion to are the
+   decide, which it names as undecided. A day a fixture takes whole is never a day
+   with every bell answered, whatever bells it keeps: the page's Week view names it
+   not expected, and so does the tool. The numbers it holds a criterion to are the
    Rule's own words for it (`rule/gate › criteria`): change the words and the tool
    follows; words it cannot read make the criterion the sitting's. Five of five is the only passing score. The counts are
    the weekly review's — an anchor ran when its bell was answered, and the

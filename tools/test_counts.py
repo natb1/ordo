@@ -36,6 +36,11 @@ def with_rule(**parts):
     return r
 
 
+def guarded(a, dates, rec=REC):
+    """Per item, over the frozen record and the Rule with these anchors."""
+    return counts.Reading(with_rule(anchors=a), rec, as_of="2026-10-18").guarded(dates)
+
+
 class Weeks(unittest.TestCase):
     def test_the_week_under_review_ended_before_the_sitting(self):
         self.assertEqual(counts.week_before("2026-10-18"), ("2026-10-11", "2026-10-17"))
@@ -93,10 +98,68 @@ class ByDay(unittest.TestCase):
 
 
 class ByWeek(unittest.TestCase):
+    def test_every_meeting_of_the_week_spends_its_supply_whether_or_not_its_day_has_a_record(self):
+        # a weekly call on Wednesday morning: the store lacks Wednesday, and the page's
+        # meetingCounts counts it all the same
+        a = copy.deepcopy(R.anchors)
+        a["commitments"].append({"id": "standup", "what": "A call", "weekday": "wed", "start": "09:00", "end": "09:30",
+                                 "calendar_event": "x", "project": "canondb"})
+        w = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")["week"]["now"]
+        self.assertEqual((w["projects"]["canondb"]["meetings"], w["gaps"]), (1, ["2026-10-14"]))
+
+    def test_a_session_a_bell_recorded_on_a_whole_day_is_charged(self):
+        a = copy.deepcopy(R.anchors)
+        a["commitments"].append({"id": "sick", "what": "A sick day", "date": "2026-10-16", "all_day": True,
+                                 "keep": ["meds"], "calendar_event": "x"})
+        out = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")
+        self.assertEqual(out["week"]["now"]["projects"], OUT["week"]["now"]["projects"])   # as the page's focusCounts
+        self.assertEqual(out["day"]["now"]["days"]["2026-10-16"], OUT["day"]["now"]["days"]["2026-10-16"])
+        self.assertEqual(counts.Day(a, "2026-10-16").slots(), [])   # none expected, all three recorded
+
+    def test_the_allocation_edited_for_the_week_is_the_one_measured(self):
+        r = with_rule()
+        r.docs = dict(R.docs)
+        page = dict(r.docs[("projects", "canondb")], allocation=3, allocWeek="2026-10-11")
+        r.docs[("projects", "canondb")] = page
+        out = counts.report(r, REC, as_of="2026-10-18")["week"]
+        self.assertEqual((out["now"]["projects"]["canondb"]["allocation"], out["now"]["projects"]["canondb"].get("edited")),
+                         (3, True))
+        self.assertEqual(out["before"]["projects"]["canondb"]["allocation"], 7)   # an edit holds for its week only
+        # an older page's edit names no week: the week of when it was made, on the Rule's clock
+        r.docs[("projects", "canondb")] = dict(R.docs[("projects", "canondb")], allocation=4, at="2026-10-05T02:00:00Z")
+        out = counts.report(r, REC, as_of="2026-10-18")["week"]
+        self.assertEqual((out["now"]["projects"]["canondb"]["allocation"], out["before"]["projects"]["canondb"]["allocation"]),
+                         (7, 4))
+
+    def test_an_item_naming_a_project_the_docket_does_not_carry_is_the_default_projects(self):
+        rec = copy.deepcopy(REC)
+        rec[("days", "2026-10-16")]["focus"]["focus_3"]["projects"] = []
+        rec[("todo", "i123")] = dict(rec[("todo", "i123")], project="ghost")
+        w = again(rec)["week"]["now"]
+        self.assertNotIn("ghost", w["projects"])   # homeProject: charged to ordo, the default, and said
+        self.assertEqual((w["projects"]["ordo"]["sessions"], w["unplaced"]), (3.5, 1))
+
+    def test_a_passed_one_off_kept_in_the_rule_is_read_on_its_day(self):
+        # the daily sync keeps a passed dated event until the counts' window has passed
+        # it, so the sitting still reads Tuesday's one-off meeting as one
+        a = copy.deepcopy(R.anchors)
+        a["commitments"].append({"id": "review", "what": "A review", "date": "2026-10-13", "start": "13:00",
+                                 "end": "13:30", "calendar_event": "x", "project": "canondb"})
+        out = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")
+        self.assertEqual(out["week"]["now"]["projects"]["canondb"]["meetings"], 1)
+        self.assertEqual(out["day"]["now"]["days"]["2026-10-13"]["taken"], 2)   # its slot was the meeting's
+        a["commitments"][-1].update({"all_day": True, "keep": []})
+        for k in ("start", "end", "project"):
+            a["commitments"][-1].pop(k)
+        out = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")
+        self.assertEqual(out["record"]["now"]["whole_days"], ["review 2026-10-13"])
+
     def test_a_shared_slot_charges_each_project_a_share(self):
         p = OUT["week"]["now"]["projects"]
         self.assertEqual(p["nix_config"]["sessions"], 2.5)   # Monday's second slot, shared with ordo
-        self.assertEqual(p["canondb"]["sessions"], 7.0)
+        # Thursday's second slot is not one: its bell was withdrawn, and the page took
+        # its projects and its tick back with it (make.py, as withdrawBell writes it)
+        self.assertEqual(p["canondb"]["sessions"], 6.0)
 
     def test_a_meeting_spends_a_slot_of_its_project_and_the_slot_is_no_session(self):
         p = OUT["week"]["now"]["projects"]["ordo"]   # the sitting, Sunday's leisure and the trainer
@@ -107,8 +170,8 @@ class ByWeek(unittest.TestCase):
 
     def test_the_sessions_add_up_to_the_slots_worked(self):
         w = OUT["week"]["now"]
-        self.assertEqual(w["slots_worked"], 13)
-        self.assertEqual(round(sum(v["sessions"] for v in w["projects"].values()), 2), 13.0)
+        self.assertEqual(w["slots_worked"], 12)   # Thursday's withdrawn bell took its slot's work with it
+        self.assertEqual(round(sum(v["sessions"] for v in w["projects"].values()), 2), 12.0)
         self.assertEqual(w["supply"], 20)
 
     def test_an_undertaking_counts_for_the_project_that_owns_it(self):
@@ -119,28 +182,28 @@ class ByWeek(unittest.TestCase):
         del rec[("todo", "i123")]   # the export does not place it: the default project's, as the page charges it, and said
         unowned = again(rec)["week"]["now"]
         self.assertEqual((unowned["projects"]["ordo"]["sessions"], unowned["unplaced"], unowned["slots_worked"]),
-                         (3.5, 1, 13))
+                         (3.5, 1, 12))
 
     def test_a_frontier_question_counts_for_its_project_and_a_follow_up_for_none(self):
         rec = copy.deepcopy(REC)
         rec[("days", "2026-10-12")]["focus"]["focus_1"] = {"planned": "canondb", "projects": [],
                                                            "undertakings": ["q:canondb:ti-esti"]}
         out = again(rec)
-        self.assertEqual((out["week"]["now"]["projects"]["canondb"]["sessions"], out["week"]["now"]["unplaced"]), (7.0, 0))
+        self.assertEqual((out["week"]["now"]["projects"]["canondb"]["sessions"], out["week"]["now"]["unplaced"]), (6.0, 0))
         self.assertEqual(out["day"]["now"]["days"]["2026-10-12"]["held"], 2)
         rec = copy.deepcopy(REC)
         d = rec[("days", "2026-10-16")]
         d["focus"]["focus_3"] = {"planned": "ordo", "projects": [], "undertakings": ["then:i123"]}
         d["bells"]["evening"].update({"projects": [], "undertakings": ["then:i123"]})
         out = again(rec)
-        self.assertEqual((out["week"]["now"]["slots_worked"], out["week"]["now"]["projects"]["ordo"]["sessions"]), (12, 2.5))
+        self.assertEqual((out["week"]["now"]["slots_worked"], out["week"]["now"]["projects"]["ordo"]["sessions"]), (11, 2.5))
         self.assertEqual(out["day"]["now"]["days"]["2026-10-16"]["unworked"], 1)
 
     def test_a_project_the_docket_does_not_know_is_named_as_such(self):
         rec = copy.deepcopy(REC)
         rec[("days", "2026-10-12")]["focus"]["focus_1"]["projects"] = ["canondb", "ghost"]
         p = again(rec)["week"]["now"]["projects"]
-        self.assertEqual((p["canondb"]["sessions"], p["ghost"]["sessions"], p["ghost"]["unknown"]), (6.5, 0.5, True))
+        self.assertEqual((p["canondb"]["sessions"], p["ghost"]["sessions"], p["ghost"]["unknown"]), (5.5, 0.5, True))
 
     def test_a_cancelled_meeting_spends_nothing(self):
         rec = copy.deepcopy(REC)
@@ -156,6 +219,17 @@ class ByWeek(unittest.TestCase):
 
 
 class TheRecord(unittest.TestCase):
+    def test_a_resume_line_is_asked_only_of_a_pick_the_page_gives_a_field(self):
+        rec = copy.deepcopy(REC)
+        rec[("todo", "d1")] = {"id": "d1", "what": "Dictate", "project": "ordo", "kind": "dictation"}
+        b = rec[("days", "2026-10-13")]["bells"]["evening"]
+        for picks in (["q:canondb:ti-esti"], ["then:i123"], ["d1"], ["canon:ordo"]):
+            b.update({"projects": [], "undertakings": picks, "threads": {}})
+            self.assertEqual(again(rec)["record"]["now"]["resume_lines"],
+                             {"with_line": 8, "written": 6, "kept": 2, "closed_with_pick": 11}, picks)
+        b["undertakings"] = ["then:i123", "i123"]   # an item beside it is asked one
+        self.assertEqual(again(rec)["record"]["now"]["resume_lines"]["closed_with_pick"], 12)
+
     def test_an_anchor_ran_when_its_bell_was_answered(self):
         self.assertEqual(OUT["record"]["now"]["anchors"]["vespers"], {"answered": 5, "expected": 6})
 
@@ -198,6 +272,60 @@ class TheRecord(unittest.TestCase):
 
 
 class ByMonth(unittest.TestCase):
+    def test_a_whole_day_is_never_a_day_with_every_bell_answered(self):
+        # a whole day that keeps every bell (it keeps something of each block), all
+        # answered, is named "not expected", as the Week view names it
+        a = copy.deepcopy(R.anchors)
+        a["commitments"].append({"id": "away", "what": "Away", "date": "2026-10-16", "all_day": True,
+                                 "keep": ["meds", "dog", "dinner", "examen"], "calendar_event": "x"})
+        self.assertEqual(counts.Day(a, "2026-10-16").bells(), ["morning", "midday", "vespers", "evening"])
+        w = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")["month"]["criteria"]["anchors_run"]["weeks"][-1]
+        self.assertEqual((w["all_answered"], w["days"], w["whole_days"]), (4, 5, ["2026-10-16"]))
+        a["commitments"][-1]["keep"] = ["meds"]   # a narrow keep: one bell, answered, decides nothing either
+        self.assertEqual(counts.Day(a, "2026-10-16").bells(), ["morning"])
+        w = counts.report(with_rule(anchors=a), REC, as_of="2026-10-18")["month"]["criteria"]["anchors_run"]["weeks"][-1]
+        self.assertEqual((w["all_answered"], w["whole_days"]), (4, ["2026-10-16"]))
+
+    def test_the_window_is_read_from_the_rules_words(self):
+        self.assertEqual(OUT["needs_from"], "2026-09-13")
+        self.assertEqual(counts.window(R.backlog, "2026-10-17"), (5, "2026-09-13"))
+        b = copy.deepcopy(R.backlog)
+        b["gate"]["criteria"]["anchors_run"] = ">=6 of 7 days, six consecutive weeks"
+        self.assertEqual(counts.window(b, "2026-10-17"), (7, "2026-08-30"))
+
+    def test_each_past_week_is_read_against_the_rule_its_sitting_snapshot_holds(self):
+        self.assertEqual(OUT["read_by"], {"2026-09-13": "the export", "2026-09-20": "the export",
+                                          "2026-09-27": "snapshots/2026-10-04", "2026-10-04": "snapshots/2026-10-11",
+                                          "2026-10-11": "the export"})
+        rec = copy.deepcopy(REC)
+        rec[("snapshots", "2026-10-11")]["docs"].append(
+            {"collection": "commitments", "doc_id": "away",
+             "data": {"id": "away", "seq": 99, "what": "Away", "date": "2026-10-06", "all_day": True, "keep": [],
+                      "calendar_event": "x"}})
+        out = again(rec)
+        self.assertEqual(out["record"]["before"]["whole_days"], ["away 2026-10-06"])   # the Rule that week held it
+        self.assertEqual(out["record"]["now"]["whole_days"], [])   # the export, which no longer does
+        rec[("snapshots", "2026-10-11")]["docs"] = []   # no whole Rule: the export, and said
+        self.assertEqual(again(rec)["read_by"]["2026-10-04"], "the export (snapshots/2026-10-11 holds no whole Rule)")
+
+    def test_a_snapshot_that_is_none_is_refused(self):
+        rec = copy.deepcopy(REC)
+        rec[("snapshots", "2026-10-11")] = {"at": "2026-10-11T13:00:00Z"}
+        with self.assertRaises(counts.items.Refused):
+            again(rec)
+
+    def test_each_week_is_counted_once(self):
+        calls = []
+        was = counts.week
+        counts.week = lambda rd, dates: calls.append(dates[0]) or was(rd, dates)
+        try:
+            counts.report(R, REC, as_of="2026-10-18")
+        finally:
+            counts.week = was
+        self.assertEqual(sorted(calls), ["2026-09-13", "2026-09-20", "2026-09-27", "2026-10-04", "2026-10-11"])
+        rd = counts.Reading(R, REC, as_of="2026-10-18")
+        self.assertIs(rd.day("2026-10-12"), rd.day("2026-10-12"))
+
     def test_anchors_run_by_week_over_thirty_five_days(self):
         c = OUT["month"]["criteria"]["anchors_run"]
         self.assertEqual((OUT["month"]["from"], OUT["month"]["to"]), ("2026-09-13", "2026-10-17"))
@@ -244,7 +372,8 @@ class ByMonth(unittest.TestCase):
         del rec[("snapshots", "2026-10-18")]
         c = again(rec)["month"]["criteria"]["rule_stable"]
         self.assertEqual(c["snapshots"], ["2026-10-04", "2026-10-11", "2026-10-18 (the export)"])
-        self.assertEqual(c["weeks_unchanged"], 0)   # the frozen snapshots hold one stub document, not the Rule
+        # the snapshots hold the frozen Rule as the gate writes one, and so does the export
+        self.assertEqual(c["weeks_unchanged"], 2)
 
     def test_a_day_after_the_snapshot_the_export_is_no_week_of_its_own(self):
         c = counts.report(R, REC, as_of="2026-10-19")["month"]["criteria"]["rule_stable"]
@@ -252,7 +381,8 @@ class ByMonth(unittest.TestCase):
 
     def test_resume_lines_meet_the_rate_or_not_on_the_exact_ratio(self):
         c = OUT["month"]["criteria"]["resume_lines"]
-        self.assertEqual((c["with_line"], c["closed_with_pick"], c["rate"], c["met"]), (49, 56, 0.88, True))
+        # the earlier weeks' Saturdays: the trainer's bell closes the meeting and picks nothing
+        self.assertEqual((c["with_line"], c["closed_with_pick"], c["rate"], c["met"]), (47, 54, 0.87, True))
         was = counts.record_counts
         counts.record_counts = lambda *a, **k: {"resume_lines": {"with_line": 159, "written": 159, "kept": 0,
                                                                  "closed_with_pick": 200}}
@@ -266,7 +396,7 @@ class ByMonth(unittest.TestCase):
         c = OUT["month"]["criteria"]
         self.assertIsNone(c["not_in_desolation"]["met"])
         self.assertIsNone(c["slot_empty"]["met"])
-        self.assertEqual(c["not_in_desolation"]["this_week"], {"all_answered": 5, "slots_worked": 13})
+        self.assertEqual(c["not_in_desolation"]["this_week"], {"all_answered": 5, "slots_worked": 12})
         self.assertEqual(c["not_in_desolation"]["weeks_before"],
                          {"all_answered_mean": 5.67, "slots_worked_mean": 14.33, "weeks": 3, "omitted": ["2026-09-13"]})
         self.assertTrue(all(x["named"] for x in c["slot_empty"]["items"]))
@@ -294,14 +424,37 @@ class PerItem(unittest.TestCase):
         # dog_2 is the evening's, and the vespers' on the improv Tuesday
         self.assertEqual(it["dog_2"]["blocks"], ["evening", "vespers"])
 
-    def test_a_conditional_item_owes_no_day(self):
-        # gym is owed a floor a week (the record's floors); groceries only when the ledger says
+    def test_a_floor_item_is_measured_on_the_days_its_floor_was_owed(self):
+        # gym's floor is three a week: in the frozen week it was never owed, the floor
+        # in reach on the days left every morning (the page's floorCanWait)
         self.assertNotIn("gym", OUT["items"]["now"]["items"])
+        rec = copy.deepcopy(REC)
+        for d in ("2026-10-12", "2026-10-13"):
+            rec[("days", d)]["items"].pop("gym")
+        # none by Thursday morning and two days left (Friday, Saturday) for three:
+        # owed Thursday (ticked), Friday (not) and Saturday (ticked); the plan guards it
+        self.assertEqual(again(rec)["items"]["now"]["items"]["gym"],
+                         {"guard": "plan", "blocks": ["midday"], "reached": {"held": 2, "days": 3},
+                          "unreached": {"held": 0, "days": 0}})
+        # the day's own tick is not what it owed: met by the days before, it can wait
+        rd = counts.Reading(R, REC, as_of="2026-10-18")
+        gym = next(it for k, it in rd.day("2026-10-17").items() if it["id"] == "gym")
+        self.assertTrue(counts.floor_can_wait(rd, "midday", gym, "2026-10-17"))   # three before Saturday
+
+    def test_an_item_the_ledger_conditions_owes_no_day(self):
         rec = copy.deepcopy(REC)
         for (c, i), d in rec.items():
             if c == "days":
                 d["na"].pop("groceries", None)
         self.assertNotIn("groceries", again(rec)["items"]["now"]["items"])
+
+    def test_a_moved_bell_leaves_unreached_only_what_the_bell_guards(self):
+        a = copy.deepcopy(R.anchors)
+        for it in a["anchors"]["evening"]["items"]:
+            if it["id"] == "dishes":
+                it["guard"] = "plan"
+        out = guarded(a, WEEK)["items"]["dishes"]   # improv's Tuesday moves the evening bell; the plan still reaches
+        self.assertEqual((out["reached"], out["unreached"]), ({"held": 5, "days": 6}, {"held": 0, "days": 0}))
 
     def test_an_item_marked_not_applicable_is_left_out(self):
         self.assertEqual(OUT["items"]["now"]["items"]["garden"]["reached"]["days"], 4)   # Friday's na
@@ -325,7 +478,7 @@ class PerItem(unittest.TestCase):
 
     def test_a_winter_item_is_not_expected_in_winter(self):
         self.assertEqual([it["id"] for _, it in counts.Day(R.anchors, "2026-12-01").items() if it["id"] == "garden"], [])
-        self.assertNotIn("garden", counts.guarded(R.anchors, counts.days_of(REC), ["2026-12-01"])["items"])
+        self.assertNotIn("garden", guarded(R.anchors, ["2026-12-01"])["items"])
         self.assertTrue(rule.winter(R.anchors, "2026-12-01"))
         self.assertFalse(rule.winter(R.anchors, "2026-10-12"))
 
@@ -335,14 +488,14 @@ class PerItem(unittest.TestCase):
             for it in an["items"]:
                 if it["id"] == "dishes":
                     it["guard"] = "none"
-        out = counts.guarded(a, counts.days_of(REC), WEEK)["items"]["dishes"]
+        out = guarded(a, WEEK)["items"]["dishes"]
         self.assertEqual((out["reached"], out["unreached"]), ({"held": 0, "days": 0}, {"held": 5, "days": 6}))
 
     def test_a_whole_day_fixture_is_unreached_and_keeps_only_what_it_names(self):
         a = copy.deepcopy(R.anchors)
         a["commitments"].append({"id": "sick", "what": "A sick day", "date": "2026-10-16", "all_day": True,
                                  "keep": ["meds", "dog", "examen", "sleep"], "calendar_event": "x"})
-        out = counts.guarded(a, counts.days_of(REC), ["2026-10-16"])["items"]
+        out = guarded(a, ["2026-10-16"])["items"]
         self.assertEqual(set(out), {"meds", "dog", "examen", "sleep"})
         self.assertEqual(out["meds"], {"guard": "bell", "blocks": ["morning"],
                                        "reached": {"held": 0, "days": 0}, "unreached": {"held": 1, "days": 1}})
@@ -360,7 +513,7 @@ class PerItem(unittest.TestCase):
         for an in a["anchors"].values():
             for it in an["items"]:
                 it.pop("guard", None)
-        self.assertEqual(counts.guarded(a, counts.days_of(REC), ["2026-10-12"])["items"]["dishes"]["guard"], "not stated")
+        self.assertEqual(guarded(a, ["2026-10-12"])["items"]["dishes"]["guard"], "not stated")
 
 
 class TheDay(unittest.TestCase):
@@ -369,16 +522,43 @@ class TheDay(unittest.TestCase):
                          [("sunday_sitting", "ordo", "focus_1"), ("sunday_leisure", "ordo", "focus_3")])
         self.assertEqual(counts.Day(R.anchors, "2026-10-17").meetings(R.docket), [("trainer", "ordo", "focus_1")])
 
-    def test_a_meeting_is_read_on_its_own_date(self):
-        # a one-off that moves a bell on another Thursday changes nothing about this one
+    def test_a_meeting_is_read_as_the_compiler_reads_it_and_a_bell_that_recorded_it_stands(self):
+        # A call inside Thursday's second session is a meeting, and takes that session...
         a = copy.deepcopy(R.anchors)
-        a["commitments"].append({"id": "call", "what": "A call", "weekday": "thu", "start": "11:30", "end": "12:00",
-                                 "calendar_event": "x", "project": "ordo"})
-        self.assertEqual(counts.Day(a, "2026-10-15").meetings(R.docket), [])   # inside the midday Office: a fixture
+        a["commitments"].append({"id": "call", "what": "A call", "weekday": "thu", "start": "13:00", "end": "13:30",
+                                 "calendar_event": "x", "project": "canondb"})
+        self.assertEqual(rule.takes(a, a["commitments"][-1], "2026-10-15"), {"thu": "focus_2"})
+        self.assertEqual(counts.Day(a, "2026-10-15").meetings(R.docket), [("call", "canondb", "focus_2")])
+        # ...until a one-off moves the midday bell on a later Thursday, past it: the
+        # compiler reads every distinct day it is on, and on that one it lies in no
+        # session, so it is a fixture, on this Thursday too, as the page reads it
         a["commitments"].append({"id": "dentist", "what": "Dentist", "date": "2026-10-29", "start": "13:00", "end": "14:00",
                                  "calendar_event": "x", "sets_anchor_bell": "midday", "derived_anchor_bell": "13:00",
                                  "derived_leave_by": "12:30"})
+        self.assertEqual(rule.kind(a, a["commitments"][-2], "2026-10-15")[0], "fixture")
         self.assertEqual(counts.Day(a, "2026-10-15").meetings(R.docket), [])
+        # The closing bell recorded what it closed: the page read the call as the
+        # meeting that took the slot that day, and that reading stands
+        recd = {"bells": {"vespers": {"closes": "call", "projects": [], "undertakings": []}}}
+        self.assertEqual(counts.Day(a, "2026-10-15").meetings(R.docket, recd), [("call", "canondb", "focus_2")])
+        # a bell that closes a fixture with no slot that day records no meeting
+        sun = {"bells": {"vespers": {"closes": "ttrpg"}}}
+        self.assertEqual(counts.Day(R.anchors, "2026-10-11").meetings(R.docket, sun),
+                         [("sunday_sitting", "ordo", "focus_1"), ("sunday_leisure", "ordo", "focus_3")])
+
+    def test_a_whole_day_keeps_a_group_by_its_part_and_every_whole_day_must_keep_an_item(self):
+        a = copy.deepcopy(R.anchors)
+        a["commitments"].append({"id": "sick", "what": "A sick day", "date": "2026-10-16", "all_day": True,
+                                 "keep": ["meds", "breakfast_ate"], "calendar_event": "x"})
+        day = counts.Day(a, "2026-10-16")
+        breakfast = next(it for _, it in day.items() if it["id"] == "breakfast")
+        self.assertEqual([k["id"] for k in day.parts("morning", breakfast)], ["breakfast_ate"])
+        out = guarded(a, ["2026-10-16"])["items"]
+        self.assertEqual(set(out), {"meds", "breakfast"})
+        self.assertEqual(out["breakfast"]["unreached"], {"held": 1, "days": 1})   # the part kept was ticked
+        a["commitments"].append({"id": "trip", "what": "A trip", "date": "2026-10-16", "all_day": True,
+                                 "keep": ["breakfast"], "calendar_event": "y"})
+        self.assertEqual(set(guarded(a, ["2026-10-16"])["items"]), {"breakfast"})   # meds: the trip keeps none of it
 
     def test_a_skipped_block_closes_no_slot(self):
         a = copy.deepcopy(R.anchors)
@@ -395,6 +575,10 @@ class TheDay(unittest.TestCase):
 
 
 class Run(unittest.TestCase):
+    def test_the_window_alone(self):
+        code, text, _ = self.run_main("--window")
+        self.assertEqual((code, text), (0, "2026-09-13\n"))
+
     def run_main(self, *args):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
@@ -404,12 +588,12 @@ class Run(unittest.TestCase):
     def test_json_for_the_skill(self):
         code, text, _ = self.run_main("--json")
         self.assertEqual(code, 0)
-        self.assertEqual(json.loads(text)["week"]["now"]["slots_worked"], 13)
+        self.assertEqual(json.loads(text)["week"]["now"]["slots_worked"], 12)
 
     def test_text_names_the_denominators_and_the_gaps(self):
         code, text, _ = self.run_main()
         self.assertEqual(code, 0)
-        self.assertIn("slots worked 13 of 20 · gaps: 2026-10-14", text)
+        self.assertIn("slots worked 12 of 20 · gaps: 2026-10-14", text)
         self.assertIn("vespers 5/6", text)
         self.assertIn("bells recorded later: 2026-10-09 vespers", text)
         self.assertIn("resume lines 9 of 12 (7 written, 2 kept)", text)
@@ -435,6 +619,57 @@ class Run(unittest.TestCase):
         _, text, _ = self.run_main()
         for word in ("good", "bad", "failed", "behind", "streak", "lapse"):
             self.assertNotIn(word, text.lower())
+
+
+class TheFixture(unittest.TestCase):
+    """The frozen record is as the page writes it (make.py)."""
+
+    def test_a_day_is_the_pages_blank_and_ticks_parts_never_a_group(self):
+        groups = {it["id"] for an in R.anchors["anchors"].values() for it in an["items"] if it.get("children")}
+        for (c, i), d in REC.items():
+            if c == "days":
+                self.assertEqual(set(counts.items.blank_day(i)) - set(d), set(), i)
+                self.assertEqual(groups & set(d["items"]), set(), i)
+
+    def test_a_withdrawn_bell_is_a_null_leaf_with_its_work_and_tick(self):
+        d = REC[("days", "2026-10-15")]
+        self.assertEqual((d["bells"]["vespers"], d["focus"]["focus_2"], d["items"]["focus_2"]), (None, None, False))
+        self.assertEqual(d["bells"]["evening"]["closes"], "focus_3")
+        self.assertEqual(REC[("days", "2026-10-11")]["bells"]["midday"]["closes"], "sunday_sitting")
+
+    def test_a_snapshot_carries_the_counts_in_the_shape_the_gate_takes(self):
+        for i in ("2026-10-11", "2026-10-18"):
+            c = REC[("snapshots", i)]["counts"]
+            self.assertEqual(c["as_of"], i)
+            self.assertEqual(set(c["under_review"]), {"from", "to"})
+        self.assertEqual(counts.ruledir.assemble(counts.gate.restored(REC[("snapshots", "2026-10-04")])).docket["projects"][0]["id"],
+                         R.docket["projects"][0]["id"])
+
+
+class TheSkill(unittest.TestCase):
+    """The skill exports and keeps what the counts read (.claude/skills/ordo/SKILL.md)."""
+    SKILL = " ".join((Path(__file__).resolve().parent.parent / ".claude" / "skills" / "ordo" / "SKILL.md")
+                     .read_text(encoding="utf-8").split())
+
+    def test_the_sync_keeps_a_passed_event_until_the_window_has_passed_it(self):
+        self.assertIn("**A `date:` or a `last:` that has passed:** keep the document until its last day is before "
+                      "the window the counts read, then delete it.", self.SKILL)
+
+    def test_the_export_window_is_the_one_the_tool_prints(self):
+        self.assertNotIn("from 34 days before", self.SKILL)
+        self.assertGreaterEqual(self.SKILL.count("tools/counts.py --window"), 3)
+
+
+class Helpers(unittest.TestCase):
+    def test_one_default_project_and_one_reading_of_blocks(self):
+        self.assertEqual(rule.default_project(R.docket), "ordo")
+        self.assertEqual(rule.project({"id": "x"}, R.docket), "ordo")
+        todos = [{"what": "a", "blocks": "dishes", "captured": "2026-10-01"},
+                 {"what": "b", "blocks": ["gym"], "captured": "2026-10-20"}]
+        self.assertEqual(counts.items.blocked_on(todos, "2026-10-12", "2026-10-18"), {"dishes"})
+
+    def test_counts_reads_the_rules_documents_from_the_loader(self):
+        self.assertIs(counts.gate.raw, counts.ruledir.raw)
 
 
 if __name__ == "__main__":
