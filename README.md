@@ -6,10 +6,11 @@ the notebook's root.
 
 **The reasoning is not here.** What a rule is, what keeping this one requires, and every
 appeal to tradition it rests on live in the **hypomnemata**, the Rule's notebook of
-questions and the source of truth:
-[Hypomnemata — private v1](https://claude.ai/artifact/1S7zEbZGc8EfLE3d2m5WNy), a shared
-document read where it stands; nothing of it is committed here. Its root question
-is [`ti-esti.md`](ti-esti.md). Everywhere in this repo, *hypomnemata › bell* means the
+questions and the source of truth: a Claude Docs document, read where it stands, which
+[`.principal/notebook.json`](.principal/notebook.json) names; nothing of it is committed
+here. The keeper's own notebook is private. To keep a Rule of your own, start your own
+notebook from the root question, [`ti-esti.md`](ti-esti.md), as the CanonDB `principal`
+plugin's README says, and put its ids in `.principal/notebook.json` in your copy. Everywhere in this repo, *hypomnemata › bell* means the
 notebook's `bell` tab.
 
 This file holds only what answers no question there: the setup, the runbook, the
@@ -33,9 +34,17 @@ Work top to bottom. It takes about twenty minutes.
 
 ### 1. Put Cadence on your home screen
 
-Open **https://claude.ai/artifact/54sxzR169AZiUx8QNJkngJ** in **Safari** (not Chrome —
-only Safari can install to the home screen), then **Share → Add to Home Screen →
-Add**. It now opens full-screen, like an app.
+Cadence is your own page: publish `web/cadence.html` as a claude.ai artifact of your own
+(with the `db` capability, so it has a store), and write its link into
+`ordo.local.json` at the repository's root, which git ignores:
+
+```json
+{"cadence": "https://claude.ai/artifact/<your page's id>"}
+```
+
+`/ordo` reads the page from there, and asks for it when the file is missing. Then open
+that link in **Safari** (not Chrome — only Safari can install to the home screen),
+**Share → Add to Home Screen → Add**. It now opens full-screen, like an app.
 
 Do this on the phone you actually carry. This is the surface you'll touch every day.
 
@@ -306,7 +315,9 @@ a list; an event points at the page, or tells you to leave.
 
 | | |
 |---|---|
-| **Hypomnemata** | [The notebook](https://claude.ai/artifact/1S7zEbZGc8EfLE3d2m5WNy): the Rule's reasoning, requirements and traditions. The source of truth. |
+| **Hypomnemata** | The notebook `.principal/notebook.json` names: the Rule's reasoning, requirements and traditions. The source of truth. The keeper's is private. |
+| `.principal/` | `notebook.json`, the notebook the `principal` plugin's skills read and write; `bootstrap.json`, the manifest of what its bootstrap rounds built (their older pull requests are in a private repository). |
+| `ordo.local.json` | Not committed: the link to your own Cadence page, `{"cadence": "<url>"}`, which `/ordo` reads. |
 | `ti-esti.md` | The notebook's root question: what a rule is, and what keeping one requires. |
 | **`README.md`** | This file. Setup, runbook, the arithmetic behind the drink and weight items, the page's mechanics. |
 | **The store** | The Rule, and the record. The Cadence page's database: `rule/*`, `commitments`, `backlog`, `projects`, the TODO list (`todo`), `periodic`, the `days`, `snapshots`, `synclog`. The skill, "The Rule lives in the store", says what each holds. |
@@ -322,13 +333,16 @@ a list; an event points at the page, or tells you to leave.
 | `tools/rule.py` | What a calendar event is to the day: a meeting or a fixture, computed from where it falls. |
 | `tools/check_capacity.py` | Fails if a block asks for more minutes than it has, or if a fixture's derived times do not follow from its travel, prep and settle. A weekday whose fixture has an `until:` is checked with it and without it. |
 | `tools/notifiers.py` | What the Clock alarms and the Cadence calendar should hold, derived from the Rule. |
-| `tools/fixture/rule/` | A frozen copy of the Rule, for the tests only. Never updated to follow the store. |
+| `tools/record.py` | The record gate: what `/ordo` writes to the record (`days`, `todo`, `periodic`, `synclog`), checked, as a pinned batch. |
+| `tools/items.py` | The item contract: the shape of a `todo` or `periodic` document, which an owner outside this repository checks by too. |
+| `tools/counts.py` | The horizon counts: what the record says against what was decided, at each stretch. |
+| `tools/fixture/rule/` · `tools/fixture/record/` | An invented Rule and an invented record, for the tests only. Never updated to follow the store, and holding no one's data: `tools/test_fixture_public.py` keeps them to example values. |
 | `tools/ruleyaml.py` | Loads `tradition/sources.yaml` strictly: a key given twice fails. |
 | `tools/sync_assets.py` | Writes the shared files into the pages that declare them, and the derived dark block into `tokens.css`; `--check` fails if a copy is stale. |
 | `.claude/skills/ordo/` | The `/ordo` skill — **executable**, not documentation. The procedure the notebook is the reasoning for. |
 | `…/reference/blockers.md` | What a blocker is. Separate what perishes from what's broken. |
 | **`tradition/sources.yaml`** | Every appeal to tradition, with audit status. |
-| `tradition/check.py` | Fails if a cited key isn't registered, in any markdown file. |
+| `tradition/check.py` | Fails if a cited key isn't registered, in any markdown file or in an export of the Rule. |
 
 ## Commands
 
