@@ -796,8 +796,16 @@ def year(docket):
             continue
         fr = [q for q in h.get("frontier") or [] if isinstance(q, dict)]
         pressure = sum(q.get("pressure", 0) for q in fr if isinstance(q.get("pressure", 0), (int, float)))
+        due = [r for r in h.get("due") or [] if isinstance(r, dict)]
+        by_kind = {}
+        for r in due:
+            by_kind[r.get("kind", "?")] = by_kind.get(r.get("kind", "?"), 0) + 1
+        # The exceptions per dependent (hypomnemata › horizon): what the record holds
+        # against the project's end, by kind, read as a trend at the sitting after this
+        # one and never as a verdict. Only what the due reading carried is counted.
         out[p["id"]] = {"end": h.get("end"), "frontier": len(fr), "pressure": pressure,
-                        "questions": [q.get("id") for q in fr]}
+                        "questions": [q.get("id") for q in fr],
+                        "exceptions": sum(by_kind.values()), "by_kind": by_kind}
     return out
 
 
@@ -952,7 +960,9 @@ def text(out):
                                                  for x in cr["slot_empty"]["items"]) + ": read at the sitting")
     for pid, v in out["year"].items():
         lines.append(f"year · {pid} · frontier {v['frontier']} question(s), pressure {_n(v['pressure'])} · end "
-                     + (f"stated ({len(str(v['end']).split())} words)" if v["end"] else "not stated"))
+                     + (f"stated ({len(str(v['end']).split())} words)" if v["end"] else "not stated")
+                     + f" · exceptions {v['exceptions']}"
+                     + (" (" + ", ".join(f"{k} {n}" for k, n in sorted(v["by_kind"].items())) + ")" if v["by_kind"] else ""))
     for label in ("now", "before"):
         it = out["items"][label]
         parts = [f"{i} ({v['guard']}) reached {v['reached']['held']}/{v['reached']['days']}"

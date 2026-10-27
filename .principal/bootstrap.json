@@ -37,7 +37,7 @@
         "tools/fixture/rule/rule/policy.json"
       ],
       "pull_request": "https://github.com/natb1/private/pull/38",
-      "rounds": 5
+      "rounds": 6
     },
     {
       "question": "record",
@@ -57,7 +57,7 @@
         "tools/test_items.py"
       ],
       "pull_request": "https://github.com/natb1/private/pull/33",
-      "rounds": 1
+      "rounds": 2
     },
     {
       "question": "record",
@@ -67,20 +67,24 @@
         "tools/sync_assets.py",
         "web/layout.css",
         "web/layout.js",
-        "web/tokens.css"
+        "web/tokens.css",
+        "tools/test_layout.py",
+        "tools/test_fixture_public.py",
+        "tools/test_skill_docs.py"
       ],
       "pull_request": "https://github.com/natb1/private/pull/33",
-      "rounds": 2
+      "rounds": 3
     },
     {
       "question": "record",
       "application": "the ordo skill",
       "files": [
         ".claude/skills/ordo/SKILL.md",
-        ".claude/skills/ordo/reference/blockers.md"
+        ".claude/skills/ordo/reference/blockers.md",
+        "CLAUDE.md"
       ],
       "pull_request": "https://github.com/natb1/ordo/pull/3",
-      "rounds": 6
+      "rounds": 7
     },
     {
       "question": "record",
@@ -110,7 +114,7 @@
         "web/cadence.html"
       ],
       "pull_request": "https://github.com/natb1/private/pull/33",
-      "rounds": 3
+      "rounds": 4
     },
     {
       "question": "deviation",
@@ -126,10 +130,11 @@
       "application": "the registry check",
       "files": [
         "tradition/check.py",
-        "tools/ruleyaml.py"
+        "tools/ruleyaml.py",
+        "tools/test_tradition.py"
       ],
       "pull_request": "https://github.com/natb1/private/pull/32",
-      "rounds": 1
+      "rounds": 2
     },
     {
       "question": "allocation",
@@ -138,7 +143,7 @@
         "web/cadence.html"
       ],
       "pull_request": "https://github.com/natb1/private/pull/35",
-      "rounds": 2
+      "rounds": 3
     },
     {
       "question": "undertaking",
@@ -147,7 +152,7 @@
         "web/cadence.html"
       ],
       "pull_request": "https://github.com/natb1/private/pull/33",
-      "rounds": 2
+      "rounds": 3
     },
     {
       "question": "undertaking",
@@ -196,7 +201,7 @@
         "tools/fixture/record/todo/i123.json"
       ],
       "pull_request": "https://github.com/natb1/private/pull/38",
-      "rounds": 1
+      "rounds": 2
     },
     {
       "question": "unprompted",
@@ -217,6 +222,24 @@
         "tools/test_gate.py"
       ],
       "pull_request": "https://github.com/natb1/private/pull/38",
+      "rounds": 1
+    },
+    {
+      "question": "horizon",
+      "application": "the annual sitting",
+      "files": [
+        ".claude/skills/ordo/SKILL.md"
+      ],
+      "pull_request": "",
+      "rounds": 1
+    },
+    {
+      "question": "horizon",
+      "application": "the due card",
+      "files": [
+        "web/cadence.html"
+      ],
+      "pull_request": "",
       "rounds": 1
     }
   ]

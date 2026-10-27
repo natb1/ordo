@@ -27,6 +27,7 @@ Three commands do all the work:
 | `/ordo` | Sync: carry the calendar to the Rule, the page and the notifiers |
 | `/ordo weekly` | The weekly review |
 | `/ordo monthly` | The monthly backlog review (hypomnemata › gate) |
+| `/ordo yearly` | The annual sitting (hypomnemata › horizon) |
 
 There are no others. No command runs a block, the exit rite or the Examen in chat:
 the page is where a block is read and ticked, where the bell is answered and where
@@ -412,6 +413,20 @@ change changes nothing.
    written anywhere else. Each frontier question is a work item on the page, in the
    third queue (§"The TODO list and dictations"); a TODO item that must be done
    before one is put names it as `q:<project>:<id>` in its `blocks:`.
+3b. **Run the due reading, once a day.** The daily thread of the Project runs this step;
+   a sync by hand may skip it. For each project whose `rule.hypomnemata` names a
+   notebook, read its author tabs whole (`view`, `sinceRev` 0), build its graph with
+   the plugin's `read.py --project <project>`, and run `tools/due.py <graph> --project
+   <project> --backstop <days> --json`, the backstop being the one the sitting set (90
+   where none is): what the record says is due and why, each row with its next step
+   (hypomnemata › hypomnemata, the due reading). Write the rows to the project's
+   `rule.hypomnemata.due` through the gate, with the frontier, as a list of
+   `{kind, question, why, next}`; an empty list where nothing is due. The page shows
+   the first row with its next step and counts the rest (hypomnemata › horizon, the
+   due card). A row is a reading and never a verdict: the run adds no comment to it,
+   proposes nothing on it, and leaves settling to the review above the horizon it
+   bears on, on level ground, except where a row blocks work, which is settled with
+   the least that unblocks.
 4. **Run the gate, every run:** with all that changed as one change, or with no
    `--change` when nothing did (§"The Rule lives in the store"). It compiles the
    Rule again as of today: which events are meetings depends on which fixtures have
@@ -605,6 +620,20 @@ Report, in this order, as counts and nothing else:
   unconfirmed: ask once about those days, and read what is not confirmed as a gap
 - Bedtime — `times.sleep`, when Lights out was ticked — against `meta.lights_out`
   (target 22:00), as a range, not a verdict
+- **The cue walk** (hypomnemata › cue) — the standing list of cue classes, walked
+  once: an offer of work or money, a request for money or help, a commitment made or
+  pressed for, a change on a device, an account or with a provider, a new person in
+  the week. For each, "nothing seen" or the candidate events read off what the store
+  holds for the week: the `todo` items captured and the dictation notes, in their own
+  words; the days' `examen.events` answers, the review step's questions; the week's
+  `synclog`; the commitments the sync added. Ask one neutral question per candidate,
+  about the event and never about a principle, take the answer without comment, and
+  say "no change" for a class with nothing rather than nothing at all. A confirmed
+  event is one dated line on the item it bears on, or a dictation note for the
+  notebook it bears on; which clause it touches is the notebook's consult entry point
+  to say, never this review's. The one rule the user keeps in the moment, to wait
+  until after the next Examen before an irreversible commitment to a person, a trade
+  or a purchase, is read here as the commitments the week held, and never scored
 
 **A Remove on the page** (`removed: true` on a `todo` or `periodic` document) may
 be a slip nobody noticed, and the page's Undo lasts only while the card is open. For
@@ -688,6 +717,37 @@ costing the user attention; that is the whole reason the fields exist. If they c
 answer `displaces`, that is the finding — say it plainly and park it anyway.
 A new entry is a `set` of `backlog/<id>` with its `id` and the next `seq`, through
 the gate; it shows in the page's Docket when the write lands.
+
+## The annual sitting
+
+`/ordo yearly`, once a year, or when a sitting calls for it. The year is decided here and
+read a year on (hypomnemata › horizon): which projects, their aims and their standing
+allocations. Export the Rule and run `ORDO_RULE=<out_dir> python3 tools/counts.py --json`
+over an export that lists the record as the weekly review does; its `year` section gives,
+per project with a notebook, the frontier against the end its root states and the
+exceptions per dependent, the due reading's rows by kind, each read as a trend against
+the snapshot of the last annual sitting and never as an absolute.
+
+1. **Each end, and the frontier against it.** Per project: the end its root states, how
+   many questions stand on its frontier and how heavy. A project whose root no longer
+   states an end is named, and nothing else is said of it.
+2. **Each end against the order.** The need a project's end serves is its `rule.need`.
+   Read whether the end still says so; where it has moved, the change goes through the
+   gate. The order itself, the user's own notebook keeps, and nothing here edits it.
+3. **The exceptions per dependent,** as a trend by kind: more or fewer than last year.
+   Every dependent straining the same way is said once, as a finding for the user's
+   own notebook, and nothing is changed here on it.
+4. **The standing allocations for the year,** by level: the projects keeping a basic
+   need, then the relational, stand first only while their ends do not hold; the rest
+   as the user allocates among the projects kept for their own sake. One change
+   through the gate, with `--counts`, as at any sitting.
+5. **The interview is offered, never required:** the root of the user's own notebook,
+   put again by a questioner that has read nothing of it (`/principal:interview`, in
+   that notebook's checkout, in a fresh session). The sitting records that it was
+   offered and nothing of what was said.
+
+Nothing is read as a verdict, and no change is made from a bad year's low or a good
+year's high (hypomnemata › gate, the fifth criterion).
 
 ## Capturing a blocker
 
@@ -865,6 +925,19 @@ slots worked. It goes through the gate, which warns when the allocations add up 
 more than `rule/policy › docket.realistic_per_week`. The *shape* of the week, never which session on
 which day — a day-by-day plan breaks the first time a Tuesday runs long.
 
+Before the allocation, the level (hypomnemata › allocation). A project whose end keeps
+a basic need stands first, then one that keeps a relational need, and only while its
+own method says its end does not hold, which that project's thread writes to the store
+as `rule.holds: false` through the gate and sets back to true when it holds again. Every
+other project is the third level, the ones kept for their own sake, where allocation
+decides and nothing else ranks them: no scoring by leverage, and no importance. A
+project's level is its `rule.need`, one of `basic`, `relational` or `own`, read off its
+end's last clause at the sitting that founds it and changed through the gate. Each item
+may say what it is for (`for`, the item contract): the end clause or the question it
+serves; the project's end stands where it names none, and the page prints the reason
+beside the item, with the count the project is behind by. The counts the sort reads are
+the last sitting's, never the day's.
+
 Report last week's actual against allocation as counts, and beside them how many
 sessions had a plan taken on the page (`focus.<slot>.planned`) and how many of those
 the closing bell recorded as worked on: both are `tools/counts.py`'s `week` and `day`
@@ -970,6 +1043,11 @@ work session. It spends that session for the default project and is not a period
   the move. Never tell the user a review "has to wait until Sunday."
 - **A review costs a slot, and that is correct.** It is counted against the default project's
   allocation like any meeting.
+
+The daily run is `/ordo` by a thread of the Project, once a day: the sync and the due
+reading, and nothing else; it proposes nothing, and what it finds waits for the review
+above the horizon it bears on. The annual sitting is a meeting like the weekly one, on
+the calendar, once a year.
 
 The monthly backlog review is a periodic item, `periodic/backlog_review`. It competes
 for a focus slot on its cadence and never outranks anything — its expected outcome is

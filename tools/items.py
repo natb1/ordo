@@ -139,6 +139,10 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
                       "carries a source")
     if doc.get("notes") is not None and not isinstance(doc["notes"], str):
         raise Refused(f"{what}: notes is plain text, not {doc['notes']!r}")
+    # What the item is for (hypomnemata › allocation): the end clause or the question
+    # it serves, as text; the project's end where it names none, which the page reads.
+    if doc.get("for") is not None and not (isinstance(doc["for"], str) and doc["for"].strip()):
+        raise Refused(f"{what}: for is the end clause or the question the item serves, as text, not {doc['for']!r}")
     if held is None or "project" in doc:
         if doc.get("project") is not None and not (isinstance(doc["project"], str) and doc["project"]):
             raise Refused(f"{what}: project is a project's id, not {doc['project']!r}")

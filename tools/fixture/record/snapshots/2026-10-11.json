@@ -247,6 +247,7 @@
           "active": true,
           "allocation": 7,
           "calendar": null,
+          "holds": true,
           "hypomnemata": {
             "end": "That what the AI does on the human's behalf is what the human would have it do, across sessions, because the AI would do it with nothing in its context pushing it there and never because it is held to it; that the conditions on which the two work can be read in the record they keep; and that the condition on which the human keeps the AI can be tested there, off what was agreed and off what comes back when a question is put again, never off either party's report. For the sake of the condition the human's own notebook sets on what he keeps as a means, which this notebook reads and does not restate.",
             "frontier": [
@@ -289,6 +290,7 @@
             }
           },
           "id": "canondb",
+          "need": "own",
           "repo": "natb1/CanonDB",
           "seq": 0,
           "what": "CanonDB"
@@ -306,7 +308,7 @@
           "calendar": null,
           "hypomnemata": null,
           "id": "garden",
-          "repo": "desk:/srv/git/allotment",
+          "repo": "box:/srv/git/allotment",
           "seq": 3,
           "what": "The garden"
         }
@@ -339,6 +341,7 @@
           "allocation": 7,
           "calendar": "rule@example.com",
           "default": true,
+          "holds": true,
           "hypomnemata": {
             "end": "That what he lives match what he decided, at every stretch the Rule decides for ahead and reads after, so that the day runs on his own values and not on the hour's appetite; and that the Rule cost the least attention that still binds, an item the Rule holds in place passing into his own keeping only when the record shows it holds where the Rule does not reach. For the sake of the agency his own notebook names, the capacity to act on his own values, which this notebook reads and does not restate.",
             "frontier": [
@@ -367,6 +370,7 @@
             }
           },
           "id": "ordo",
+          "need": "own",
           "repo": "natb1/ordo",
           "seq": 2,
           "what": "ordo \u2014 the Rule"
@@ -377,6 +381,17 @@
     {
       "collection": "rule",
       "data": {
+        "probes": [
+          {
+            "offers": "Did anyone offer you work or money, or ask you for money or help?"
+          },
+          {
+            "commitments": "Did you commit to anything new, or feel pushed to?"
+          },
+          {
+            "custody": "Did anything change on a device, an account, or with a provider?"
+          }
+        ],
         "steps": [
           {
             "gratitude": "One thing. First, always."
@@ -959,9 +974,9 @@
         "docket": {
           "focus_slots_per_day": 3,
           "realistic_per_week": 20,
-          "rule": "At the bell, the suggested project is the one FURTHEST BEHIND its allocation, unless an overdue periodic item is marked to outrank it. Arithmetic, not appetite. Behind is measured as a share: the smallest fraction of its allocation used, ties to the larger allocation, the same measure the sort uses for periodic items, so a short week falls on every project in proportion and not all on the smallest. A project with no allocation this week is behind nothing; it comes last, as slack. Overdue means past its due day: on the day itself the item waits in its project's own sort. Several overdue at once go furthest past due first, as a fraction of their cadence. A meeting spends a slot without being chosen for it: a project's used count is its sessions worked and its meetings together. One that did not happen \u2014 a cancelled week, marked on the page the day of \u2014 spends nothing: that session is an ordinary one, and the meeting counts for nothing. A session counts for every project it worked, whether the bell named the project or only one of its items (a review is ordo's slot); a follow-up counts for none. A slot is one slot of supply, so one shared by n projects charges each 1/n, and the counts never outrun the slots worked.\n",
+          "rule": "Before the deficit, the level: a project whose end keeps a basic need, then one that keeps a relational need, stands first only while its own method says its end does not hold (its `holds` is false); every other project is the third level, the ones kept for their own sake, where allocation decides (hypomnemata \u203a allocation). Within a level: At the bell, the suggested project is the one FURTHEST BEHIND its allocation, unless an overdue periodic item is marked to outrank it. Arithmetic, not appetite. Behind is measured as a share: the smallest fraction of its allocation used, ties to the larger allocation, the same measure the sort uses for periodic items, so a short week falls on every project in proportion and not all on the smallest. A project with no allocation this week is behind nothing; it comes last, as slack. Overdue means past its due day: on the day itself the item waits in its project's own sort. Several overdue at once go furthest past due first, as a fraction of their cadence. A meeting spends a slot without being chosen for it: a project's used count is its sessions worked and its meetings together. One that did not happen \u2014 a cancelled week, marked on the page the day of \u2014 spends nothing: that session is an ordinary one, and the meeting counts for nothing. A session counts for every project it worked, whether the bell named the project or only one of its items (a review is ordo's slot); a follow-up counts for none. A slot is one slot of supply, so one shared by n projects charges each 1/n, and the counts never outrun the slots worked.\n",
           "set_at": "the Sunday sitting",
-          "sort": "Within the project the work is taken in order from three queues, which are three tiers of priority, never a matrix (hypomnemata \u203a allocation). First, the meetings of the session: each takes its session outright, and the order always shows them. Second, periodic items and TODO items together, by one measure: how far overdue each is as a fraction of its cadence. A TODO item with a date is due on it, counted from its capture; one without is due fourteen days after it was captured, so it rises as it ages. A periodic item not yet due waits below. Third, canon: the project's frontier hypomnemata by pressure, then dictations waiting to be dictated, oldest first. A blocker takes the tier and the rank of what it stops and stands just before it, and the page draws the two as bound; one that stops an Office item or a fixture stands in the second tier at that thing's next day, which is the only way the Office enters the order. There is no scoring by leverage and no rule of one in progress.\n",
+          "sort": "Within the project the work is taken in order from three queues, which are three tiers of priority, never a matrix (hypomnemata \u203a allocation). First, the meetings of the session: each takes its session outright, and the order always shows them. Second, periodic items and TODO items together, by one measure: how far overdue each is as a fraction of its cadence. A TODO item with a date is due on it, counted from its capture; one without is due fourteen days after it was captured, so it rises as it ages. A periodic item not yet due waits below. Third, canon: the project's frontier hypomnemata by pressure, then dictations waiting to be dictated, oldest first. A blocker takes the tier and the rank of what it stops and stands just before it, and the page draws the two as bound; one that stops an Office item or a fixture stands in the second tier at that thing's next day, which is the only way the Office enters the order. There is no scoring by leverage and no rule of one in progress. Each item may say what it is for, the end clause or the question it serves; the project's end stands where it names none, and the page prints the reason beside the item.",
           "starvation_is_data": "A project far under at week's end usually means the allocation was wrong, or another project pulls harder than you admitted. Change the number, never scold. Read it as a share: a short week leaves every project at about the same fraction, so the outlier is the signal.\n"
         },
         "todo": {

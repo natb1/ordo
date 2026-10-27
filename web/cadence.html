@@ -619,6 +619,7 @@
   .dicons{display:flex;gap:4px;flex:none}
   .dicons .ctxBtn{margin:0}
   .dkid .dwhy{display:block;font-size:11.5px;color:var(--faint);line-height:1.4;margin-top:2px}
+  .dproj .dreason{display:block;font-size:11.5px;color:var(--faint);line-height:1.4;margin:2px 0 6px}
   .dkid.canon>b::before,.dkid.blocker>b::before{content:"";display:inline-block;width:6px;height:6px;
     border-radius:50%;margin-right:7px;vertical-align:middle;background:var(--accent)}
   .dkid.blocker>b::before{background:var(--blocked)}
@@ -1314,14 +1315,14 @@
    TODO items and periodic items are not here: they are the todo and periodic
    collections, which the page and /ordo both write. */
 var BLOCKS, COMMITMENTS, PROJECTS, SHELVED, FRONTIER, BACKLOG, WHOLE_DAYS, EXAMEN, EXIT_RITE,
-    WINTER, RATION, TIMEBOX, TODO_CADENCE, BELL_LEAD, DAY_START, TIMEZONE;
+    WINTER, RATION, TIMEBOX, TODO_CADENCE, BELL_LEAD, DAY_START, TIMEZONE, DUE, EXAMEN_PROBES;
 /* Each name's value before any Rule, and again before each Rule is taken: a Rule
    that leaves a name out leaves it at this, never at the last Rule's (nor at the
    values of one that could not be drawn). The clock needs a day before the Rule has
    arrived; the Rule's own replaces it. With no TIMEZONE the clock is this browser's. */
 var RULE_DEFAULT={
   BLOCKS:[], COMMITMENTS:[], PROJECTS:[], SHELVED:[], FRONTIER:[], BACKLOG:[], WHOLE_DAYS:[],
-  EXAMEN:[], EXIT_RITE:[], WINTER:{start:"",end:""}, RATION:{week:0,day:0},
+  EXAMEN:[], EXAMEN_PROBES:[], DUE:[], EXIT_RITE:[], WINTER:{start:"",end:""}, RATION:{week:0,day:0},
   TIMEBOX:{minutes:0,sessions:0}, TODO_CADENCE:14, BELL_LEAD:0, DAY_START:"04:00", TIMEZONE:null
 };
 /* The gate holds every value to its shape, but the store takes a write from anyone
@@ -1334,6 +1335,7 @@ var RULE_SET={
   WHOLE_DAYS:function(v){WHOLE_DAYS=v;}, WINTER:function(v){WINTER=v;},
   DAY_START:function(v){ if(typeof v==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)) DAY_START=v; },
   EXAMEN:function(v){EXAMEN=v;}, EXIT_RITE:function(v){EXIT_RITE=v;},
+  DUE:function(v){DUE=v;}, EXAMEN_PROBES:function(v){EXAMEN_PROBES=v;},
   RATION:function(v){ RATION={week:+v.week||0,day:+v.day||0}; },
   TIMEBOX:function(v){TIMEBOX=v;}, TODO_CADENCE:function(v){TODO_CADENCE=v;}, BELL_LEAD:function(v){BELL_LEAD=v;},
   /* meta.timezone, an IANA name: the wall clock the day is read on, wherever this
@@ -2818,6 +2820,42 @@ function pickWithin(pid,focusId){
   if(!r) return null;
   return {what:r.o.what,why:r.why};
 }
+/* The level a project's end serves (hypomnemata › allocation): a basic need, then a
+   relational need, stands before any allocation only while the project's own method
+   says its end does not hold (`holds` false, written by that project's thread through
+   the gate); every other project is the third level, the ones kept for their own
+   sake, where allocation decides. 0, 1 and 2 sort before the deficit. */
+function levelOf(p){
+  if(p && p.holds===false){ if(p.need==="basic") return 0; if(p.need==="relational") return 1; }
+  return 2;
+}
+/* The end's last clause, what a project is for where an item names nothing itself:
+   the "For the sake of" clause where the end has one, else its last sentence. */
+function lastClause(end){
+  var t=String(end||"").trim(); if(!t) return "";
+  var i=t.lastIndexOf("For the sake of"); if(i>=0) return t.slice(i);
+  var parts=t.split(". "); return parts[parts.length-1];
+}
+/* The one item the sort offers for tomorrow (hypomnemata › examen, the fifth step):
+   the first project by level then by share, and within it the first thing the sort
+   puts, with its reason. Taken or overridden on the card, and counted either way. */
+function offeredItem(){
+  var fc=focusCounts();
+  var ps=PROJECTS.map(function(p){ var done=fc[p.id]||0, alloc=allocOf(p); return {p:p,alloc:alloc,share:alloc>0?done/alloc:Infinity}; })
+    .sort(function(a,b){ return (levelOf(a.p)-levelOf(b.p)) || (a.share-b.share) || (b.alloc-a.alloc); });
+  for(var i=0;i<ps.length;i++){ var pk=pickWithin(ps[i].p.id); if(pk) return {project:ps[i].p.what,what:pk.what,why:pk.why}; }
+  return null;
+}
+/* The reason a project's next item stands where it does: the item's own `for`, else
+   the end's last clause, and the count the project is behind by. */
+function reasonLine(host,p,top){
+  var fc=focusCounts(), short=allocOf(p)-(fc[p.id]||0), f=(top && top.o && top.o["for"]) || lastClause(p.end);
+  var bits=[];
+  if(levelOf(p)<2) bits.push("its end does not hold, a "+p.need+" need: first");
+  if(f) bits.push("for: "+f);
+  if(short>0) bits.push("behind by "+countText(short));
+  if(bits.length) host.appendChild(el("div","dreason",bits.join(" · ")));
+}
 function recommend(focusId){
   var out=[], fc=focusCounts();
 
@@ -2846,10 +2884,11 @@ function recommend(focusId){
     var done=fc[p.id]||0, alloc=allocOf(p);
     return {p:p,done:done,alloc:alloc,short:alloc-done,share:alloc>0?done/alloc:Infinity};
   }).sort(function(a,b){
-    return (a.share-b.share) || (b.alloc-a.alloc);
+    return (levelOf(a.p)-levelOf(b.p)) || (a.share-b.share) || (b.alloc-a.alloc);
   }).forEach(function(r,i){
     var m=meet[r.p.id]||0, short=halves(r.short);
-    var why=countText(r.done)+" of "+r.alloc+" this week"+(m?" ("+plural(m,"meeting")+" counted)":"");
+    var why=(levelOf(r.p)<2 ? "Its end does not hold, a "+r.p.need+" need: it stands before any allocation. " : "")
+           +countText(r.done)+" of "+r.alloc+" this week"+(m?" ("+plural(m,"meeting")+" counted)":"");
     if(!(r.alloc>0)) why+=" — unallocated this week.";
     else if(short>0) why+=", short by "+countText(r.short)+(i===0?" — furthest behind its allocation, as a share of it.":".");
     else if(short===0) why+=(r.short ? " — about on its allocation." : " — on its allocation.");
@@ -3599,6 +3638,32 @@ function paintExamen(host,it){
     save();
   });
   host.appendChild(ta);
+  /* The review step asks its fixed questions about events, never about principles
+     (hypomnemata › examen): one at a time, each answer stored under its id in the
+     day's document, and nothing reflected back. */
+  if(s.k==="review" && EXAMEN_PROBES.length){
+    state.examen=state.examen||{}; var ev=(state.examen.events=state.examen.events||{});
+    EXAMEN_PROBES.forEach(function(pr){
+      var inp=field(host,pr.p,textInput(dr.ex["ev:"+pr.id]!=null?dr.ex["ev:"+pr.id]:(ev[pr.id]||""),"No, or what happened, in a line"),"ex:ev:"+pr.id);
+      inp.addEventListener("input",function(){ dr.ex["ev:"+pr.id]=inp.value; ev[pr.id]=inp.value.trim(); save(); });
+    });
+  }
+  /* The fifth step offers the sort's one item for tomorrow with its reason; taken
+     or overridden, and either is counted, never judged. */
+  if(s.k==="tomorrow"){
+    var off=offeredItem();
+    if(off){
+      state.examen=state.examen||{};
+      if(!state.examen.offered || state.examen.offered.what!==off.what){ state.examen.offered={project:off.project,what:off.what}; state.examen.taken=false; save(); }
+      var o=el("div","rec"); o.appendChild(el("div","what","Offered: "+off.what)); o.appendChild(el("div","why",off.project+": "+off.why));
+      var oa=el("div","acts");
+      oa.appendChild(actButton(state.examen.taken?"Taken":"Take it","no",function(){
+        ta.value="If the first focus bell rings, then "+off.what; dr.ex[s.k]=ta.value; state.examen[s.k]=ta.value.trim();
+        state.examen.taken=true; save(); repaintCard(rowId(it));
+      }));
+      o.appendChild(oa); host.appendChild(o);
+    }
+  }
   var acts=el("div","acts");
   if(exIdx>0){
     var back=el("button","no","Back"); back.type="button"; back.setAttribute("data-fk","ex:back");
@@ -3639,6 +3704,19 @@ function paintBlocked(host){
     card.appendChild(acts);
     host.appendChild(card);
   });
+}
+/* ---- due: the due reading, one at the top with its next step, the rest counted ----
+   (hypomnemata › horizon, the due card). The rows are the daily run's, carried to
+   each project's document; nothing here scolds, and the page adds no comment. */
+function paintDue(host){
+  host.textContent="";
+  if(!DUE.length){ para(host,"empty","Nothing is due."); return; }
+  var d=DUE[0], card=el("div","rec");
+  card.appendChild(el("div","what",(d.project?d.project+" · ":"")+d.question+" · "+d.kind));
+  card.appendChild(el("div","why",d.why));
+  card.appendChild(el("div","next","Next: "+d.next));
+  host.appendChild(card);
+  if(DUE.length>1) para(host,"note",(DUE.length-1)+" more due, read at the sitting.");
 }
 /* Said beside the button that could not act, in place of doing nothing. */
 function nudge(host,txt){
@@ -3705,6 +3783,7 @@ function workRow(host,r){
   var row=el("div",cls);
   row.appendChild(el("b",null,o.what));
   if(r.why) row.appendChild(el("span","dwhy",r.why));
+  if(o["for"]) row.appendChild(el("span","dwhy","For: "+o["for"]));
   if(r.binds) row.appendChild(el("span","dbind","Stops "+r.bindsWhat+", below."));
   if(o.question) row.appendChild(el("div","next none","Read and answered at the notebook."));
   else if(isD) row.appendChild(el("div","next none",invocation(o)));
@@ -3847,6 +3926,7 @@ function todoSavePatch(e,x){
   if(e.by!==w.by) patch.by=e.by||null;
   if(canon(e.blocks)!==canon(w.blocks)) patch.blocks=e.blocks.slice();
   if(e.dictation!==w.dictation) patch.dictation=(e.dictation||"").trim()||null;
+  if(e["for"]!==w["for"]) patch["for"]=(e["for"]||"").trim()||null;
   return patch;
 }
 function todoItem(host,p,x,dr){
@@ -3866,8 +3946,8 @@ function todoItem(host,p,x,dr){
   if(owner){ ownedItem(host,p,x,dr,owner); return; }
   /* `was` is what the draft opened on: Save sends only the fields changed here, so a
      field another device changed meanwhile is not written back over with this one. */
-  var e=dr.edit=dr.edit||{id:x.id,what:x.what,dictation:x.dictation||"",next:threadLine(x.id),by:x.by||"",blocks:(x.blocks||[]).slice()};
-  if(!e.was) e.was={what:e.what,dictation:e.dictation,next:e.next,by:e.by,blocks:e.blocks.slice()};
+  var e=dr.edit=dr.edit||{id:x.id,what:x.what,dictation:x.dictation||"",next:threadLine(x.id),by:x.by||"",blocks:(x.blocks||[]).slice(),"for":x["for"]||""};
+  if(!e.was) e.was={what:e.what,dictation:e.dictation,next:e.next,by:e.by,blocks:e.blocks.slice(),"for":e["for"]};
   var wrap=el("div","iopen"); host.appendChild(wrap);
   var h=field(wrap,"Heading",textInput(e.what),"ed:what:"+x.id); h.addEventListener("input",function(){ e.what=h.value; });
   var d=field(wrap,"Details",document.createElement("textarea"),"ed:dictation:"+x.id); d.value=e.dictation; d.placeholder="Your own prose: the details, and why";
@@ -3875,6 +3955,9 @@ function todoItem(host,p,x,dr){
   notesOf(wrap,x);
   var n=field(wrap,"Next step",textInput(e.next,"Where you pick up"),"ed:next:"+x.id); n.addEventListener("input",function(){ e.next=n.value; });
   var by=field(wrap,"Due by",dateInput(e.by),"ed:by:"+x.id); by.addEventListener("change",function(){ e.by=by.value; });
+  /* What the item is for (hypomnemata › allocation): the end clause or the question
+     it serves; the project's end stands where it names none. */
+  var fo=field(wrap,"For",textInput(e["for"],"The clause or the question it serves"),"ed:for:"+x.id); fo.addEventListener("input",function(){ e["for"]=fo.value; });
   var bl=field(wrap,"It blocks",el("div"));
   if(dr.blocksOpen===x.id) blocksChooser(bl,e,x.id);
   else{
@@ -4607,6 +4690,7 @@ function docketProject(host,p,ranked){
   var c=el("div","dproj");
   var h=el("div","dhead");
   h.appendChild(el("b",null,p.what));
+  if(p.need && p.need!=="own") h.appendChild(el("span","dtag",p.need+" need"+(p.holds===false?", not held":"")));
   if(ranked){
     var fc=focusCounts(), meet=meetingCounts()[p.id]||0;
     h.appendChild(allocDots(fc[p.id]||0,allocOf(p),meet));
@@ -4621,6 +4705,7 @@ function docketProject(host,p,ranked){
   c.appendChild(h);
   nextLine(c,p.id);
   var rs=rankWork(p.id);
+  if(ranked) reasonLine(c,p,rs.filter(function(x){ return x.step!=="follow" && x.step!=="later" && x.step!=="meeting" && !x.blocked; })[0]);
   if(rs.length) c.appendChild(el("div","dsub","Work, in order"));
   workRows(c,rs,"dtier");
   host.appendChild(c);
@@ -4712,6 +4797,7 @@ defineCard("focus","This focus session",function(host){
 },true);
 defineCard("blocked","Blocked",paintBlocked,true);
 defineCard("budget","Budget",paintBudget,true);
+defineCard("due","Due",paintDue,true);
 /* Whoever opened it — the app, or the reader from the ⋮ menu — it gets painted.
    Whatever closed it, what it was part-way through saying goes with it. */
 shell.on("open",function(e){ paintCard(e.id); });
