@@ -3903,7 +3903,7 @@ function todoItem(host,p,x,dr){
   var acts=el("div","acts");
   acts.appendChild(actButton("Save","go",function(){
     putTodo(x.id,todoSavePatch(e,x));
-    var nx=(e.next||"").trim(); if(e.next!==w.next && nx!==threadLine(x.id)) setThread(x.id,nx);
+    var nx=(e.next||"").trim(); if(e.next!==e.was.next && nx!==threadLine(x.id)) setThread(x.id,nx);
     delete dr.edit; dr.blocksOpen=false; render();
   }));
   acts.appendChild(actButton("Done","no",function(){ finish("Done: "+x.what+".",donePatch(),{done:false,doneAt:null}); }));
