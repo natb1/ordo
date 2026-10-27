@@ -786,6 +786,11 @@ class Page(unittest.TestCase):
                  todoSavePatch(e({dictation:"  why  "}),{what:"Call"}),
                  todoSavePatch(e({what:" ",by:"",blocks:[]}),{what:"Call"})]);""")
         self.assertEqual(got, [{}, {"dictation": "why"}, {"what": "Call", "by": None, "blocks": []}])
+        # its next step is compared with what the draft opened on, e.was (a bare `w`
+        # there is undeclared in todoItem: Save threw after writing, under "use strict")
+        todo = page_fn("todoItem")
+        self.assertIn("e.next!==e.was.next", todo)
+        self.assertNotRegex(todo, r"[^.\w]w\.")
         # the owned card's line and the periodic card's fields are drafts the same way
         owned, periodic = page_fn("ownedItem"), page_fn("periodicItem")
         self.assertIn("dr.edit=dr.edit||{id:x.id,next:nl,was:nl}", owned)
