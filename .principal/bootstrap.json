@@ -36,7 +36,7 @@
         "tools/fixture/rule/rule/office.json",
         "tools/fixture/rule/rule/policy.json"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/38",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 6
     },
     {
@@ -56,7 +56,7 @@
         "tools/items.py",
         "tools/test_items.py"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/33",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 2
     },
     {
@@ -72,7 +72,7 @@
         "tools/test_fixture_public.py",
         "tools/test_skill_docs.py"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/33",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 3
     },
     {
@@ -83,7 +83,7 @@
         ".claude/skills/ordo/reference/blockers.md",
         "CLAUDE.md"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/3",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 7
     },
     {
@@ -113,7 +113,7 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/33",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 4
     },
     {
@@ -133,7 +133,7 @@
         "tools/ruleyaml.py",
         "tools/test_tradition.py"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/32",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 2
     },
     {
@@ -142,7 +142,7 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/35",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 3
     },
     {
@@ -151,7 +151,7 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/33",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 3
     },
     {
@@ -200,7 +200,7 @@
         "tools/fixture/record/snapshots/2026-10-18.json",
         "tools/fixture/record/todo/i123.json"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/38",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 2
     },
     {
@@ -230,7 +230,7 @@
       "files": [
         ".claude/skills/ordo/SKILL.md"
       ],
-      "pull_request": "",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 1
     },
     {
@@ -239,7 +239,7 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "",
+      "pull_request": "https://github.com/natb1/ordo/pull/5",
       "rounds": 1
     }
   ]
