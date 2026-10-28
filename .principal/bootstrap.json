@@ -36,8 +36,8 @@
         "tools/fixture/rule/rule/office.json",
         "tools/fixture/rule/rule/policy.json"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 6
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 7
     },
     {
       "question": "record",
@@ -46,8 +46,8 @@
         "tools/record.py",
         "tools/test_record.py"
       ],
-      "pull_request": "https://github.com/natb1/private/pull/33",
-      "rounds": 2
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 3
     },
     {
       "question": "record",
@@ -56,8 +56,8 @@
         "tools/items.py",
         "tools/test_items.py"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 2
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 3
     },
     {
       "question": "record",
@@ -83,8 +83,8 @@
         ".claude/skills/ordo/reference/blockers.md",
         "CLAUDE.md"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 7
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 8
     },
     {
       "question": "record",
@@ -113,8 +113,8 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 4
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 5
     },
     {
       "question": "deviation",
@@ -151,8 +151,8 @@
       "files": [
         "web/cadence.html"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 3
+      "pull_request": "https://github.com/natb1/ordo/pull/7",
+      "rounds": 4
     },
     {
       "question": "undertaking",
