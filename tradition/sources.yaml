@@ -253,6 +253,24 @@ sources:
     verified: unverified
     note: Origins commonly traced to Noh and tea practice; attribution is loose.
 
+  RB-3:
+    work: The Rule of St. Benedict
+    locus: Ch. 3, On Calling the Brethren for Counsel
+    date: c. 530
+    domain: monastic
+    quote: "Whenever any important business has to be done in the monastery, let the Abbot call together the whole community"
+    supports: >
+      Where a conflict in the Rule or between principles is settled: what blocks is
+      settled when it blocks, with the least that unblocks; the rest waits for the
+      review above it, where the whole matter is put, counsel heard, and the one who
+      decides decides on level ground (hypomnemata › gate).
+    verified: web-2026-10-27
+    note: >
+      Confirmed against Project Gutenberg's text of the Rule in Leonard J. Doyle's
+      translation (Liturgical Press, 1948), Chapter 3: the abbot states the matter,
+      hears the brethren's advice, then "turn[s] the matter over in his own mind"
+      and decides.
+
   # ---- Review: looking at the day without a verdict ------------------------
 
   PYTHAG-GV-40:
@@ -408,6 +426,24 @@ sources:
       of the same party reports the Stephanus references checked, but that audit is
       another repo's and does not count here. Promote before leaning on it.
 
+  IGNATIUS-ELECTION:
+    work: The Spiritual Exercises
+    locus: Second Week, "Three times for making, in any one of them, a sound and good election", and the first way, its first two points
+    author: Ignatius of Loyola
+    date: 1548
+    domain: christian-spirituality
+    quote: "The third time is quiet, when one considers, first, for what man is born"
+    supports: >
+      A change to the order or to the Rule is made in a quiet time and not under the
+      movement of the moment, and by one measure, what is more conducive to the end
+      one is made for, held "like the middle of a balance": the sort by the ends, and
+      a conflict settled on level ground (hypomnemata › allocation, › gate).
+    verified: web-2026-10-27
+    note: >
+      Confirmed against the 1914 English translation (Elder Mullan's) as sacred-texts
+      publishes it, the Second Week's election: the three times, and the first way's
+      second point, which keeps "as aim the end for which I am created".
+
   # ---- The end: what the counts serve ---------------------------------------
 
   CASSIAN-CONF-1:
@@ -432,6 +468,77 @@ sources:
       The end is first in the order of intention and last in the order of execution,
       so it is stated before a horizon is decided for and read after it (hypomnemata › horizon).
     verified: unverified
+
+  CASSIAN-CONF-1.5:
+    work: The Conferences
+    locus: Conference I, 5–7, Abba Moses on what serves the mark and what is left off
+    author: John Cassian
+    date: c. 420
+    domain: monastic
+    quote: "Whatever then can help to guide us to this object; viz., purity of heart, we must follow with all our might"
+    supports: >
+      Discretion by the mark: every practice is judged by whether it serves the mark,
+      kept while it does and left off where it hinders, the secondary thing never
+      taken for the end. The sort's levels read each project the same way, against
+      the end its root states and as a threshold, never a maximization
+      (hypomnemata › allocation).
+    verified: web-2026-10-27
+    note: >
+      Confirmed against Gibson's translation (Nicene and Post-Nicene Fathers, second
+      series, vol. 11) at New Advent, Conference I chapters 4–7: fasting, vigils and
+      the rest are secondary, practised for the main object, and given up where they
+      stand in its way. CASSIAN-CONF-1 covers the end and the mark themselves.
+
+  ARISTOTLE-TOPICS-1.2:
+    work: Topics
+    locus: I.2, 101a34–b4, the third use of dialectic
+    author: Aristotle
+    date: c. 350 BC
+    domain: hellenic
+    quote: "for dialectic is a process of criticism wherein lies the path to the principles of all inquiries"
+    supports: >
+      The first principles of a science cannot be examined from inside it, so they
+      are reached by dialectic, by questioning what is held: the derivation reading
+      that puts the archai root's question to the user again is that road, and it is
+      why the order is refined by a question and never by a count (the archai root).
+    verified: web-2026-10-27
+    note: Confirmed against Pickard-Cambridge's translation at the MIT classics archive, Topics I.2.
+
+  RAWLS-1971-RE:
+    work: A Theory of Justice
+    locus: §4 and §9, reflective equilibrium
+    author: John Rawls
+    date: 1971
+    domain: ethics
+    supports: >
+      Principles and considered judgements are adjusted against each other until they
+      agree. The archai root's method takes the form and slows it to one direction at
+      a time: what cannot be derived from the order is the finding, and the order
+      changes only by the user's own hand, after a reading, from level ground.
+    verified: web-2026-10-27
+    note: >
+      Confirmed against the Stanford Encyclopedia of Philosophy, "Reflective
+      Equilibrium" (Carl Knight, 2023): "Equilibrium is reached where principles and
+      judgments have been revised such that they agree with each other." The Theory
+      itself was not opened.
+
+  COLLINGWOOD-1940-STRAIN:
+    work: An Essay on Metaphysics
+    locus: Ch. V, p. 48 n., the footnote on how a constellation of absolute presuppositions changes
+    author: R. G. Collingwood
+    date: 1940
+    domain: philosophy
+    supports: >
+      A constellation of absolute presuppositions is under strains, taken up in
+      various ways; when they are too great the structure gives way to a modification
+      of itself, and not by anyone's argument. The archai root's second reading looks
+      for the strain, when every dependent's exceptions strain the same way, and the
+      order changes only from level ground.
+    verified: unverified
+    note: >
+      Drawn from model knowledge. The footnote was not found in the Stanford
+      Encyclopedia's entry or by search on 2026-10-27; to be read in the text before
+      anything leans on its wording.
 
   # ---- Cueing and habit: why intentions become behaviour -------------------
 
@@ -558,6 +665,24 @@ sources:
       winning moment-to-moment fights. The reason to build a Rule instead of trying harder.
     verified: unverified
 
+  SENECA-EP-33:
+    work: Epistulae morales ad Lucilium
+    locus: Letter 33, On the futility of learning maxims
+    author: Seneca
+    date: c. 65
+    domain: stoic
+    quote: "He should make such maxims and not memorize them"
+    supports: >
+      A maxim kept at hand is for the occasion and made one's own, never a list
+      carried in the head: the cue for a principle is the review that asks, the user
+      carries one rule and not a list, and what is kept is put forth "from your own
+      stock" (hypomnemata › cue).
+    verified: web-2026-10-27
+    note: >
+      Confirmed against Gummere's translation (Loeb, 1917) on Wikisource. The letter
+      argues against carrying borrowed maxims, so it is cited for that and not for
+      the list it refuses.
+
   # ---- Attention, flow, hyperfocus ----------------------------------------
 
   ASHINOFF-2021:
@@ -585,6 +710,25 @@ sources:
       Absorption from challenge matched to skill; and the warning that the autotelic
       experience can become addictive. Flow and the trap are the same machinery.
     verified: unverified
+
+  LARSON-CSIK-1983:
+    work: "The Experience Sampling Method"
+    author: Larson, R., & Csikszentmihalyi, M.
+    venue: New Directions for Methodology of Social and Behavioral Science 15, 41–56, ed. H. T. Reis, Jossey-Bass
+    date: 1983
+    domain: psychology
+    supports: >
+      A pager signals at random moments and the subject reports what is happening
+      then, so the moment sampled is uncorrelated with what the subject would choose
+      to report: the model for the uncorrelated draw that puts the derivation question
+      to the user, and for a probe that asks about events and never about principles
+      (the archai root's method, hypomnemata › examen).
+    verified: web-2026-10-27
+    caution: >
+      The citation (editor, venue, pages, and the 2014 Springer reprint) was
+      confirmed by search on 2026-10-27; the chapter itself was not opened, so the
+      method's description rests on model knowledge and on Csikszentmihalyi & Larson
+      (1987), J. Nerv. Ment. Dis. 175, 526–536.
 
   # ---- The specific problems ----------------------------------------------
 
