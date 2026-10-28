@@ -35,6 +35,8 @@
     "id": "ordo",
     "repo": "natb1/ordo",
     "seq": 2,
-    "what": "ordo — the Rule"
+    "what": "ordo — the Rule",
+    "need": "own",
+    "holds": true
   }
 }

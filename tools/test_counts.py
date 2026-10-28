@@ -411,6 +411,7 @@ class ByYear(unittest.TestCase):
         self.assertEqual(set(y), {"canondb", "ordo"})   # nix_config keeps no notebook
         self.assertTrue(y["ordo"]["end"].startswith("That what he lives match what he decided"))
         self.assertEqual((y["ordo"]["frontier"], y["ordo"]["questions"]), (1, ["ti-esti"]))
+        self.assertEqual((y["ordo"]["exceptions"], y["ordo"]["by_kind"]), (0, {}))   # the fixture carries no due list
 
 
 class PerItem(unittest.TestCase):

@@ -48,6 +48,8 @@
     "id": "canondb",
     "repo": "natb1/CanonDB",
     "seq": 0,
-    "what": "CanonDB"
+    "what": "CanonDB",
+    "need": "own",
+    "holds": true
   }
 }

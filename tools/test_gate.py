@@ -815,3 +815,63 @@ class Page(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Levels(Projects):
+    """The level a project's end serves (hypomnemata › allocation): need and holds,
+    compiled for the page's sort, defaults where the Rule says nothing."""
+
+    def test_need_and_holds_default_to_own_and_held(self):
+        p = self.compiled()["garden"]
+        self.assertEqual((p["need"], p["holds"]), ("own", True))
+        self.assertNotIn("end", p)   # no notebook, so no end: an unset value is left out, as the repo link is
+
+    def test_the_fixture_s_level_is_compiled(self):
+        p = self.compiled()["ordo"]
+        self.assertEqual((p["need"], p["holds"]), ("own", True))
+        self.assertTrue(p["end"].startswith("That what he lives match what he decided"))
+
+    def test_a_need_the_rule_does_not_name_is_refused(self):
+        with self.assertRaisesRegex(gate.Refused, "need 'money'"):
+            gate.gate(store(), [self.rule("garden", need="money")])
+        with self.assertRaisesRegex(gate.Refused, "holds 'no'"):
+            gate.gate(store(), [self.rule("garden", holds="no")])
+
+    def test_a_basic_need_not_held_reaches_the_page(self):
+        p = self.compiled(self.rule("garden", need="basic", holds=False))["garden"]
+        self.assertEqual((p["need"], p["holds"]), ("basic", False))
+
+
+class DueRows(unittest.TestCase):
+    """The due reading's rows ride to the page on projects/<id> › rule.hypomnemata.due
+    (hypomnemata › horizon, the due card), each {kind, question, why, next}."""
+
+    def compiled_of(self, *changes):
+        s = store()
+        return {k: d for _, k, d in gate.gate(s, list(changes), now=NOW)}[gate.COMPILED]
+
+    def test_nothing_due_by_default(self):
+        self.assertEqual(store()[gate.COMPILED]["DUE"], [])
+
+    def test_rows_are_compiled_with_their_project(self):
+        row = {"kind": "pending", "question": "allocation", "why": "a pending note", "next": "take it in"}
+        c = self.compiled_of({"op": "update", "collection": "projects", "doc_id": "ordo",
+                              "data": {"rule": {"hypomnemata": {"due": [row]}}}})
+        self.assertEqual(c["DUE"], [dict(row, project="ordo")])
+
+    def test_a_row_that_is_not_one_is_refused(self):
+        with self.assertRaisesRegex(gate.Refused, "due row is"):
+            self.compiled_of({"op": "update", "collection": "projects", "doc_id": "ordo",
+                              "data": {"rule": {"hypomnemata": {"due": [{"kind": "pending"}]}}}})
+        with self.assertRaisesRegex(gate.Refused, "due row kind 'late'"):
+            self.compiled_of({"op": "update", "collection": "projects", "doc_id": "ordo",
+                              "data": {"rule": {"hypomnemata": {"due": [{"kind": "late", "question": "q", "why": "w", "next": "n"}]}}}})
+
+
+class ExamenProbes(unittest.TestCase):
+    """The review step's fixed questions about events (hypomnemata › examen)."""
+
+    def test_the_fixture_s_three_probes_are_compiled_in_order(self):
+        probes = store()[gate.COMPILED]["EXAMEN_PROBES"]
+        self.assertEqual([p["id"] for p in probes], ["offers", "commitments", "custody"])
+        self.assertTrue(all(p["p"].endswith("?") for p in probes))

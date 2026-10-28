@@ -31,6 +31,16 @@ def check(collection, doc, held=None, owner=None, lists=LISTS):
 
 
 class Shape(unittest.TestCase):
+    def test_what_an_item_is_for_is_text_or_nothing(self):
+        d = check("todo", {"id": "i9", "what": "Rebalance", "for": "the floor holds in every case"})
+        self.assertEqual(d["for"], "the floor holds in every case")
+        d = check("todo", {"id": "i9", "what": "Rebalance", "for": "q:canondb:priority"})
+        self.assertEqual(d["for"], "q:canondb:priority")
+        for bad in ("", "  ", 3, ["x"]):
+            with self.subTest(bad=bad), self.assertRaisesRegex(items.Refused, "for is the end clause"):
+                check("todo", {"id": "i9", "what": "Rebalance", "for": bad})
+        self.assertNotIn("for", check("todo", {"id": "i9", "what": "Rebalance"}))
+
     def test_a_capture_takes_the_default_project_and_today(self):
         d = check("todo", {"id": "i1", "what": "Call the plumber", "blocks": ["gym", "q:canondb:priority"]})
         self.assertEqual((d["project"], d["captured"], d["blocks"]), ("ordo", TODAY, ["gym", "q:canondb:priority"]))

@@ -15,5 +15,16 @@
     {
       "tomorrow": "One intention, in if-then form."
     }
+  ],
+  "probes": [
+    {
+      "offers": "Did anyone offer you work or money, or ask you for money or help?"
+    },
+    {
+      "commitments": "Did you commit to anything new, or feel pushed to?"
+    },
+    {
+      "custody": "Did anything change on a device, an account, or with a provider?"
+    }
   ]
 }

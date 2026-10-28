@@ -84,6 +84,12 @@ WHEN = {"weekday", "not_winter", "ledger", "floor_per_week", "commitment"}
 # so the guarded region is computed from the Rule and never read off the runbook;
 # the counts (tools/counts.py) read an item's days by whether its guard reached them.
 GUARDS = ("bell", "alarm", "budget", "plan", "none")
+# The level a project's end serves (hypomnemata › allocation): a basic need, a
+# relational need, or the project kept for its own sake. The first two stand before
+# any allocation only while the project's own method says its end does not hold
+# (`holds: false`, written by that project's thread through the gate); otherwise
+# every project is sorted by its allocation, the third level.
+NEEDS = ("basic", "relational", "own")
 
 
 def item(it, gloss, cs):
@@ -412,8 +418,19 @@ def projects(d, active=True):
             what = r.rstrip("/").split("/")[-1]
         elif not (isinstance(what, str) and what.strip()):
             errors.append(f"project {p['id']} has what {what!r}; a project's name is text, or left out")
+        need = p.get("need", "own")
+        if need not in NEEDS:
+            errors.append(f"project {p['id']} has need {need!r}; it is one of " + ", ".join(NEEDS)
+                          + " (hypomnemata › allocation)")
+            need = "own"
+        holds = p.get("holds", True)
+        if not isinstance(holds, bool):
+            errors.append(f"project {p['id']} has holds {holds!r}; it is true or false, whether the "
+                          "project's own method says its end holds")
+            holds = True
         e = {"id": p["id"], "what": what, "allocation": p.get("allocation"), "repo": link, "checkout": r,
-             "calendar": p.get("calendar"), "notebook": h.get("notebook")}
+             "calendar": p.get("calendar"), "notebook": h.get("notebook"), "need": need, "holds": holds,
+             "end": h.get("end") if isinstance(h.get("end"), str) else None}
         if p.get("default"):
             e["default"] = True
         if "next_step" in p:
@@ -462,6 +479,58 @@ def frontier(d):
                 pr = 0
             out.append({"id": f"q:{p['id']}:{q['id']}", "project": p["id"], "question": q["id"],
                         "what": q["headline"], "pressure": pr, "notebook": h.get("notebook")})
+    return out
+
+
+DUE_KINDS = ("again", "drift", "pending", "suspended", "backstop", "upstream")
+
+
+def due(d):
+    """The due reading of each project with a notebook (hypomnemata › hypomnemata, the
+    due reading): what the record says is due and why, each row with its next step,
+    as the daily run carries it to projects/<id> › rule.hypomnemata.due. The page
+    shows the first with its next step and counts the rest (hypomnemata › horizon,
+    the due card). Nothing here scolds: a row is a reading, never a verdict."""
+    out = []
+    for p in d["projects"]:
+        h = p.get("hypomnemata")
+        if not isinstance(h, dict) or not p.get("active", True):
+            continue
+        rows = h.get("due")
+        if rows is None:
+            continue
+        if not isinstance(rows, list):
+            errors.append(f"project {p['id']}: hypomnemata.due is {rows!r}; it is a list of rows, each "
+                          "{kind, question, why, next}")
+            continue
+        for r in rows:
+            if not (isinstance(r, dict) and all(isinstance(r.get(k), str) and r[k].strip()
+                                                for k in ("kind", "question", "why", "next"))):
+                errors.append(f"project {p['id']}: a due row is {{kind, question, why, next}}, not {r!r}")
+                continue
+            if r["kind"] not in DUE_KINDS:
+                errors.append(f"project {p['id']}: due row kind {r['kind']!r} is not one of " + ", ".join(DUE_KINDS))
+                continue
+            out.append({"project": p["id"], "kind": r["kind"], "question": r["question"],
+                        "why": r["why"], "next": r["next"]})
+    return out
+
+
+def examen_probes(a):
+    """The review step's fixed questions about events, never about principles
+    (hypomnemata › examen): each `id: text`, asked one at a time on the page, the
+    answer stored in the day's document under the id. A fourth that rotates monthly
+    is one more entry, set at the sitting through the gate."""
+    out = []
+    for s in a.get("examen_probes") or []:
+        if not (isinstance(s, dict) and len(s) == 1):
+            errors.append(f"rule/examen probes: {s!r} is not one `id: text` question")
+            continue
+        i, text = next(iter(s.items()))
+        if not (isinstance(text, str) and text.strip()):
+            errors.append(f"rule/examen probes: {i} has no question text")
+            continue
+        out.append({"id": i, "p": text})
     return out
 
 
@@ -629,7 +698,7 @@ def compile(r=None):
     bs = blocks(a, gloss)
     return {
         "BLOCKS": bs, "COMMITMENTS": fx, "PROJECTS": ps, "SHELVED": projects(d, active=False),
-        "FRONTIER": fr, "BACKLOG": backlog(b),
+        "FRONTIER": fr, "BACKLOG": backlog(b), "DUE": due(d), "EXAMEN_PROBES": examen_probes(a),
         "WHOLE_DAYS": whole_days(a, bs), "WINTER": {"start": w["start"], "end": w["end"]},
         "DAY_START": ds, "TIMEZONE": tz, "EXAMEN": examen(a, gloss), "EXIT_RITE": exit_rite(a, gloss),
         "RATION": ration(ledger), "TIMEBOX": timebox(u), "TODO_CADENCE": due_after(u),

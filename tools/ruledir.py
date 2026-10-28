@@ -153,6 +153,7 @@ def assemble(docs):
     anchors["commitments"] = _each(docs, "commitments")
     anchors["exit_rite"] = docs[("rule", "exit_rite")]
     anchors["examen"] = docs[("rule", "examen")].get("steps") or []
+    anchors["examen_probes"] = docs[("rule", "examen")].get("probes") or []
     docket = {"policy": policy.get("docket") or {}, "projects": _each(docs, "projects", nested=True)}
     backlog = dict(docs[("rule", "gate")])
     backlog["items"] = _each(docs, "backlog")
