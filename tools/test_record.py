@@ -289,6 +289,60 @@ class Items(unittest.TestCase):
         self.assertEqual((w, bool(said)), ({}, True))
 
 
+class Asks(unittest.TestCase):
+    """An ask (hypomnemata › kinds): the sync writes the notebook's as owner `notebook`,
+    an answer said in chat is the answer fact, and the owner closes it."""
+    SRC = {"owner": "notebook", "url": "https://claude.ai/artifact/x#tab"}
+
+    def ask(self, **more):
+        return dict({"id": "notebook-ordo-ti-esti", "what": "What is a rule?", "kind": "ask", "project": "ordo",
+                     "captured": "2026-10-10", "asked": "2026-10-10", "source": self.SRC}, **more)
+
+    def test_a_run_writes_an_owners_ask_only_as_that_owner(self):
+        doc = {"id": "notebook-ordo-ti-esti", "what": "What is a rule?", "kind": "ask", "asked": TODAY, "source": self.SRC}
+        with self.assertRaisesRegex(record.Refused, "written by its owner"):
+            gated(export(), {"fact": "todo", "doc": doc})
+        with self.assertRaisesRegex(record.Refused, "short id"):
+            gated(export(), {"fact": "todo", "doc": doc, "owner": 7})
+        with self.assertRaisesRegex(record.Refused, "writes its own source"):
+            gated(export(), {"fact": "todo", "doc": dict(doc, id="ledger-ask"), "owner": "ledger"})
+        w, _ = gated(export(), {"fact": "todo", "doc": doc, "owner": "notebook"})
+        op, d = w["todo/notebook-ordo-ti-esti"]
+        self.assertEqual((op, d["kind"], d["captured"], d["source"]), ("set", "ask", TODAY, self.SRC))
+        # a re-run is an update under the protocol, and the kind is never written again
+        docs = export(**{"todo/notebook-ordo-ti-esti": self.ask()})
+        w, _ = gated(docs, {"fact": "todo", "doc": {"id": "notebook-ordo-ti-esti", "source": self.SRC, "what": "What is a rule, asked again?"},
+                            "owner": "notebook"})
+        self.assertEqual(w["todo/notebook-ordo-ti-esti"][0], "update")
+        with self.assertRaisesRegex(record.Refused, "the answer is the user's"):
+            gated(docs, {"fact": "todo", "doc": {"id": "notebook-ordo-ti-esti", "source": self.SRC, "answer": "x"}, "owner": "notebook"})
+
+    def test_an_answer_said_in_chat_is_written_as_the_page_writes_one(self):
+        docs = export(**{"todo/notebook-ordo-ti-esti": self.ask()})
+        w, _ = gated(docs, {"fact": "answer", "id": "notebook-ordo-ti-esti", "text": " A trellis. "})
+        op, d = w["todo/notebook-ordo-ti-esti"]
+        self.assertEqual((op, d["answer"], d["answeredAt"]), ("update", "A trellis.", NOW))
+        with self.assertRaisesRegex(record.Refused, "carries text"):
+            gated(docs, {"fact": "answer", "id": "notebook-ordo-ti-esti", "text": ""})
+        with self.assertRaisesRegex(record.Refused, "not in the export"):
+            gated(docs, {"fact": "answer", "id": "nope", "text": "x"})
+        plain = export(**{"todo/i1": {"id": "i1", "what": "x", "project": "ordo"}})
+        with self.assertRaisesRegex(record.Refused, "only an ask takes an answer"):
+            gated(plain, {"fact": "answer", "id": "i1", "text": "x"})
+        shut = export(**{"todo/notebook-ordo-ti-esti": self.ask(done=True, doneAt="2026-10-14")})
+        with self.assertRaisesRegex(record.Refused, "is closed"):
+            gated(shut, {"fact": "answer", "id": "notebook-ordo-ti-esti", "text": "x"})
+
+    def test_the_owner_closes_an_answered_ask_and_nobody_else_does(self):
+        docs = export(**{"todo/notebook-ordo-ti-esti": self.ask(answer="A trellis.", answeredAt=NOW)})
+        with self.assertRaisesRegex(record.Refused, "its owner closes it"):
+            gated(docs, {"fact": "close", "id": "notebook-ordo-ti-esti"})
+        with self.assertRaisesRegex(record.Refused, "its owner closes it"):
+            gated(docs, {"fact": "close", "id": "notebook-ordo-ti-esti", "owner": "ledger"})
+        w, _ = gated(docs, {"fact": "close", "id": "notebook-ordo-ti-esti", "owner": "notebook"})
+        self.assertEqual(w["todo/notebook-ordo-ti-esti"][1]["doneAt"], TODAY)
+
+
 class Batch(unittest.TestCase):
     """Each fact is checked against the record as the facts before it leave it."""
 

@@ -30,6 +30,55 @@ def check(collection, doc, held=None, owner=None, lists=LISTS):
                        default_project=lists["default_project"], known=set(lists["known"]), today=lists["today"])
 
 
+class Asks(unittest.TestCase):
+    """An ask (hypomnemata › kinds): kind ask, a question only the user can answer, with
+    its asked date and the answer the page writes; an owner writes the kind at capture
+    and never the answer."""
+
+    def test_an_ask_carries_its_asked_date_and_the_answer_the_page_wrote(self):
+        d = check("todo", {"id": "i2", "what": "Which account pays the floor first?", "kind": "ask",
+                           "asked": "2026-10-20", "answer": "The taxable one", "answeredAt": "2026-10-21T10:00:00Z"})
+        self.assertEqual((d["kind"], d["asked"], d["answer"], d["captured"]),
+                         ("ask", "2026-10-20", "The taxable one", TODAY))
+        with self.assertRaisesRegex(items.Refused, "asked.*not a date"):
+            check("todo", {"id": "i2", "what": "x", "kind": "ask", "asked": "yesterday"})
+        with self.assertRaisesRegex(items.Refused, "answer is the user's words"):
+            check("todo", {"id": "i2", "what": "x", "kind": "ask", "answer": "  "})
+        with self.assertRaisesRegex(items.Refused, "answeredAt is the instant"):
+            check("todo", {"id": "i2", "what": "x", "kind": "ask", "answer": "yes", "answeredAt": 5})
+
+    def test_the_answer_and_the_asked_date_stand_on_an_ask_alone(self):
+        for k, v in (("asked", "2026-10-20"), ("answer", "yes"), ("answeredAt", "2026-10-21T10:00:00Z")):
+            with self.subTest(k=k), self.assertRaisesRegex(items.Refused, k + " is an ask's"):
+                check("todo", {"id": "i2", "what": "x", k: v})
+            with self.subTest(k=k, kind="dictation"), self.assertRaisesRegex(items.Refused, "is an ask's"):
+                check("todo", {"id": "i2", "what": "x", "kind": "dictation", k: v})
+        # an update of a held ask may carry them without saying the kind again
+        held = {"id": "i2", "what": "x", "kind": "ask", "project": "ordo", "captured": TODAY}
+        d = check("todo", {"id": "i2", "answer": "yes"}, held=held)
+        self.assertEqual(d["answer"], "yes")
+
+    def test_an_owner_writes_kind_ask_at_capture_and_never_changes_it_or_the_answer(self):
+        src = {"owner": "ledger", "url": "https://claude.ai/code/project/x"}
+        d = check("todo", {"id": "ledger-ask-medical", "what": "Which plan?", "kind": "ask", "asked": TODAY,
+                           "source": src, "for": "the floor holds in every case"}, owner="ledger")
+        self.assertEqual((d["kind"], d["source"]), ("ask", src))
+        held = dict(d)
+        with self.assertRaisesRegex(items.Refused, "never changes it"):
+            check("todo", {"id": "ledger-ask-medical", "source": src, "kind": None}, held=held, owner="ledger")
+        with self.assertRaisesRegex(items.Refused, "never changes it"):
+            check("todo", {"id": "ledger-x", "what": "x", "source": src, "kind": "ask"},
+                  held={"id": "ledger-x", "what": "x", "source": src}, owner="ledger")
+        for k in ("answer", "answeredAt"):
+            with self.subTest(k=k), self.assertRaisesRegex(items.Refused, "the answer is the user's"):
+                check("todo", {"id": "ledger-ask-medical", "source": src, k: "x"}, held=held, owner="ledger")
+        with self.assertRaisesRegex(items.Refused, "never a dictation"):
+            check("todo", {"id": "ledger-d", "what": "x", "source": src, "kind": "dictation"}, owner="ledger")
+        # closed by its owner once the answer is read, as any owned item
+        d = check("todo", {"id": "ledger-ask-medical", "source": src, "done": True, "doneAt": TODAY}, held=held, owner="ledger")
+        self.assertTrue(d["done"])
+
+
 class Shape(unittest.TestCase):
     def test_what_an_item_is_for_is_text_or_nothing(self):
         d = check("todo", {"id": "i9", "what": "Rebalance", "for": "the floor holds in every case"})

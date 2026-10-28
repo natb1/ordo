@@ -398,12 +398,13 @@ change changes nothing.
    document. Its **revision** is the `rev` each author tab answers with, kept as a map
    `{<question>: <rev>}`. If every tab answers with the rev the project holds, the
    frontier has not moved: change nothing. Otherwise run the plugin's
-   `tools/frontier.py --project <project>` over saved searches of the author tabs
-   (` · ` and `▸ `, as its usage says) and update the project's
-   `rule.hypomnemata.revision` and
-   `frontier` — one entry
-   per question it prints, `{id, headline, pressure}`, heaviest first, the headline
-   being the question's own words as its tab gives them; and `end`, the end the
+   `tools/frontier.py --project <project> --json` over saved searches of the author
+   tabs (` · ` and `▸ `, as its usage says), and `--principal --json` over the same,
+   and update the project's `rule.hypomnemata.revision` and `frontier` — one entry
+   per question either prints, `{id, headline, pressure, answerer}`, the AI's
+   heaviest first and then the user's, `answerer` being `ai` for the frontier's and
+   `principal` for the listing's, the headline being the question's own words as its
+   tab gives them; and `end`, the end the
    root states, where it states one: the paragraph under the root tab's heading
    `⚓ end: what the asking is for` (a `search` for `⚓ end` on the root tab finds it),
    written whole, and left out where the root states none — and where the project
@@ -413,6 +414,22 @@ change changes nothing.
    written anywhere else. Each frontier question is a work item on the page, in the
    third queue (§"The TODO list and dictations"); a TODO item that must be done
    before one is put names it as `q:<project>:<id>` in its `blocks:`.
+3a. **Carry the user's questions as asks.** A question `--principal` lists is a
+   decision only the user can make, and reaches the page as an ask (hypomnemata ›
+   kinds, § "The TODO list and dictations"), written through the record gate as owner
+   `notebook`: a `todo` fact with `"owner": "notebook"` and the document
+   `{id: "notebook-<project>-<question>", kind: "ask", what: <the headline>,
+   project: <the project's id>, asked: <today>, source: {owner: "notebook",
+   url: <the question's tab in the notebook>}}`, the id lowercased, so that a re-run
+   updates and never duplicates; one the store already holds open is left as it
+   stands, since the answer on it is the user's. An ask whose question is no longer
+   listed, the lineage above it having moved, is closed by its owner:
+   `{"fact": "close", "id": ..., "owner": "notebook"}`. An ask that carries an
+   `answer` is the user's dictation to the notebook: capture a dictation (a `todo`
+   fact, kind `dictation`, `what` the question, `dictation` the question and the
+   answer as the user wrote it, `for: "q:<project>:<question>"`), then close the ask
+   as above. The user runs the dictation from its card; nothing here writes the
+   notebook, which changes only by the user's hand.
 3b. **Run the due reading, once a day.** The daily thread of the Project runs this step;
    a sync by hand may skip it. For each project whose `rule.hypomnemata` names a
    notebook, read its author tabs whole (`view`, `sinceRev` 0), build its graph with
@@ -423,7 +440,14 @@ change changes nothing.
    `rule.hypomnemata.due` through the gate, with the frontier, as a list of
    `{kind, question, why, next}`; an empty list where nothing is due. The page shows
    the first row with its next step and counts the rest (hypomnemata › horizon, the
-   due card). A row is a reading and never a verdict: the run adds no comment to it,
+   due card). The rows whose next step is the user's — every kind but `backstop`: a
+   dictation to run, a question to put again, a clause to settle, a rev to record —
+   are carried as asks too, as step 3a carries a question: `{id:
+   "notebook-<project>-<kind>-<question>", kind: "ask", what: <the row's why>,
+   notes: "Next: " + <its next>, for: "q:<project>:<question>", asked: <today>,
+   source: {owner: "notebook", url: <the question's tab>}}`, one per kind and
+   question, closed by `notebook` once the row is gone. The Due card still shows every
+   row; the ask is where the user answers or acts. A row is a reading and never a verdict: the run adds no comment to it,
    proposes nothing on it, and leaves settling to the review above the horizon it
    bears on, on level ground, except where a row blocks work, which is settled with
    the least that unblocks.
@@ -490,6 +514,11 @@ will.
   Say nothing about it — no approval, no reminder of why it matters, no comment on
   a missed dose. It is recorded because the gated-activity data is uninterpretable
   without it (hypomnemata › gated), not because it is being monitored.
+- **Record an answer to an ask.** The user may answer an ask (§"The TODO list and
+  dictations") in chat during a run: it goes to the store as the record gate's
+  `answer` fact, `{"fact": "answer", "id", "text"}`, the words as the user said
+  them, on an open ask alone, and the owner reads it at its next run. Said outside a
+  run, the page takes it: the ask's row carries an answer box.
 - **Record what is reported done in the store's days.** They are the only count of
   drinks and gym, and `rule/ledger` keeps none: a drink goes in
   as a pour on the day it was drunk, never the day it was reported, and gym as a
@@ -972,7 +1001,7 @@ project's work is taken in order from **three queues**, three tiers of priority
    capture; one without is due fourteen days after it was captured, so it rises as
    it ages.
 3. **Canon**: the project's frontier hypomnemata by pressure (§"Sync", step 3), then
-   its dictations, oldest first.
+   its asks, oldest first, then its dictations, oldest first.
 
 A blocker takes the tier and the rank of what it stops and stands just before it.
 There is no scoring by leverage and no rule of one in progress.
@@ -1003,6 +1032,20 @@ offers only "not wanted", and a run writes nothing of it but its next step (the
 record gate refuses a close, an edit, or a capture that names an owner). Undated, it does not age: it stands last in tier 2 until its owner
 dates it, and the never-wanted check passes it by. The owner's sync lives with the
 owner; a run learns of it only by reading the store.
+
+**Asks.** A `todo` item of kind `ask` is a question only the user can answer
+(hypomnemata › kinds): the question as `what`, what it is `for`, its `source` (the
+owner that put it, and where), `asked`, the date it was put, and `answer`, the user's
+own words, written on the page (the Docket's row and the TODO card carry an answer
+box) or said in chat during a run, which is the record gate's `answer` fact. The
+owner reads the answer at its next run and closes the item, as it closes any owned
+item; the page never closes it. Three feeds put asks: this skill's sync, as owner
+`notebook` (§"Sync", steps 3a and 3b: the notebook's listing of the user's questions,
+and the due rows whose next step is the user's; an answered one becomes a dictation);
+the retirement round, as owner `ledger`; and the security project's readings, as
+owner `security` — each under the item contract, which lets an owner write `kind:
+ask` at capture and never change it, and never write the answer. An ask that blocks
+work names it in `blocks` and takes its rank, as any item does.
 
 There is no Saturday reserve. Saturday afternoon is a focus slot like any other, and a
 repair is a TODO item charged to its project.

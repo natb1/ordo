@@ -842,6 +842,30 @@ class Levels(Projects):
         self.assertEqual((p["need"], p["holds"]), ("basic", False))
 
 
+class Frontier(unittest.TestCase):
+    """Each frontier question carries its answerer (hypomnemata › kinds): ai, the
+    frontier's rows, or principal, the questions the user answers, which the sync
+    carries to the page as asks."""
+
+    def compiled_of(self, *changes):
+        s = store()
+        return {k: d for _, k, d in gate.gate(s, list(changes), now=NOW)}[gate.COMPILED]
+
+    def test_the_answerer_is_ai_unless_said(self):
+        fr = [q for q in store()[gate.COMPILED]["FRONTIER"] if q["project"] == "ordo"]
+        self.assertEqual([q["answerer"] for q in fr], ["ai"])
+
+    def test_the_principals_question_rides_with_its_answerer(self):
+        q = {"id": "layer", "headline": "What gives way after a fall?", "pressure": 0, "answerer": "principal"}
+        c = self.compiled_of({"op": "update", "collection": "projects", "doc_id": "ordo",
+                              "data": {"rule": {"hypomnemata": {"frontier": [q]}}}})
+        self.assertEqual([(x["question"], x["answerer"]) for x in c["FRONTIER"] if x["project"] == "ordo"],
+                         [("layer", "principal")])
+        with self.assertRaisesRegex(gate.Refused, "answerer 'them'"):
+            self.compiled_of({"op": "update", "collection": "projects", "doc_id": "ordo",
+                              "data": {"rule": {"hypomnemata": {"frontier": [dict(q, answerer="them")]}}}})
+
+
 class DueRows(unittest.TestCase):
     """The due reading's rows ride to the page on projects/<id> › rule.hypomnemata.due
     (hypomnemata › horizon, the due card), each {kind, question, why, next}."""
