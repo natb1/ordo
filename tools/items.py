@@ -28,8 +28,11 @@ A document. Its id is lowercase letters, digits, `-` and `_`, at most 64. It has
 `blocks` is a list of ids the page carries, or q:<project>:<question>. Its dates
 (captured, by, due, last, and an owner's doneAt) are YYYY-MM-DD. A periodic item's cadence is a whole
 number of days, at least 1; its `then` is {what, sessions}; its history a map of
-dates. A todo item's kind is dictation or nothing, and a capture is dated today.
-`source`, where given, is {owner, url}: the owner a short id, the url https, and
+dates. A todo item's kind is dictation, ask or nothing, and a capture is dated today.
+An ask is a question only the user can answer (hypomnemata › kinds): `asked`, where
+given, is the date it was put, YYYY-MM-DD; `answer` is the user's answer as the page
+writes it, plain text, with `answeredAt` the instant it was written; neither stands on
+any other kind, and an owner never writes either. `source`, where given, is {owner, url}: the owner a short id, the url https, and
 on a todo item only, until the periodic card has an owned view. `notes`, where
 given, is plain text, multi-line, shown on the item's card as written and never
 edited there: an owner's place for the detail behind an item. An item with a
@@ -45,13 +48,14 @@ in the step that commits what the item tracks.
   - The owner writes its own source on every item, and never an item another owns
     or none owns.
   - It never writes removed (whether an item is wanted is the page's), next or
-    nextAt (the line to resume by is the page's once written), and never moves an
-    item to another project after capture.
+    nextAt (the line to resume by is the page's once written), answer or answeredAt
+    (the answer is the user's, written on the page), and never moves an item to
+    another project after capture.
   - It closes an item with done and doneAt, the date it closed; it never writes
     done false, and an item removed on the page is no longer its to write.
   - An update says only what changed: what, project and blocks are kept as held
-    where unsaid; captured is written once, and kind never (an owned item is no
-    dictation).
+    where unsaid; captured is written once, and kind at capture alone, ask or
+    nothing (an owned item is a TODO item or an ask, never a dictation).
 The store cannot refuse a write that skipped this, so the gate for an owner's
 writes, as for /ordo's own, is convention and the weekly review's line per owner.
 """
@@ -68,7 +72,7 @@ QUESTION = re.compile(r"q:[a-z0-9_-]+:[A-Za-z0-9_-]+")
 YMD = re.compile(r"\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])")
 OWNER = re.compile(r"[a-z][a-z0-9]{0,31}")
 COLLECTIONS = ("todo", "periodic")
-NEVER_BY_OWNER = ("removed", "next", "nextAt")
+NEVER_BY_OWNER = ("removed", "next", "nextAt", "answer", "answeredAt")
 
 
 class Refused(Exception):
@@ -159,7 +163,7 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
                 raise Refused(f"{what}: blocks names {b!r}, which the page does not carry")
     if held is None or "blocks" in doc:
         doc["blocks"] = blocks or []
-    for k in ("captured", "by", "due", "last") + (("doneAt",) if owner is not None else ()):
+    for k in ("captured", "by", "due", "last", "asked") + (("doneAt",) if owner is not None else ()):
         if doc.get(k) is not None:
             ymd(doc[k], f"{what} {k}")
     if collection == "periodic":
@@ -177,8 +181,20 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
             for k in h:
                 ymd(k, f"{what} history")
     else:
-        if doc.get("kind") not in (None, "dictation"):
-            raise Refused(f"{what}: kind is dictation or nothing, not {doc['kind']!r}")
+        if doc.get("kind") not in (None, "dictation", "ask"):
+            raise Refused(f"{what}: kind is dictation, ask or nothing, not {doc['kind']!r}")
+        # An ask (hypomnemata › kinds): a question only the user can answer. Its
+        # `asked` is the date it was put, its `answer` the user's own words as the
+        # page writes them, with `answeredAt` the instant; none stands on another kind.
+        kind = doc.get("kind") if "kind" in doc else (held or {}).get("kind")
+        for k in ("asked", "answer", "answeredAt"):
+            if doc.get(k) is not None and kind != "ask":
+                raise Refused(f"{what}: {k} is an ask's, and this item's kind is {kind or 'nothing'}")
+        if doc.get("answer") is not None and not (isinstance(doc["answer"], str) and doc["answer"].strip()):
+            raise Refused(f"{what}: answer is the user's words, as text, not {doc['answer']!r}")
+        if doc.get("answeredAt") is not None and not (isinstance(doc["answeredAt"], str) and doc["answeredAt"].strip()):
+            raise Refused(f"{what}: answeredAt is the instant the answer was written, ISO 8601, "
+                          f"not {doc['answeredAt']!r}")
         if doc.get("captured") is None and held is None:
             doc["captured"] = today
     return doc
@@ -204,11 +220,15 @@ def protocol(collection, doc, held, owner, what):
         if k in doc:
             raise Refused(f"{what}: an owner never writes {k}; "
                           + ("whether an item is wanted is the page's" if k == "removed"
+                             else "the answer is the user's, written on the page" if k in ("answer", "answeredAt")
                              else "the line to resume by is the page's"))
     if held is not None and "captured" in doc and doc["captured"] != held.get("captured"):
         raise Refused(f"{what}: an owner never re-dates a capture; captured is written once")
-    if doc.get("kind") is not None:
-        raise Refused(f"{what}: an owner's item is a TODO item, never a dictation")
+    if doc.get("kind") == "dictation":
+        raise Refused(f"{what}: an owner's item is a TODO item or an ask, never a dictation")
+    if "kind" in doc and held is not None and doc.get("kind") != held.get("kind"):
+        raise Refused(f"{what}: kind is written at capture alone, ask or nothing; an owner never changes it "
+                      f"({held.get('kind') or 'nothing'} to {doc.get('kind') or 'nothing'})")
     if held is not None and "project" in doc and doc["project"] != held.get("project"):
         raise Refused(f"{what}: an owner never moves an item to another project after capture "
                       f"({held.get('project')!r} to {doc['project']!r})")

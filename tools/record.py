@@ -19,9 +19,11 @@ DIR       an export of the store: the Rule (as gate.py takes it) and every recor
 --facts   a JSON list; each fact is one of
             {"fact": "tick", "date", "item", "time"?, "weight"?}
             {"fact": "pour", "date", "n", "key"}
-            {"fact": "close", "id", "date"?}
+            {"fact": "close", "id", "date"?, "owner"?}
             {"fact": "restore", "collection", "id"}
-            {"fact": "todo", "doc": {...}}        a TODO item or a dictation, captured or edited
+            {"fact": "todo", "doc": {...}, "owner"?}   a TODO item, a dictation or an ask,
+                                                  captured or edited; with `owner`, as that owner
+            {"fact": "answer", "id", "text"}      the user's answer to an open ask, said in chat
             {"fact": "periodic", "doc": {...}}    a periodic item, captured or edited
             {"fact": "periodic-done", "id", "date"?, "focus"?}
             {"fact": "synclog", "date", "text"}
@@ -45,7 +47,11 @@ todo or periodic document names an active project, blocks only ids the page
 carries, keeps its dates as YYYY-MM-DD, its cadence a whole number of days and its
 `then` as {what, sessions} (tools/items.py). An item its owner holds — one with a
 `source` — is closed by its owner, never by a close here, and a dictation is let go
-on its card, never closed here. A restore is of an item removed; one not removed is
+on its card, never closed here. A `todo` or a `close` fact that names its `owner` is
+that owner's write, checked under the item contract's protocol and allowed on that
+owner's items: the skill says which run is which owner's writer (the sync writes the
+notebook's asks as `notebook`). An answer is written on an open ask alone, as the
+page writes one, with the instant it was said. A restore is of an item removed; one not removed is
 left as it is, and said. A synclog's text is added to the day's, a second run after
 a blank line. A document the store holds is updated, pinned; one it does not is set,
 a day as the page's blank() (items.blank_day) with the fact's leaves.
@@ -79,7 +85,7 @@ Refused = items.Refused   # gate.Refused is the same class: one `except` takes b
 # A second sync of the day is added to the day's text, after a blank line.
 SYNCLOG_JOIN = "\n\n"
 
-FACTS = ("tick", "pour", "close", "restore", "todo", "periodic", "periodic-done", "synclog")
+FACTS = ("tick", "pour", "close", "restore", "todo", "periodic", "periodic-done", "synclog", "answer")
 
 
 blank = items.blank_day   # a day as the page makes one, held once in the item contract
@@ -257,11 +263,14 @@ class Record:
         doc = f.get("doc")
         i = doc.get("id") if isinstance(doc, dict) else None
         held = self.held(collection, i) if isinstance(i, str) else None
+        writer = f.get("owner")
+        if writer is not None and not (isinstance(writer, str) and writer):
+            raise Refused("a fact's owner is a short id: the owner this run writes as, where the skill names it")
         owner = items.owner_of(held) or items.owner_of(doc if isinstance(doc, dict) else None)
-        if owner and (held is None or set(doc) - {"id", "next"}):
+        if writer is None and owner and (held is None or set(doc) - {"id", "next"}):
             raise Refused(f"{collection}/{i} is {owner}'s, written by its owner under the item contract; "
-                          "a run here writes only its next step")
-        doc = items.check(collection, doc, held=held, today=self.today,
+                          "a run here writes only its next step, unless the fact names that owner as its writer")
+        doc = items.check(collection, doc, held=held, today=self.today, owner=writer,
                           projects=[p["id"] for p in self.r.docket["projects"] if p.get("active", True)],
                           default_project=(self.r.todo["policy"] or {}).get("default_project"),
                           known=self.known_ids(except_id=i))
@@ -279,7 +288,7 @@ class Record:
         if x.get("done"):
             self.said.append(f"todo/{i} is already done ({closed_on(x) or 'no date'}); nothing changes")
             return
-        if items.owner_of(x):
+        if items.owner_of(x) and f.get("owner") != items.owner_of(x):
             raise Refused(f"todo/{i} is {items.owner_of(x)}'s, and its owner closes it; "
                           "if it is not wanted, say so on the page")
         if x.get("kind") == "dictation":
@@ -288,6 +297,23 @@ class Record:
         b = self.held("breakdowns", i)
         if b is not None and b.get("open") is not False:
             self.patch("breakdowns", i, {"open": False, "closed": d})
+
+    def answer(self, f):
+        """The user's answer to an open ask, said in chat: written as the page writes
+        one, the words and the instant, on an ask the export holds and nobody has
+        closed. The owner reads it at its next run and closes the item."""
+        i = f.get("id")
+        x = self.held("todo", i)
+        if x is None:
+            raise Refused(f"todo/{i} is not in the export; an answer needs the document read")
+        if x.get("kind") != "ask":
+            raise Refused(f"todo/{i} is not an ask; only an ask takes an answer")
+        if x.get("done") or x.get("removed"):
+            raise Refused(f"todo/{i} is closed: its owner has read it, or it was not wanted")
+        t = f.get("text")
+        if not isinstance(t, str) or not t.strip():
+            raise Refused("an answer carries text, the user's own words")
+        self.patch("todo", i, {"id": i, "answer": t.strip(), "answeredAt": self.at, "at": self.at})
 
     def restore(self, f):
         c, i = f.get("collection"), f.get("id")
@@ -346,7 +372,8 @@ class Record:
                 {"tick": self.tick, "pour": self.pour, "close": self.close, "restore": self.restore,
                  "todo": lambda f: self.item_doc(f, "todo"),
                  "periodic": lambda f: self.item_doc(f, "periodic"),
-                 "periodic-done": self.periodic_done, "synclog": self.synclog}[kind](f)
+                 "periodic-done": self.periodic_done, "synclog": self.synclog,
+                 "answer": self.answer}[kind](f)
             except rule.RuleError as e:
                 raise Refused(f"fact {n}: {e}")
             except Refused as e:

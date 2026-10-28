@@ -446,7 +446,9 @@ def frontier(d):
     revision has changed, and keeps them in projects/<id> › rule.hypomnemata
     (revision, frontier, and `end`: the end the notebook's root states, as text,
     which the year's count reads each frontier against); each frontier question is
-    a work item the page links to the notebook."""
+    a work item the page links to the notebook. Its `answerer` says who answers it,
+    `ai` or `principal`: the AI's are the frontier's rows, and the principal's are
+    carried to the page as asks (hypomnemata › kinds)."""
     out = []
     for p in d["projects"]:
         h = p.get("hypomnemata")
@@ -477,8 +479,13 @@ def frontier(d):
             if not isinstance(pr, (int, float)) or isinstance(pr, bool):
                 errors.append(f"project {p['id']}: frontier question {q['id']} has pressure {pr!r}, not a number")
                 pr = 0
+            ans = q.get("answerer", "ai")
+            if ans not in ("ai", "principal"):
+                errors.append(f"project {p['id']}: frontier question {q['id']} has answerer {ans!r}; it is ai or "
+                              "principal, whoever answers it at the notebook")
+                ans = "ai"
             out.append({"id": f"q:{p['id']}:{q['id']}", "project": p["id"], "question": q["id"],
-                        "what": q["headline"], "pressure": pr, "notebook": h.get("notebook")})
+                        "what": q["headline"], "pressure": pr, "notebook": h.get("notebook"), "answerer": ans})
     return out
 
 

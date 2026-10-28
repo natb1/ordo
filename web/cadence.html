@@ -2221,7 +2221,7 @@ function bellNotExpected(key,date){
 }
 function notExpectedText(x){ return "Not expected — "+x.what+". Not a miss."; }
 function notNeededText(naVal){ return typeof naVal==="string"&&naVal ? "Not needed — "+naVal+". Not a miss." : "Not needed today. Not a miss."; }
-function allWork(){ return PROJECTS.concat(SHELVED).concat(periodicAll()).concat(todoAll()).concat(frontierItems()).concat(dictationsAll()); }
+function allWork(){ return PROJECTS.concat(SHELVED).concat(periodicAll()).concat(todoAll()).concat(frontierItems()).concat(asksAll()).concat(dictationsAll()); }
 function dictationsAll(){ return dictationDocs(null).filter(function(x){ return !isDictated(x) && !!projById(homeProject(x)); }); }
 /* What a recorded id is called. A finished or removed item is no longer work, but
    the sessions that recorded it still name it. */
@@ -2294,6 +2294,9 @@ function putDoc(store,key,coll,id,patch){
      line's age is how old the line is. */
   if("thread" in p) p.threadAt=p.at;
   if("next" in p) p.nextAt=p.at;
+  /* An answer carries its own instant too: when it was written, not when the doc
+     last moved; cleared with the answer. */
+  if("answer" in p) p.answeredAt=p.answer?p.at:null;
   var next=applyPatch(clone(store[id]||{}),p);
   store[id]=next; saveStore(key,store);
   queue("cadence:pendingDocs",coll+"/"+id,p);
@@ -2399,7 +2402,7 @@ function todoAll(){
   var out=[];
   Object.keys(todoStore).forEach(function(id){
     var o=todoStore[id];
-    if(!o.done && o.what && !isDictation(o)) out.push(tidy(Object.assign({},o)));
+    if(!o.done && o.what && !isDictation(o) && !isAsk(o)) out.push(tidy(Object.assign({},o)));
   });
   return out;
 }
@@ -2423,11 +2426,40 @@ function periodicFor(pid){ return periodicAll().filter(function(x){ return homeP
    notebook (the docket › frontier). Each is a work item, answered at the notebook. */
 function frontierItems(){ return FRONTIER.map(function(q){ return Object.assign({},q); }); }
 function frontierFor(pid){ return frontierItems().filter(function(x){ return x.project===pid; }); }
+/* The frontier's rows: the questions the AI answers. The user's (answerer
+   "principal") are carried to the page as asks by the sync, and stand on the
+   frontier only as what a blocker may name. */
+function frontierRows(pid){ return frontierFor(pid).filter(function(q){ return q.answerer!=="principal"; }); }
 /* A dictation is a quick note bound for its project's notebook (hypomnemata ›
    kinds), kept in the store's todo collection as kind "dictation". An item an
    older page marked for the hypomnemata is one too, and one it recorded under a
    question's reference has been dictated already, and waits only to be let go. */
 function isDictation(x){ return !!x && (x.kind==="dictation" || !!x.canon); }
+/* An ask is a question only the user can answer (hypomnemata › kinds), kept in the
+   todo collection as kind "ask" by the owner that put it: the notebook's listing and
+   its due reading (the sync, as "notebook"), the retirement round, security's
+   readings. The user answers it here; the owner reads the answer at its next run and
+   closes the item, so the page never closes an owned one. */
+function isAsk(x){ return !!x && x.kind==="ask"; }
+function askDocs(pid){
+  var out=[];
+  Object.keys(todoStore).forEach(function(id){
+    var o=todoStore[id];
+    if(!isAsk(o) || o.done || o.removed || !o.what) return;
+    var x=tidy(Object.assign({id:id},o));
+    if(!pid || homeProject(x)===pid) out.push(x);
+  });
+  return out;
+}
+function asksFor(pid){ return askDocs(pid); }
+function asksAll(){ return askDocs(null).filter(function(x){ return !!projById(homeProject(x)); }); }
+function askedOn(x){ return String(x.asked||x.captured||"").slice(0,10); }
+/* The reason an ask stands where it does, with what happens to the answer. */
+function askWhy(x){
+  var owner=ownerOf(x), when=askedOn(x);
+  if(x.answer) return "Answered"+(x.answeredAt?" "+String(x.answeredAt).slice(0,10):"")+"; "+(owner?owner+" reads it at its next run and closes it.":"mark it done once it has been read.");
+  return "An ask"+(owner?" from "+owner:"")+(when?", put "+when:"")+": a question only you can answer. Answer it here"+(owner?"; "+owner+" closes it once it has read the answer.":".");
+}
 function isDictated(x){ return !!x.canon && x.canon!=="marked"; }
 /* The open dictations in the store — a project's, or every project's with no project
    named. */
@@ -2463,6 +2495,7 @@ function blockables(except){
     add(x.id,x.what,"TODO");
   });
   frontierItems().forEach(function(q){ var p=projById(q.project); add(q.id,q.what+(p?" — "+p.what:""),"question"); });
+  asksAll().forEach(function(x){ add(x.id,x.what,"ask"); });
   return out;
 }
 function labelOf(id){
@@ -2720,7 +2753,7 @@ function meetingsFor(pid,focusId){
    three tiers of priority, never a matrix. First the meetings of the session.
    Second, periodic items and TODO items together, by how far overdue each is as a
    fraction of its cadence. Third, canon: the frontier hypomnemata by pressure, then
-   dictations, oldest first. A blocker takes the tier and the rank of what it stops
+   the asks, oldest first, then dictations, oldest first. A blocker takes the tier and the rank of what it stops
    and stands just before it, and the two are drawn bound. Follow-ups ride above as a
    strip; what cannot start in this session, or is not yet due, waits below. Every
    line carries its reason, because a ranking you cannot argue with is a ranking you
@@ -2753,16 +2786,19 @@ function rankWork(pid,focusId){
     if(sd){ r.frac=daysBetween(sd.on,viewDate); r.why="Stops "+sd.what+(sd.on===viewDate?", which is today":" on "+sd.on)+rw+"."; }
     due.push(r);
   });
-  frontierFor(pid).forEach(function(q){
+  frontierRows(pid).forEach(function(q){
     front.push({o:q,why:"On the frontier, pressure "+(q.pressure||0)+". Read and answered at the notebook."});
   });
+  var asks=[];
+  asksFor(pid).forEach(function(x){ asks.push({o:x,why:askWhy(x)}); });
   dictationsFor(pid).forEach(function(x){
     dict.push({o:x,why:"A dictation captured "+String(x.captured||"").slice(0,10)+": run it through the notebook's dictate entry point."});
   });
   due.sort(function(a,b){ return a.frac===b.frac ? 0 : b.frac>a.frac ? 1 : -1; });
   front.sort(function(a,b){ return (b.o.pressure||0)-(a.o.pressure||0); });
   dict.sort(function(a,b){ return String(a.o.captured||"").localeCompare(String(b.o.captured||"")); });
-  var canon=front.concat(dict), out=[];
+  asks.sort(function(a,b){ return askedOn(a.o).localeCompare(askedOn(b.o)); });
+  var canon=front.concat(asks).concat(dict), out=[];
   follow.forEach(function(r){ r.step="follow"; out.push(r); });
   meet.forEach(function(r){ r.step="meeting"; out.push(r); });
   due.forEach(function(r){ r.step="due"; out.push(r); });
@@ -3262,6 +3298,11 @@ function bellLine(o,isKid,fc,b){
       var nb=el("a","dwhy","Read and answer it at the notebook.");
       nb.href=o.notebook; nb.target="_blank"; nb.rel="noopener"; wrap.appendChild(nb);
     }
+    return wrap;
+  }
+  if(isAsk(o)){
+    /* An ask is answered on the docket, where its answer box is; its owner closes it. */
+    wrap.appendChild(el("div","dwhy","Answer it on the docket"+(ownerOf(o)?"; "+ownerOf(o)+" closes it once it has read the answer.":".")));
     return wrap;
   }
   if(isDictation(o)){
@@ -3779,7 +3820,7 @@ function allocDots(used,total,meet){
 /* A blocker and what it stops are drawn as one bound pair: the blocker's row says
    what it stops, and the row after it, what stops it. */
 function workRow(host,r){
-  var o=r.o, isD=isDictation(o), cls="dkid"+(o.question||isD?" canon":"")+((o.blocks||[]).length?" blocker":"")+(r.binds?" bound":"")+(r.boundBy?" boundto":"");
+  var o=r.o, isD=isDictation(o), isA=isAsk(o), cls="dkid"+(o.question||isD||isA?" canon":"")+((o.blocks||[]).length?" blocker":"")+(r.binds?" bound":"")+(r.boundBy?" boundto":"");
   var row=el("div",cls);
   row.appendChild(el("b",null,o.what));
   if(r.why) row.appendChild(el("span","dwhy",r.why));
@@ -3787,11 +3828,46 @@ function workRow(host,r){
   if(r.binds) row.appendChild(el("span","dbind","Stops "+r.bindsWhat+", below."));
   if(o.question) row.appendChild(el("div","next none","Read and answered at the notebook."));
   else if(isD) row.appendChild(el("div","next none",invocation(o)));
+  else if(isA) askBox(row,o);
   else if(!o.meeting) nextLine(row,o.id,r.step==="later");
   host.appendChild(row);
 }
+/* An ask's answer box (hypomnemata › kinds, › undertaking): the user's own words,
+   saved as the item's answer with the instant it was written (putDoc stamps
+   answeredAt as it stamps nextAt); the owner reads it and closes the item. The box
+   is a draft of its own, so a repaint keeps what was typed. */
+function askBox(host,o){
+  var dr=draft("ask:"+o.id), owner=ownerOf(o), href=o.source&&webLink(o.source.url);
+  notesOf(host,o);
+  if(owner){
+    var row=el("div","links");
+    if(href){ var a=el("a",null,"From "+owner); a.href=href; a.target="_blank"; a.rel="noopener"; row.appendChild(a); }
+    else row.appendChild(el("span",null,"From "+owner));
+    host.appendChild(row);
+  }
+  if(o.answer && !dr.editing){
+    var ans=el("div","next"); ans.appendChild(document.createTextNode("Answer: "+o.answer));
+    host.appendChild(ans);
+    var acts=el("div","acts");
+    acts.appendChild(actButton("Change the answer","no",function(){ dr.editing=true; dr.text=o.answer; render(); }));
+    host.appendChild(acts);
+    return;
+  }
+  var ta=document.createElement("textarea"); ta.value=dr.text!=null?dr.text:(o.answer||""); ta.placeholder="Your answer, in your own words";
+  ta.setAttribute("aria-label","Answer to "+o.what); ta.setAttribute("data-fk","answer:"+o.id);
+  ta.addEventListener("input",function(){ dr.text=ta.value; });
+  host.appendChild(ta);
+  var acts2=el("div","acts");
+  acts2.appendChild(actButton("Save the answer","go",function(){
+    var t=(dr.text||"").trim(); if(!t){ nudge(acts2,"Say it first."); ta.focus(); return; }
+    if(t!==(o.answer||"")) putTodo(o.id,{answer:t});
+    delete drafts["ask:"+o.id]; render();
+  }));
+  if(dr.editing) acts2.appendChild(actButton("Keep the answer","no",function(){ delete drafts["ask:"+o.id]; render(); }));
+  host.appendChild(acts2);
+}
 var WORK_TIERS={follow:"Follow-ups — they ride along",meeting:"Meetings — each takes its session outright",
-  due:"Periodic and TODO, by how far overdue",canon:"Canon — the frontier, then dictations",
+  due:"Periodic and TODO, by how far overdue",canon:"Canon — the frontier, the asks, then dictations",
   later:"Not now — not yet due, or it cannot start in this session"};
 /* Ranked rows under their tier headings, in the heading class the card uses. */
 function workRows(host,rs,cls){
@@ -3885,7 +3961,7 @@ function invocation(x){ return "/principal:dictate "+(x.dictation||x.what||"").t
 function paintTodo(host,p){
   host.textContent="";
   var dr=draft("todo:"+p.id);
-  para(host,"prompt","Captured on sight, in your own words: a claim with a finish line. Give it a date if it has one; without one it is due "+words(TODO_CADENCE)+" days after capture. What it stops is blocked while it is open, and it stands just before it in the order. An item another tool owns shows where it came from, and its owner closes it.");
+  para(host,"prompt","Captured on sight, in your own words: a claim with a finish line. Give it a date if it has one; without one it is due "+words(TODO_CADENCE)+" days after capture. What it stops is blocked while it is open, and it stands just before it in the order. An item another tool owns shows where it came from, and its owner closes it. An ask is a question only you can answer: write the answer, and its owner closes it once it has read it.");
   undoLine(host,dr);
   /* adding one */
   var addBtn=actButton(dr.adding?"Cancel":"Add an item",dr.adding?"no":"go",function(){ dr.adding=!dr.adding; if(!dr.adding){ delete dr.add; } repaintCard("todo:"+p.id); if(dr.adding) focusAdded("todo:"+p.id); });
@@ -3912,7 +3988,7 @@ function paintTodo(host,p){
     host.appendChild(acts);
   }
   /* the items */
-  var ids={}; todoFor(p.id).forEach(function(x){ ids[x.id]=true; });
+  var ids={}; todoFor(p.id).concat(asksFor(p.id)).forEach(function(x){ ids[x.id]=true; });
   var items=rankWork(p.id).filter(function(r){ return ids[r.o.id]; });
   if(!items.length){ para(host,"empty","The TODO list is empty."); return; }
   head(host,"Open, in order");
@@ -3952,7 +4028,7 @@ function todoItem(host,p,x,dr){
   var h=field(wrap,"Heading",textInput(e.what),"ed:what:"+x.id); h.addEventListener("input",function(){ e.what=h.value; });
   var d=field(wrap,"Details",document.createElement("textarea"),"ed:dictation:"+x.id); d.value=e.dictation; d.placeholder="Your own prose: the details, and why";
   d.addEventListener("input",function(){ e.dictation=d.value; });
-  notesOf(wrap,x);
+  if(isAsk(x)) askBox(wrap,x); else notesOf(wrap,x);
   var n=field(wrap,"Next step",textInput(e.next,"Where you pick up"),"ed:next:"+x.id); n.addEventListener("input",function(){ e.next=n.value; });
   var by=field(wrap,"Due by",dateInput(e.by),"ed:by:"+x.id); by.addEventListener("change",function(){ e.by=by.value; });
   /* What the item is for (hypomnemata › allocation): the end clause or the question
@@ -4013,8 +4089,8 @@ function ownedItem(host,p,x,dr,owner){
   var n=field(wrap,"Next step",textInput(e.next,"Where you pick up"),"ed:next:"+x.id);
   n.addEventListener("input",function(){ e.next=n.value; });
   if(x.dictation) wrap.appendChild(el("div","hist",x.dictation));
-  notesOf(wrap,x);
-  wrap.appendChild(el("div","hist",x.by ? "Due by "+x.by+"." : "Undated: it waits until "+owner+" dates it."));
+  if(isAsk(x)) askBox(wrap,x); else notesOf(wrap,x);
+  wrap.appendChild(el("div","hist",isAsk(x) ? "Put "+(askedOn(x)||"undated")+"." : x.by ? "Due by "+x.by+"." : "Undated: it waits until "+owner+" dates it."));
   var row=el("div","links"), href=webLink(x.source.url);
   if(href){ var a=el("a",null,"From "+owner); a.href=href; a.target="_blank"; a.rel="noopener"; row.appendChild(a); }
   else row.appendChild(el("span",null,"From "+owner));
