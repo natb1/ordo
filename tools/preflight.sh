@@ -29,9 +29,8 @@ run python3 -m unittest -q tools/test_fixture_public.py
 run python3 -m unittest -q tools/test_skill_docs.py
 # The check's note names the un-audited sources by their keys.
 run python3 -m unittest -q tools/test_tradition.py
-# Every citation, in the markdown and in the Rule: the frozen copy stands in for the store.
+# Every citation, in the markdown and in the Rule: the frozen copies stand in for the
+# store and for the parties' works on the notebook, which is where the registry lives.
 run env ORDO_RULE=tools/fixture/rule python3 tradition/check.py
-# Strictly: a key given twice is an error, not a silent last-one-wins.
-run python3 tools/ruleyaml.py tradition/sources.yaml
 if [ "$fail" -ne 0 ]; then echo "PREFLIGHT FAILED — do not publish"; exit 1; fi
 echo "PREFLIGHT OK"

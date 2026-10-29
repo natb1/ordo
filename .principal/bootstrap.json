@@ -130,7 +130,7 @@
       "application": "the registry check",
       "files": [
         "tradition/check.py",
-        "tools/ruleyaml.py",
+        "tools/fixture/registry.json",
         "tools/test_tradition.py"
       ],
       "pull_request": "https://github.com/natb1/ordo/pull/5",

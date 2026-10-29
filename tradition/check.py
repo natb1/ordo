@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
-"""Validate every appeal to tradition against tradition/sources.yaml.
+"""Validate every appeal to tradition against the registry.
+
+The registry is not in this repo. It is the works of the parties on the notebook's
+tradition tabs (hypomnemata › ordo-tradition), each under the key it is cited by, so
+that recording a source is a write to the notebook and never a change here; CanonDB's
+`tools/registry.py export` writes them out as one file, and this reads that file.
 
 Fails if a [KEY] citation is used but not registered, or if a REJECTED source is
 cited anywhere: in any markdown file here, and in the Rule — which lives in the
 Cadence page's store, so it is scanned from an export of it (hypomnemata ›
-tradition: the check scans the Rule and the skill). Reports — without failing —
+ordo-tradition: the check scans the Rule and the skill). Reports — without failing —
 sources that are registered but never used, and the share of load-bearing
 citations that are still un-audited.
 
-    python3 tradition/check.py [--strict] [--rule DIR]
-    ORDO_RULE=<export> python3 tradition/check.py
+    python3 tradition/check.py [--strict] [--rule DIR] [--registry FILE]
+    ORDO_RULE=<export> ORDO_REGISTRY=<registry.json> python3 tradition/check.py
+
+--registry FILE (or $ORDO_REGISTRY) is the export of the parties' works,
+{"sources": {KEY: {work, verified, status, note, ...}}}. Without one the check reads
+the frozen copy, tools/fixture/registry.json, as preflight does: it stands in for the
+notebook the way tools/fixture/rule stands in for the store, and a run that has the
+notebook to hand exports it and passes that instead.
 
 --rule DIR (or $ORDO_RULE) is the export, laid out as ArtifactData's `out_dir`
 leaves it: <collection>/<doc_id>.json. Every string in every document is read, and
@@ -26,15 +37,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
-from ruleyaml import load  # strict: a key given twice fails, never wins
-REGISTRY = ROOT / "tradition" / "sources.yaml"
+from ruledir import RuleDirError, loads  # strict: a key given twice fails, never wins
+REGISTRY = ROOT / "tools" / "fixture" / "registry.json"
 # A citation is a bracketed all-caps key: [RB-5], [LEROY-GLOMB-2018]
 CITE = re.compile(r"\[([A-Z][A-Z0-9.-]*[A-Z0-9])\]")
 SKIP = {".git", "node_modules", "__pycache__"}
 
 
 def scan_markdown():
-    # Not sources.yaml itself: its keys are the registry, not citations.
     paths = sorted(ROOT.rglob("*.md"))
     for path in paths:
         if any(part in SKIP for part in path.parts):
@@ -86,7 +96,14 @@ def main() -> int:
     if export and not Path(export).is_dir():
         print(f"ERROR  {export} is not a directory")
         return 1
-    sources = load(REGISTRY)["sources"]
+    registry = Path(os.environ.get("ORDO_REGISTRY") or REGISTRY)
+    if "--registry" in argv:
+        registry = Path(argv[argv.index("--registry") + 1])
+    try:
+        sources = loads(registry.read_text(encoding="utf-8"))["sources"]
+    except (OSError, ValueError, RuleDirError, KeyError, TypeError) as e:
+        print(f"ERROR  {registry}: {e}")
+        return 1
 
     # `unaudited` keeps each warning's key as the citation matched it: the warning's
     # own text names a field path (`steps[0]`) whose brackets are not a key's.
@@ -96,7 +113,7 @@ def main() -> int:
         used.setdefault(key, []).append(f"{where}:{at}")
         entry = sources.get(key)
         if entry is None:
-            errors.append(f"{where}:{at}: [{key}] is not in tradition/sources.yaml")
+            errors.append(f"{where}:{at}: [{key}] is not in the registry: no party's works define it")
         elif str(entry.get("status", "")).upper() == "REJECTED":
             errors.append(
                 f"{where}:{at}: [{key}] is REJECTED — {entry.get('note', '').strip()[:90]}"

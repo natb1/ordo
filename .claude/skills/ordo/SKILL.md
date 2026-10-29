@@ -14,11 +14,14 @@ The Rule is not in this repo. It lives in the Cadence page's store, and every ru
 starts by exporting it (§"The Rule lives in the store"). The store is the source of
 truth, not this file. This file is the procedure.
 
-Appeals to tradition are versioned in `tradition/sources.yaml` and cited by key —
-`[RB-5]`, `[LALLY-2010]`. Never introduce a citation that is not registered there;
-`tradition/check.py` enforces it. The registry's `verified:` field says which claims
-have actually been audited and which are still un-audited leads — do not present an
-`unverified` source as established.
+Appeals to tradition are cited by key — `[RB-5]`, `[LALLY-2010]` — and the registry
+of keys is the works of the parties on the notebook's tradition tabs, not a file here:
+recording a source is a write to the notebook. Never introduce a citation no party's
+works define; `tradition/check.py` enforces it, reading an export of the works
+(CanonDB's `tools/registry.py export`), or the frozen copy `tools/fixture/registry.json`
+when it is given none. A work's `verified` field says which claims have actually been
+audited and which are still un-audited leads — do not present an `unverified` source
+as established.
 
 Three commands do all the work:
 
@@ -457,7 +460,8 @@ change changes nothing.
    ended, so a passed `until:` can change what the page should show with no
    document changing. Send the batch if it writes one.
    Then `ORDO_RULE=<out_dir> python3 tradition/check.py`: every appeal to tradition in
-   the Rule's documents is a key the registry holds.
+   the Rule's documents is a key some party's works define (`--registry` an export of
+   them, where the run has one; the frozen copy otherwise).
    **When the gate refuses, stop.** A day that no
    longer fits is the finding: name the day, the block and the minutes it is over,
    send nothing, and leave what gives to the user. A moved meeting and a declined one

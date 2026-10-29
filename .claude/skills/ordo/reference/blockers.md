@@ -103,7 +103,7 @@ cue, a slot and a cost like anything else.
 ## Sources
 
 > Registry keys: [RB-31] [RB-32] [MARCUS-5.20] [SENECA-PREMEDITATIO]
-> [RUSSELL-VINSEL-2016] [EPICTETUS-ENCH-1] — full entries in `tradition/sources.yaml`.
+> [RUSSELL-VINSEL-2016] [EPICTETUS-ENCH-1] — full entries in the parties' works on the notebook.
 >
 > Note on [MARCUS-5.20]: the familiar "what stands in the way becomes the way" is
 > Hays's 2002 phrasing, not a literal translation. Cite it as his.

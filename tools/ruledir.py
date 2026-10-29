@@ -68,7 +68,7 @@ def _pairs(pairs):
 
 
 def loads(text):
-    """JSON, with a key given twice in one object an error (as ruleyaml has it)."""
+    """JSON, with a key given twice in one object an error, never a silent last-one-wins."""
     return json.loads(text, object_pairs_hook=_pairs)
 
 
