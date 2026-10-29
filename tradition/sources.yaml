@@ -937,7 +937,7 @@ sources:
   # ---- Custody: what security keeps -----------------------------------------
 
   SHOSTACK-FOUR:
-    work: "Threat Modeling: Designing for Security", and the Four Question Framework
+    work: "Threat Modeling: Designing for Security, and the Four Question Framework"
     locus: the four questions
     author: Adam Shostack
     date: 2014
