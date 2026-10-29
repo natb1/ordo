@@ -933,3 +933,106 @@ sources:
       Low-risk for men: no more than 4 drinks on any day AND no more than 14 per week.
       Binge: ~5 drinks in about 2 hours for men. Standard drink = 14 g pure alcohol.
     verified: web-2026-09-21
+
+  # ---- Custody: what security keeps -----------------------------------------
+
+  SHOSTACK-FOUR:
+    work: "Threat Modeling: Designing for Security, and the Four Question Framework"
+    locus: the four questions
+    author: Adam Shostack
+    date: 2014
+    domain: security
+    quote: "What are we working on? What can go wrong? What are we going to do about it? Did we do a good job?"
+    supports: >
+      The threat model in the security set follows the four in order: the assets,
+      the matrix of what can go wrong, the register's steps and acceptances, and the
+      register read back as the test; the last question asks the first again, so the
+      four are a cadence and not a document (the security root).
+    verified: web-2026-10-29
+    note: >
+      Confirmed against the framework as Shostack states it on shostack.org; that
+      page does not tie the four questions to the 2014 book, which was not opened.
+
+  SALTZER-SCHROEDER-1975:
+    work: The Protection of Information in Computer Systems
+    locus: Section I.A.3, Design principles
+    author: Jerome H. Saltzer and Michael D. Schroeder
+    venue: Proceedings of the IEEE 63(9)
+    date: 1975
+    domain: security
+    quote: "It is essential that the human interface be designed for ease of use, so that users routinely and automatically apply the protection mechanisms correctly."
+    supports: >
+      Eight design principles, economy of mechanism to psychological acceptability;
+      the last is the attention a control costs, and the first the reason a control
+      no asset or threat needs is retired (the security root).
+    verified: web-2026-10-29
+    note: >
+      Confirmed against the paper's text at web.mit.edu/Saltzer; the venue and date
+      are from model knowledge, since that copy names neither.
+
+  KERCKHOFFS-1883:
+    work: La cryptographie militaire
+    locus: the second of six requirements for a military cipher
+    author: Auguste Kerckhoffs
+    venue: Journal des sciences militaires IX, January and February 1883
+    date: 1883
+    domain: security
+    quote: "Il faut qu'il n'exige pas le secret, et qu'il puisse sans inconvénient tomber entre les mains de l'ennemi."
+    supports: >
+      The machines' configuration is public and the keys are the whole of the secret;
+      the map of weaknesses kept private besides is the register's own addition, since
+      a list of accepted residuals is not a design (the security root).
+    verified: web-2026-10-29
+    note: >
+      Confirmed in the original and in translation at Wikipedia's article on the
+      principle; the journal was not opened. Shannon's restatement, the enemy knows
+      the system, is in Communication Theory of Secrecy Systems (1949).
+
+  SCHNEIER-2000-PROCESS:
+    work: "The Process of Security"
+    locus: the CryptoRhythms column
+    author: Bruce Schneier
+    venue: Information Security magazine
+    date: April 2000
+    domain: security
+    quote: "Security is a process, not a product."
+    supports: >
+      The security root's method is a cadence of readings, never a product bought
+      once (the security root).
+    verified: web-2026-10-29
+    note: Confirmed against the essay as archived at schneier.com.
+
+  SCHNEIER-2003-BEYOND-FEAR:
+    work: "Beyond Fear: Thinking Sensibly About Security in an Uncertain World"
+    author: Bruce Schneier
+    venue: Copernicus Books
+    date: 2003
+    domain: security
+    supports: >
+      A countermeasure is judged by a five-step trade-off, what is protected, the
+      risks to it, how well the measure mitigates them, what other risks it causes
+      and what it costs, and never by fear: the weighing the user asks for at every
+      decision, and the end's clause that no rule is kept from fear (the security root).
+    verified: web-2026-10-29
+    caution: >
+      The book, its publisher and the existence of a five-step process were confirmed
+      at schneier.com and Wikipedia on 2026-10-29; the wording of the five steps is
+      from model knowledge, the book not opened.
+
+  ANDERSON-2020-SE:
+    work: "Security Engineering: A Guide to Building Dependable Distributed Systems"
+    locus: Ch. 1, What is Security Engineering?
+    author: Ross Anderson
+    venue: Wiley, third edition
+    date: 2020
+    domain: security
+    supports: >
+      Security engineering builds systems to remain dependable in the face of malice,
+      error or mischance, and it fails at the whole system, its people, incentives and
+      economics, more often than at the cryptography; the household's continuity and
+      the attention its controls cost are inside the system (the security root).
+    verified: web-2026-10-29
+    caution: >
+      The title, edition and first chapter were confirmed at the author's page on
+      2026-10-29; the definition's wording is from model knowledge, the chapter not
+      opened.
