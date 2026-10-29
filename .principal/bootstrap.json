@@ -133,8 +133,8 @@
         "tools/fixture/registry.json",
         "tools/test_tradition.py"
       ],
-      "pull_request": "https://github.com/natb1/ordo/pull/5",
-      "rounds": 2
+      "pull_request": "https://github.com/natb1/ordo/pull/9",
+      "rounds": 3
     },
     {
       "question": "allocation",
