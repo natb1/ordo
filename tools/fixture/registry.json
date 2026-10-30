@@ -1,0 +1,670 @@
+{
+  "sources": {
+    "AINSLIE-2001": {
+      "work": "Breakdown of Will, Cambridge University Press",
+      "author": "Ainslie, G.",
+      "date": "2001",
+      "domain": "behavioural-economics",
+      "verified": "unverified",
+      "note": "Hyperbolic discounting among successive selves; a personal rule holds because it bundles the choices, so that a lapse stakes the whole series and not the one occasion. The ground of \"vary as little as possible\", and why a deviation declared ahead costs nothing while one discovered after costs the rule. hypomnemata › Ainslie, alignment."
+    },
+    "ALLEN-2001": {
+      "work": "Getting Things Done: The Art of Stress-Free Productivity",
+      "author": "Allen, D.",
+      "date": "2001",
+      "domain": "practitioner",
+      "verified": "unverified",
+      "note": "The canonical treatment of captured-but-unscheduled work: open loops cost attention until they are written somewhere trusted, and a capture that is not trusted is not a capture. Not peer reviewed. A practitioner book, not scholarship, and included on those terms. Its central mechanism is not Allen's own finding — the evidence is ZEIGARNIK-1927 and MASICAMPO-2011, which show the intrusion and that a PLAN (not a list) discharges it. Cite those for the claim; cite this for the practice."
+    },
+    "ANALECTS-1.4": {
+      "work": "Analects",
+      "author": "Confucius (Zengzi)",
+      "locus": "I.4",
+      "domain": "confucian",
+      "verified": "unverified",
+      "note": "Fixed, short, enumerated self-examination. Short lists survive; open-ended reflection ruminates. Quote: “Daily I examine myself on three points”"
+    },
+    "ANDERSON-2020-SE": {
+      "work": "Security Engineering: A Guide to Building Dependable Distributed Systems, Wiley, third edition",
+      "author": "Ross Anderson",
+      "locus": "Ch. 1, What is Security Engineering?",
+      "date": "2020",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "Security engineering builds systems to remain dependable in the face of malice, error or mischance, and it fails at the whole system, its people, incentives and economics, more often than at the cryptography; the household's continuity and the attention its controls cost are inside the system (the security root). Caution: The title, edition and first chapter were confirmed at the author's page on 2026-10-29; the definition's wording is from model knowledge, the chapter not opened."
+    },
+    "AQUINAS-ST-1-2-1": {
+      "work": "Summa Theologiae",
+      "author": "Thomas Aquinas",
+      "locus": "I-II q.1 a.1, with ad 1, the treatise on the last end",
+      "date": "1265–1274",
+      "domain": "scholastic",
+      "verified": "unverified",
+      "note": "The end is first in the order of intention and last in the order of execution, so it is stated before a horizon is decided for and read after it (hypomnemata › horizon)."
+    },
+    "ARISTOTLE-NE-2.1": {
+      "work": "Nicomachean Ethics",
+      "author": "Aristotle",
+      "locus": "II.1",
+      "domain": "ethics",
+      "verified": "unverified",
+      "note": "Hexis — character is the residue of repetition, not of intention. Quote: “we become just by doing just acts, temperate by doing temperate acts”"
+    },
+    "ARISTOTLE-NE-2.9": {
+      "work": "Nicomachean Ethics",
+      "author": "Aristotle",
+      "locus": "II.9",
+      "domain": "ethics",
+      "verified": "unverified",
+      "note": "For a disposition you want to change, drag yourself in the contrary direction, as with warped wood."
+    },
+    "ARISTOTLE-NE-7": {
+      "work": "Nicomachean Ethics",
+      "author": "Aristotle",
+      "locus": "Book VII",
+      "domain": "ethics",
+      "verified": "unverified",
+      "note": "Akrasia — acting against one's own better judgment. The philosophical name for the fourth drink."
+    },
+    "ARISTOTLE-TOPICS-1.2": {
+      "work": "Topics",
+      "author": "Aristotle",
+      "locus": "I.2, 101a34–b4, the third use of dialectic",
+      "date": "c. 350 BC",
+      "domain": "hellenic",
+      "verified": "web-2026-10-27",
+      "note": "The first principles of a science cannot be examined from inside it, so they are reached by dialectic, by questioning what is held: the derivation reading that puts the archai root's question to the user again is that road, and it is why the order is refined by a question and never by a count (the archai root). Quote: “for dialectic is a process of criticism wherein lies the path to the principles of all inquiries” Confirmed against Pickard-Cambridge's translation at the MIT classics archive, Topics I.2."
+    },
+    "ASHINOFF-2021": {
+      "work": "Hyperfocus: the forgotten frontier of attention, Psychological Research 85(1), 1-19",
+      "author": "Ashinoff, B. K., & Abu-Akel, A.",
+      "date": "2021",
+      "domain": "cognitive-psychology",
+      "verified": "web-2026-09-21",
+      "note": "The construct is poorly operationalized in the literature that uses it; not exclusive to ADHD or autism. Grounds the decision to define \"gated\" empirically from the log rather than by category. Peer reviewed. Existence, venue and the \"poorly defined\" thrust confirmed. The specific list of defining criteria was NOT confirmed — do not quote criteria without the full text."
+    },
+    "CARVER-SCHEIER-1998": {
+      "work": "On the Self-Regulation of Behavior, Cambridge University Press",
+      "author": "Carver, C. S., & Scheier, M. F.",
+      "date": "1998",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Behaviour as the output of control loops: a reference, a perception, a comparator and an output, the loops nested so that a higher level's output is a lower level's reference, attention going to the level most in error, and the rate of closing felt as doing well or badly. The optimizable form of the Rule's goal, and the reason a review acts on a trend. hypomnemata › Carver, alignment, horizon."
+    },
+    "CASSIAN-CONF-1": {
+      "work": "The Conferences",
+      "author": "John Cassian",
+      "locus": "Conference I, 2–5, Abba Moses on the monk's end and his mark",
+      "date": "c. 420",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "Every craft has a mark it aims at and an end the mark serves, and the one who takes the mark for the end goes astray. Each horizon's count is a mark, and what the marks serve is the end the root states (hypomnemata › horizon, › ti-esti)."
+    },
+    "CASSIAN-CONF-1.5": {
+      "work": "The Conferences",
+      "author": "John Cassian",
+      "locus": "Conference I, 5–7, Abba Moses on what serves the mark and what is left off",
+      "date": "c. 420",
+      "domain": "monastic",
+      "verified": "web-2026-10-27",
+      "note": "Discretion by the mark: every practice is judged by whether it serves the mark, kept while it does and left off where it hinders, the secondary thing never taken for the end. The sort's levels read each project the same way, against the end its root states and as a threshold, never a maximization (hypomnemata › allocation). Quote: “Whatever then can help to guide us to this object; viz., purity of heart, we must follow with all our might” Confirmed against Gibson's translation (Nicene and Post-Nicene Fathers, second series, vol. 11) at New Advent, Conference I chapters 4–7: fasting, vigils and the rest are secondary, practised for the main object, and given up where they stand in its way. CASSIAN-CONF-1 covers the end and the mark themselves."
+    },
+    "COLLINGWOOD-1940-STRAIN": {
+      "work": "An Essay on Metaphysics",
+      "author": "R. G. Collingwood",
+      "locus": "Ch. V, p. 48 n., the footnote on how a constellation of absolute presuppositions changes",
+      "date": "1940",
+      "domain": "philosophy",
+      "verified": "unverified",
+      "note": "A constellation of absolute presuppositions is under strains, taken up in various ways; when they are too great the structure gives way to a modification of itself, and not by anyone's argument. The archai root's second reading looks for the strain, when every dependent's exceptions strain the same way, and the order changes only from level ground. Drawn from model knowledge. The footnote was not found in the Stanford Encyclopedia's entry or by search on 2026-10-27; to be read in the text before anything leans on its wording."
+    },
+    "CSIK-1990": {
+      "work": "Flow: The Psychology of Optimal Experience",
+      "author": "Csikszentmihalyi, M.",
+      "date": "1990",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Absorption from challenge matched to skill; and the warning that the autotelic experience can become addictive. Flow and the trap are the same machinery."
+    },
+    "DOGEN-TENZO": {
+      "work": "Tenzo Kyokun (Instructions for the Cook)",
+      "author": "Dogen",
+      "date": "1237",
+      "domain": "zen",
+      "verified": "unverified",
+      "note": "The cook's work IS the practice, entire — not preparation for it and not a lesser substitute. The argument against filing chores as interruptions."
+    },
+    "ELSTER-1979": {
+      "work": "Ulysses and the Sirens",
+      "author": "Elster, J.",
+      "date": "1979",
+      "domain": "philosophy-social-science",
+      "verified": "unverified",
+      "note": "Precommitment. Let the self with better judgment bind the other."
+    },
+    "EPICTETUS-ENCH-1": {
+      "work": "Enchiridion",
+      "author": "Epictetus",
+      "locus": "1",
+      "domain": "stoic",
+      "verified": "unverified",
+      "note": "The dichotomy of control. The machine breaking is not up to you; the response, the slot you give it, and whether it becomes a verdict are."
+    },
+    "EVAGRIUS-PRAKTIKOS-12": {
+      "work": "Praktikos",
+      "author": "Evagrius Ponticus",
+      "locus": "chapter 12",
+      "date": "c. 390",
+      "domain": "christian-spirituality",
+      "verified": "unverified",
+      "note": "Acedia, the noonday demon: the thought that comes about the ninth hour, when the day's labour thins; the monk looks out of the window, counts the hours to the meal, finds the cell hateful and is moved to leave. The Rule's name for the Sunday evening after the game. hypomnemata › Evagrius, allocation, unprompted."
+    },
+    "EVAGRIUS-PRAKTIKOS-28": {
+      "work": "Praktikos",
+      "author": "Evagrius Ponticus",
+      "locus": "chapter 28 (the locus is the less certain of the two; the remedy may be stated in chapter 12 itself, or in the Antirrhetikos)",
+      "date": "c. 390",
+      "domain": "christian-spirituality",
+      "verified": "unverified",
+      "note": "The remedy for acedia is endurance where one is: stay in the cell and keep the hours, and do not argue with the thought. The reason the Rule meets the Sunday evening with architecture and a bell rather than resolve. hypomnemata › Evagrius."
+    },
+    "FINGARETTE-1972": {
+      "work": "Confucius: The Secular as Sacred",
+      "author": "Fingarette, H.",
+      "date": "1972",
+      "domain": "philosophy",
+      "verified": "unverified",
+      "note": "Ritual as \"holy vessel\" — ceremony makes right action effortless rather than effortful."
+    },
+    "FOUCAULT-1982": {
+      "work": "Technologies of the Self",
+      "author": "Michel Foucault",
+      "date": "1982",
+      "domain": "philosophy",
+      "verified": "unverified",
+      "note": "Epimeleia heautou, and the hypomnemata — notebooks of self-record. The genealogy of the record (the store's days)."
+    },
+    "FRANKLIN-AUTO": {
+      "work": "Autobiography",
+      "author": "Benjamin Franklin",
+      "date": "1791",
+      "domain": "practical-ethics",
+      "verified": "unverified",
+      "note": "The thirteen virtues and the grid — the original habit tracker. The method matters more than the list: ONE virtue per week, the rest let go. Also the speckled axe, and his admission he never came close to the scheme."
+    },
+    "GALLA-DUCKWORTH-2015": {
+      "work": "More than resisting temptation: Beneficial habits mediate the relationship between self-control and positive life outcomes, Journal of Personality and Social Psychology 109(3), 508-525",
+      "author": "Galla, B. M., & Duckworth, A. L.",
+      "date": "2015",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Across six studies, high self-control predicts outcomes largely VIA HABIT, not via winning moment-to-moment fights. The reason to build a Rule instead of trying harder. Peer reviewed."
+    },
+    "GOLLWITZER-1999": {
+      "work": "Implementation intentions: Strong effects of simple plans, American Psychologist 54(7), 493-503",
+      "author": "Gollwitzer, P. M.",
+      "date": "1999",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "The if-then format. Every item in this Rule is written as one. Peer reviewed."
+    },
+    "GOLLWITZER-SHEERAN-2006": {
+      "work": "Implementation intentions and goal achievement: A meta-analysis of effects and processes, Advances in Experimental Social Psychology 38, 69-119",
+      "author": "Gollwitzer, P. M., & Sheeran, P.",
+      "date": "2006",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Claimed: d ~ 0.65 across 94 independent studies Peer reviewed."
+    },
+    "GREAT-SILENCE": {
+      "work": "Monastic custom following Compline",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "After Compline the day's business is closed; what follows is silence. The device for bedtime drift — the Examen ends the day, so the 21:00-23:00 window is declared leisure rather than unfinished day. A widespread custom across orders rather than a specific chapter of the Rule."
+    },
+    "HADOT-1995": {
+      "work": "Philosophy as a Way of Life",
+      "author": "Pierre Hadot",
+      "date": "1995",
+      "domain": "history-of-philosophy",
+      "verified": "unverified",
+      "note": "Ancient philosophy as daily spiritual exercises — an askesis — rather than doctrine. The scholarly frame for the whole project."
+    },
+    "HESCHEL-1951": {
+      "work": "The Sabbath",
+      "author": "Abraham Joshua Heschel",
+      "date": "1951",
+      "domain": "jewish-thought",
+      "verified": "unverified",
+      "note": "Rest is BUILT, with as much architecture as work. Unstructured time is not rest, merely undefended. The Sunday-evening argument. Quote: “a palace in time”"
+    },
+    "IGNATIUS-DISCERN-5": {
+      "work": "Spiritual Exercises, Rules for Discernment",
+      "author": "Ignatius of Loyola",
+      "locus": "Rule 5 (first week)",
+      "domain": "christian-spirituality",
+      "verified": "unverified",
+      "note": "The negative gate on the backlog: never promote a goal, and never abandon one, during a bad week. hypomnemata › gate. Quote: “In time of desolation never make a change”"
+    },
+    "IGNATIUS-ELECTION": {
+      "work": "The Spiritual Exercises",
+      "author": "Ignatius of Loyola",
+      "locus": "Second Week, \"Three times for making, in any one of them, a sound and good election\", and the first way, its first two points",
+      "date": "1548",
+      "domain": "christian-spirituality",
+      "verified": "web-2026-10-27",
+      "note": "A change to the order or to the Rule is made in a quiet time and not under the movement of the moment, and by one measure, what is more conducive to the end one is made for, held \"like the middle of a balance\": the sort by the ends, and a conflict settled on level ground (hypomnemata › allocation, › gate). Quote: “The third time is quiet, when one considers, first, for what man is born” Confirmed against the 1914 English translation (Elder Mullan's) as sacred-texts publishes it, the Second Week's election: the three times, and the first way's second point, which keeps \"as aim the end for which I am created\"."
+    },
+    "IGNATIUS-EXAMEN": {
+      "work": "Spiritual Exercises",
+      "author": "Ignatius of Loyola",
+      "date": "1548",
+      "domain": "christian-spirituality",
+      "verified": "unverified",
+      "note": "The Examen: five steps, fixed order, GRATITUDE FIRST, before any review of faults. Also consolation/desolation as a vocabulary for emotional movement."
+    },
+    "IGNATIUS-PARTICULAR": {
+      "work": "Spiritual Exercises",
+      "author": "Ignatius of Loyola",
+      "locus": "the particular examen, Exercises 24-31",
+      "date": "1548",
+      "domain": "christian-spirituality",
+      "verified": "unverified",
+      "note": "One fault at a time, chosen and marked on a grid twice daily, the second day compared to the first and the second week to the first: every count read as a trend and never an absolute, and a sitting's attention on one gap a week. hypomnemata › Ignatius, horizon."
+    },
+    "JAMES-1890-HABIT": {
+      "work": "The Principles of Psychology, Ch. 4 \"Habit\"",
+      "author": "William James",
+      "date": "1890",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Habit as the flywheel; make the nervous system an ally. BUT the \"never suffer an exception\" maxim is the one place he is empirically wrong — see LALLY-2010. Kept for the physiology, not the absolutism. Quote: “Never suffer an exception to occur till the new habit is securely rooted in your life” Contradicted by ['LALLY-2010']."
+    },
+    "KERCKHOFFS-1883": {
+      "work": "La cryptographie militaire, Journal des sciences militaires IX, January and February 1883",
+      "author": "Auguste Kerckhoffs",
+      "locus": "the second of six requirements for a military cipher",
+      "date": "1883",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "The machines' configuration is public and the keys are the whole of the secret; the map of weaknesses kept private besides is the register's own addition, since a list of accepted residuals is not a design (the security root). Quote: “Il faut qu'il n'exige pas le secret, et qu'il puisse sans inconvénient tomber entre les mains de l'ennemi.” Confirmed in the original and in translation at Wikipedia's article on the principle; the journal was not opened. Shannon's restatement, the enemy knows the system, is in Communication Theory of Secrecy Systems (1949)."
+    },
+    "LALLY-2010": {
+      "work": "How are habits formed: Modelling habit formation in the real world, European Journal of Social Psychology 40(6), 998-1009",
+      "author": "Lally, P., van Jaarsveld, C. H. M., Potts, H. W. W., & Wardle, J.",
+      "date": "2010",
+      "domain": "psychology",
+      "verified": "web-2026-09-21",
+      "note": "The direct refutation of James's ball of string, and the reason a missed day is logged as an event rather than a verdict. hypomnemata › deviation. Claimed: Median 66 days to automaticity; range 18-254 days; n=96 over 12 weeks. Quote: “missing one opportunity to perform the behaviour did not materially affect the habit formation process” Peer reviewed."
+    },
+    "LARSON-CSIK-1983": {
+      "work": "The Experience Sampling Method, New Directions for Methodology of Social and Behavioral Science 15, 41–56, ed. H. T. Reis, Jossey-Bass",
+      "author": "Larson, R., & Csikszentmihalyi, M.",
+      "date": "1983",
+      "domain": "psychology",
+      "verified": "web-2026-10-27",
+      "note": "A pager signals at random moments and the subject reports what is happening then, so the moment sampled is uncorrelated with what the subject would choose to report: the model for the uncorrelated draw that puts the derivation question to the user, and for a probe that asks about events and never about principles (the archai root's method, hypomnemata › examen). Caution: The citation (editor, venue, pages, and the 2014 Springer reprint) was confirmed by search on 2026-10-27; the chapter itself was not opened, so the method's description rests on model knowledge and on Csikszentmihalyi & Larson (1987), J. Nerv. Ment. Dis. 175, 526–536."
+    },
+    "LEFIN-1808": {
+      "work": "Cheshbon HaNefesh",
+      "author": "Menachem Mendel Lefin",
+      "date": "1808",
+      "domain": "mussar",
+      "verified": "unverified",
+      "note": "The \"accounting of the soul,\" explicitly built on Franklin's grid. One trait at a time, written down. Independent arrival at the same technique."
+    },
+    "LEROY-2009": {
+      "work": "Why is it so hard to do my work? The challenge of attention residue, Organizational Behavior and Human Decision Processes 109(2), 168-181",
+      "author": "Leroy, S.",
+      "date": "2009",
+      "domain": "organizational-psychology",
+      "verified": "unverified",
+      "note": "Attention residue — switching costs are worst when the prior task is unfinished. Peer reviewed."
+    },
+    "LEROY-GLOMB-2018": {
+      "work": "Tasks interrupted: How anticipating time pressure on resumption of an interrupted task causes attention residue and low performance on interrupting tasks, and how a 'ready-to-resume' plan mitigates the effects, Organization Science 29(3), 380-397",
+      "author": "Leroy, S., & Glomb, T. M.",
+      "date": "2018",
+      "domain": "organizational-psychology",
+      "verified": "web-2026-09-21",
+      "url": "https://doi.org/10.1287/orsc.2017.1184",
+      "note": "A brief ready-to-resume plan — where you left off, what remains, what you are postponing — clears attention residue WITHOUT finishing the task. The evidence base for step 2 of the exit rite, and the answer to \"just finish it first.\" Peer reviewed."
+    },
+    "MARCUS-5.1": {
+      "work": "Meditations",
+      "author": "Marcus Aurelius",
+      "locus": "5.1",
+      "domain": "stoic",
+      "verified": "unverified",
+      "note": "The morning rising passage. He reminds himself what the day is for rather than scolding himself out of bed."
+    },
+    "MARCUS-5.20": {
+      "work": "Meditations",
+      "author": "Marcus Aurelius",
+      "locus": "5.20",
+      "domain": "stoic",
+      "verified": "web-2026-09-21",
+      "note": "The obstacle is handled by the same faculty that handles everything else — it does not require suspending the Rule. Grounds treating a breakdown as ordinary Rule business with its own slot. Quote: “The impediment to action advances action. What stands in the way becomes the way.” CAUTION. The punchy wording is Gregory Hays's 2002 translation, not a literal rendering. George Long (1862) has \"that which is an obstacle on the road helps us on this road.\" The thought is Marcus's; the epigram is the translator's. Attribute as \"Marcus, in Hays's translation\" — never as Marcus's own words."
+    },
+    "MARLATT-1985": {
+      "work": "Relapse Prevention: Maintenance Strategies in the Treatment of Addictive Behaviors",
+      "author": "Marlatt, G. A., & Gordon, J. R.",
+      "date": "1985",
+      "domain": "clinical-psychology",
+      "verified": "unverified",
+      "note": "The Abstinence Violation Effect — a lapse becomes a relapse through the attribution, not the substance. Also high-risk situation analysis, and the competing response: fill the slot, do not vacate it."
+    },
+    "MASICAMPO-2011": {
+      "work": "Consider it done! Plan making can eliminate the cognitive effects of unfulfilled goals, Journal of Personality and Social Psychology 101(4), 667-683",
+      "author": "Masicampo, E. J., & Baumeister, R. F.",
+      "date": "2011",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Making a plan discharges an unfulfilled goal's intrusion as well as completing it does. Why a backlog entry must contain a cue, not just a name. Peer reviewed."
+    },
+    "MORTON-2018": {
+      "work": "A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength, British Journal of Sports Medicine 52(6), 376-384",
+      "author": "Morton, R. W., et al.",
+      "date": "2018",
+      "domain": "sports-science",
+      "verified": "unverified",
+      "note": "Claimed: Benefit for lean mass plateaus around 1.6 g/kg/day. Peer reviewed."
+    },
+    "NIAAA-PATTERNS": {
+      "work": "Understanding Alcohol Drinking Patterns",
+      "author": "National Institute on Alcohol Abuse and Alcoholism",
+      "domain": "public-health",
+      "verified": "web-2026-09-21",
+      "url": "https://www.niaaa.nih.gov/alcohols-effects-health/alcohol-drinking-patterns",
+      "note": "Claimed: Low-risk for men: no more than 4 drinks on any day AND no more than 14 per week. Binge: ~5 drinks in about 2 hours for men. Standard drink = 14 g pure alcohol."
+    },
+    "PLATO-MENO-71B": {
+      "work": "Meno (71b), with Euthyphro (5c-d)",
+      "author": "Plato",
+      "domain": "hellenic",
+      "verified": "unverified",
+      "note": "What a thing is (ti esti) is asked before what it is like, and it is asked of someone already doing the thing. The form of the root question of the hypomnemata, which this repo borrows from natb1/CanonDB; cited from the notebook's Plato tab and nowhere in the repo. Added with the notebook. Drawn from model knowledge; CanonDB's reconstruction of the same party reports the Stephanus references checked, but that audit is another repo's and does not count here. Promote before leaning on it."
+    },
+    "POWERS-1973": {
+      "work": "Behavior: The Control of Perception, Aldine",
+      "author": "Powers, W. T.",
+      "date": "1973",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Perceptual control theory, the hierarchy of control loops that Carver and Scheier build on: each level sets the reference of the one below. hypomnemata › Carver."
+    },
+    "PYTHAG-GV-40": {
+      "work": "Golden Verses",
+      "locus": "lines 40-44",
+      "domain": "hellenic",
+      "verified": "unverified",
+      "author": "Pythagoras",
+      "note": "The oldest form of the evening review. Three fixed questions. Quote: “Let not sleep close thy eyes before thrice reviewing the deeds of the day”"
+    },
+    "RAWLS-1971-RE": {
+      "work": "A Theory of Justice",
+      "author": "John Rawls",
+      "locus": "§4 and §9, reflective equilibrium",
+      "date": "1971",
+      "domain": "ethics",
+      "verified": "web-2026-10-27",
+      "note": "Principles and considered judgements are adjusted against each other until they agree. The archai root's method takes the form and slows it to one direction at a time: what cannot be derived from the order is the finding, and the order changes only by the user's own hand, after a reading, from level ground. Confirmed against the Stanford Encyclopedia of Philosophy, \"Reflective Equilibrium\" (Carl Knight, 2023): \"Equilibrium is reached where principles and judgments have been revised such that they agree with each other.\" The Theory itself was not opened."
+    },
+    "RB-3": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 3, On Calling the Brethren for Counsel",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-10-27",
+      "note": "Where a conflict in the Rule or between principles is settled: what blocks is settled when it blocks, with the least that unblocks; the rest waits for the review above it, where the whole matter is put, counsel heard, and the one who decides decides on level ground (hypomnemata › gate). Quote: “Whenever any important business has to be done in the monastery, let the Abbot call together the whole community” Confirmed against Project Gutenberg's text of the Rule in Leonard J. Doyle's translation (Liturgical Press, 1948), Chapter 3: the abbot states the matter, hears the brethren's advice, then \"turn[s] the matter over in his own mind\" and decides."
+    },
+    "RB-31": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 31, The Cellarer of the Monastery",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "A named office exists for the material problems of the house, so that breakdowns have an owner and do not compete with the horarium for attention. The argument that infrastructure failure belongs INSIDE the Rule, with its own handling, rather than being an exception to it."
+    },
+    "RB-32": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 32, The Tools and Goods of the Monastery",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "Tools are inventoried and assigned; the abbot keeps a list and checks it. The precedent for a written breakdown register rather than remembering what is broken. Chapter title and the tool-list practice confirmed alongside the RB-35/43/48 check."
+    },
+    "RB-35": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 35, Weekly Kitchen Servers",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "Chores as rotating office, no exemptions. Kitchen work is assigned, not left over."
+    },
+    "RB-40": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 40, The Measure of Drink",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "Rationing over prohibition. A measured daily allowance (a hemina), drunk \"sparingly and not to satiety,\" adjustable by the abbot, with abstainers having \"their own reward.\" The model for the drink ration (hypomnemata › count). Quote: “although we read that wine is altogether not for monks, it is impossible in our times to persuade monks of this”"
+    },
+    "RB-43": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 43, On Those Who Come Late",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "The bell has authority independent of the task's state. Quote: “abandon whatever they may have in hand and hasten with the greatest speed”"
+    },
+    "RB-43-LETTER": {
+      "work": "Commonly attributed to the Rule of St. Benedict",
+      "locus": "(none — not in the Rule)",
+      "domain": "monastic",
+      "verified": "disputed",
+      "status": "REJECTED",
+      "note": "Nothing. Retained so the error is not reintroduced. Claimed: That a monk hearing the bell must not \"even finish the letter he is writing.\" Searched 2026-09-21; not present in Ch. 43 or elsewhere in the Rule. A later commentarial gloss. Cite RB-5 and RB-43 for the substance instead."
+    },
+    "RB-47": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 47, Announcing the Hours for the Work of God",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "ONE person owns the clock so that nobody else has to watch it. The monk is freed from timekeeping — that freedom is the gift of the horarium, not an incidental detail. Grounds the rule that a countdown is available on demand but never ambient: a visible ticking clock reinstates exactly the vigilance the bell exists to remove. Quote: “The indicating of the hour for the Work of God by day and by night shall devolve upon the Abbot, either to give the signal himself or to assign this duty to such a careful brother that everything will take place at the proper hours.”"
+    },
+    "RB-48": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 48, Daily Manual Labour",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "Breadth of activity is produced by assigning fixed hours, not by intention. Directly addresses \"correct breadth of productivity through the day.\" Quote: “Idleness is the enemy of the soul”"
+    },
+    "RB-49": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 49, The Observance of Lent",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "A declared season — deviation announced in advance, under authority, fully inside the Rule. Origin of the dispensation/lapse distinction, hypomnemata › deviation."
+    },
+    "RB-5": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 5, On Obedience",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "web-2026-09-21",
+      "note": "The exit rite. Leaving work unfinished at the signal is prescribed, not merely tolerated — the load-bearing citation for the exit rite (hypomnemata › bell). Quote: “dropping the work they were engaged in and leaving it unfinished” Confirmed against Project Gutenberg text of the Rule."
+    },
+    "RB-58": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 58, The Reception of Brothers",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "The novitiate. A postulant is turned away, made to wait, then given months of probation with the Rule read aloud and the cost stated before entry — admission on demonstrated capacity, never on enthusiasm. The model for the backlog gate and the novitiate state, hypomnemata › gate. Probation periods (commonly given as two months, then six, then four) are from memory and should be checked before being quoted as specifics."
+    },
+    "RB-64": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 64, The Election of an Abbot",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "Arrange things \"so that the strong have something to yearn for and the weak nothing to run from.\" The anti-perfectionism clause. Quote: “discretion, the mother of virtues”"
+    },
+    "RB-73": {
+      "work": "The Rule of St. Benedict",
+      "locus": "Ch. 73",
+      "date": "c. 530",
+      "domain": "monastic",
+      "verified": "unverified",
+      "note": "Benedict deprecating his own Rule in its final chapter. Quote: “a little rule for beginners”"
+    },
+    "RUSSELL-VINSEL-2016": {
+      "work": "Hail the Maintainers: Capitalism excels at innovation but is failing at maintenance, and for most lives it is maintenance that matters more., Aeon, 7 April 2016",
+      "author": "Russell, A. L., & Vinsel, L.",
+      "date": "2016",
+      "domain": "history-of-technology",
+      "verified": "web-2026-09-21",
+      "note": "Maintenance and repair have more effect on daily life than most innovation, and are systematically undervalued. The modern companion to DOGEN-TENZO: a repair is not an interruption of real work, it is the larger share of real work. Essay, not peer-reviewed. Expanded into The Innovation Delusion (2020)."
+    },
+    "SALTZER-SCHROEDER-1975": {
+      "work": "The Protection of Information in Computer Systems, Proceedings of the IEEE 63(9)",
+      "author": "Jerome H. Saltzer and Michael D. Schroeder",
+      "locus": "Section I.A.3, Design principles",
+      "date": "1975",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "Eight design principles, economy of mechanism to psychological acceptability; the last is the attention a control costs, and the first the reason a control no asset or threat needs is retired (the security root). Quote: “It is essential that the human interface be designed for ease of use, so that users routinely and automatically apply the protection mechanisms correctly.” Confirmed against the paper's text at web.mit.edu/Saltzer; the venue and date are from model knowledge, since that copy names neither."
+    },
+    "SCHELLING-1984": {
+      "work": "Self-Command in Practice, in Policy, and in a Theory of Rational Choice, American Economic Review 74(2), 1-11",
+      "author": "Schelling, T. C.",
+      "date": "1984",
+      "domain": "economics",
+      "verified": "unverified",
+      "note": "Self-command across time-inconsistent selves. The Sunday-morning plan, and no stock in the house. Peer reviewed."
+    },
+    "SCHNEIER-2000-PROCESS": {
+      "work": "The Process of Security, Information Security magazine",
+      "author": "Bruce Schneier",
+      "locus": "the CryptoRhythms column",
+      "date": "April 2000",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "The security root's method is a cadence of readings, never a product bought once (the security root). Quote: “Security is a process, not a product.” Confirmed against the essay as archived at schneier.com."
+    },
+    "SCHNEIER-2003-BEYOND-FEAR": {
+      "work": "Beyond Fear: Thinking Sensibly About Security in an Uncertain World, Copernicus Books",
+      "author": "Bruce Schneier",
+      "date": "2003",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "A countermeasure is judged by a five-step trade-off, what is protected, the risks to it, how well the measure mitigates them, what other risks it causes and what it costs, and never by fear: the weighing the user asks for at every decision, and the end's clause that no rule is kept from fear (the security root). Caution: The book, its publisher and the existence of a five-step process were confirmed at schneier.com and Wikipedia on 2026-10-29; the wording of the five steps is from model knowledge, the book not opened."
+    },
+    "SENECA-BREV": {
+      "work": "De Brevitate Vitae",
+      "author": "Seneca",
+      "domain": "stoic",
+      "verified": "unverified",
+      "note": "Time is squandered by inattention, not by shortage. The counterweight to RB-47: the answer is a reliable signal, not indifference to the hour."
+    },
+    "SENECA-EP-33": {
+      "work": "Epistulae morales ad Lucilium",
+      "author": "Seneca",
+      "locus": "Letter 33, On the futility of learning maxims",
+      "date": "c. 65",
+      "domain": "stoic",
+      "verified": "web-2026-10-27",
+      "note": "A maxim kept at hand is for the occasion and made one's own, never a list carried in the head: the cue for a principle is the review that asks, the user carries one rule and not a list, and what is kept is put forth \"from your own stock\" (hypomnemata › cue). Quote: “He should make such maxims and not memorize them” Confirmed against Gummere's translation (Loeb, 1917) on Wikisource. The letter argues against carrying borrowed maxims, so it is cited for that and not for the list it refuses."
+    },
+    "SENECA-IRA-3.36": {
+      "work": "De Ira",
+      "author": "Seneca",
+      "locus": "Book III, 36",
+      "domain": "stoic",
+      "verified": "unverified",
+      "note": "The nightly review, taken from Sextius. Crucially Seneca is a judge who then PARDONS — the review is not the punishment. The shame-management citation. Quote: “I examine my entire day and go back over what I have done and said, hiding nothing from myself, passing nothing by”"
+    },
+    "SENECA-PREMEDITATIO": {
+      "work": "Letters to Lucilius (esp. Ep. 91) and Ad Marciam",
+      "author": "Seneca",
+      "domain": "stoic",
+      "verified": "unverified",
+      "note": "Premeditatio malorum — rehearsing misfortune in advance so its arrival does not destabilize. The case for the Rule carrying a breakdown CATEGORY, built before anything breaks, rather than improvising at each failure."
+    },
+    "SHOSTACK-FOUR": {
+      "work": "Threat Modeling: Designing for Security, and the Four Question Framework",
+      "author": "Adam Shostack",
+      "locus": "the four questions",
+      "date": "2014",
+      "domain": "security",
+      "verified": "web-2026-10-29",
+      "note": "The threat model in the security set follows the four in order: the assets, the matrix of what can go wrong, the register's steps and acceptances, and the register read back as the test; the last question asks the first again, so the four are a cadence and not a document (the security root). Quote: “What are we working on? What can go wrong? What are we going to do about it? Did we do a good job?” Confirmed against the framework as Shostack states it on shostack.org; that page does not tie the four questions to the 2014 book, which was not opened."
+    },
+    "SHUHARI": {
+      "work": "Shu-ha-ri",
+      "domain": "japanese-arts-pedagogy",
+      "verified": "unverified",
+      "note": "Obey the form, detach from it, transcend it. Governs how much variation to allow: strictly at first, adaptively much later. Origins commonly traced to Noh and tea practice; attribution is loose."
+    },
+    "SILER-1999": {
+      "work": "De novo lipogenesis, lipid kinetics, and whole-body lipid balances in humans after acute alcohol consumption, American Journal of Clinical Nutrition 70(5), 928-936",
+      "author": "Siler, S. Q., Wolfe, R. R., & Schutz, Y.",
+      "date": "1999",
+      "domain": "nutrition-science",
+      "verified": "unverified",
+      "note": "Alcohol is oxidized preferentially, suppressing fat oxidation for hours. Peer reviewed."
+    },
+    "WANG-CHUANXILU": {
+      "work": "Chuanxilu (Instructions for Practical Living)",
+      "author": "Wang Yangming",
+      "date": "1518-1527",
+      "domain": "confucian-ethics",
+      "verified": "unverified",
+      "note": "Zhixing heyi, the unity of knowledge and action: knowledge is the beginning of action and action the completion of knowledge, and one who knows filial piety and does not practise it does not yet know it. A gap between a stated goal and the week lived is evidence about the goal as much as about the act. hypomnemata › Wang, alignment."
+    },
+    "WOOD-2002": {
+      "work": "Habits in everyday life: Thought, emotion, and action, Journal of Personality and Social Psychology 83(6), 1281-1297",
+      "author": "Wood, W., Quinn, J. M., & Kashy, D. A.",
+      "date": "2002",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Claimed: ~43% of daily behaviour performed almost daily, in the same context. Peer reviewed."
+    },
+    "WOOD-NEAL-2007": {
+      "work": "A new look at habits and the habit-goal interface, Psychological Review 114(4), 843-863",
+      "author": "Wood, W., & Neal, D. T.",
+      "date": "2007",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Habits are context-cued, not goal-driven. Change the room, not the resolve. Peer reviewed."
+    },
+    "XUNZI-LILUN": {
+      "work": "Discourse on Ritual (Lilun)",
+      "author": "Xunzi",
+      "date": "c. 250 BCE",
+      "domain": "confucian",
+      "verified": "unverified",
+      "note": "Li as the channel that shapes desire rather than suppressing it. The case for rationing over prohibition."
+    },
+    "ZEIGARNIK-1927": {
+      "work": "Das Behalten erledigter und unerledigter Handlungen",
+      "author": "Zeigarnik, B.",
+      "date": "1927",
+      "domain": "psychology",
+      "verified": "unverified",
+      "note": "Unfinished tasks intrude on memory. Why the un-advanced laundry occupies the afternoon."
+    },
+    "ZHENG-2015": {
+      "work": "Self-weighing in weight management: a systematic literature review, Obesity 23(2), 256-265",
+      "author": "Zheng, Y., Klem, M. L., Sereika, S. M., Danford, C. A., Ewing, L. J., Burke, L. E.",
+      "date": "2015",
+      "domain": "behavioural-medicine",
+      "verified": "web-2026-09-22",
+      "note": "The daily weigh-in as an office item (README.md, \"Drinking and weight\"), and the decision to show the number without a verdict attached. Claimed: Across 17 studies, greater frequency of self-weighing was associated with greater weight loss, and the review found no consistent adverse psychological effects — with reports of self-weighing frequency instead associating with DECREASES in depressive symptoms. Caution: ASSOCIATION, NOT EFFECT. The review is explicit that only 2 of the 17 studies had objective self-weighing data; the rest relied on self-report, so people who report weighing more may simply be people already doing better. Do not present this as \"weighing daily causes weight loss.\" Peer reviewed."
+    }
+  }
+}
