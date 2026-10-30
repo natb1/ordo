@@ -189,7 +189,6 @@ python3 tools/gate.py <dir> --change <file> --versions <file> --out <batch dir> 
 | Weekly, at the sitting | `/ordo weekly` keeps a snapshot of the Rule in the store, the last twelve |
 | Daily, at Lauds, and whenever a fixture changes on either calendar | `/ordo`, the sync — see below |
 | When a fixture's `until:` passes | Nothing. Its `until:` retires it on the page, and what it caused with it (`commitment:` on the items and variation), while the days it covered still show as they were run; its Cadence series end with it and no date of the usual bell is cancelled any more; on the phone, delete its alarm and tick the weekday back on the usual one (I.4) |
-| Occasionally | Promote an un-audited source in `tradition/sources.yaml` before leaning on it |
 
 **What no checker can see.** Fixture times live in Google's data, and the alarms on
 the phone, so no check here can verify them. `/ordo` carries them, both ways, with
@@ -337,11 +336,9 @@ a list; an event points at the page, or tells you to leave.
 | `tools/items.py` | The item contract: the shape of a `todo` or `periodic` document, which an owner outside this repository checks by too. |
 | `tools/counts.py` | The horizon counts: what the record says against what was decided, at each stretch. |
 | `tools/fixture/rule/` · `tools/fixture/record/` | An invented Rule and an invented record, for the tests only. Never updated to follow the store, and holding no one's data: `tools/test_fixture_public.py` keeps them to example values. |
-| `tools/ruleyaml.py` | Loads `tradition/sources.yaml` strictly: a key given twice fails. |
 | `tools/sync_assets.py` | Writes the shared files into the pages that declare them, and the derived dark block into `tokens.css`; `--check` fails if a copy is stale. |
 | `.claude/skills/ordo/` | The `/ordo` skill — **executable**, not documentation. The procedure the notebook is the reasoning for. |
 | `…/reference/blockers.md` | What a blocker is. Separate what perishes from what's broken. |
-| **`tradition/sources.yaml`** | Every appeal to tradition, with audit status. |
 | `tradition/check.py` | Fails if a cited key isn't registered, in any markdown file or in an export of the Rule. |
 
 ## Commands
