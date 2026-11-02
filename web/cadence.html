@@ -2395,6 +2395,7 @@ function tidy(o){
              : isObj(o.blocks) ? Object.keys(o.blocks).filter(function(k){ return o.blocks[k]; }) : [];
   if(o.then!=null && !(isObj(o.then) && typeof o.then.what==="string" && o.then.what && o.then.sessions>0)) delete o.then;
   if(o.notes!=null && typeof o.notes!=="string") delete o.notes;
+  if(o.default!=null && typeof o.default!=="string") delete o.default;
   return o;
 }
 /* Every open TODO item. A finished one stays in the store, closed. */
@@ -2720,6 +2721,12 @@ function todoStatus(x){
   var over=daysBetween(on,viewDate);
   return {on:on,over:over,frac:over/Math.max(1,daysBetween(cap,on)),dated:!!x.by};
 }
+/* What holds if a dated item goes past its date undone: its owner's `default`, said
+   once the date is near or past, so an item never waits silently. */
+function defaultWhy(x,st){
+  if(typeof x.default!=="string" || !x.default.trim() || st.over===null || st.over< -14) return "";
+  return (st.over>0 ? "; past its date, the default holds: " : "; if it is not done by then: ")+x.default.trim();
+}
 function todoWhy(st){
   if(st.held) return "Held by "+st.held+", undated: it does not age, and waits last until "+st.held+" dates it";
   var when=st.dated ? "its date, "+st.on : words(TODO_CADENCE)+" days from capture, "+st.on;
@@ -2752,8 +2759,9 @@ function meetingsFor(pid,focusId){
 /* One project's work, in order (hypomnemata › kinds, › allocation): three queues,
    three tiers of priority, never a matrix. First the meetings of the session.
    Second, periodic items and TODO items together, by how far overdue each is as a
-   fraction of its cadence. Third, canon: the frontier hypomnemata by pressure, then
-   the asks, oldest first, then dictations, oldest first. A blocker takes the tier and the rank of what it stops
+   fraction of its cadence, a dated ask among them. Third, canon: the frontier
+   hypomnemata by pressure, then the undated asks, oldest first, then dictations,
+   oldest first. A blocker takes the tier and the rank of what it stops
    and stands just before it, and the two are drawn bound. Follow-ups ride above as a
    strip; what cannot start in this session, or is not yet due, waits below. Every
    line carries its reason, because a ranking you cannot argue with is a ranking you
@@ -2779,7 +2787,7 @@ function rankWork(pid,focusId){
        again — as a periodic item stops being due once a bell records it. */
     if(owed["then:"+x.id]){ later.push({o:x,why:"Started; this session owes it "+x.then.what.toLowerCase()+"."}); return; }
     if(!startFits(x,focusId)){ later.push({o:x,why:startWhy(x)}); return; }
-    var st=todoStatus(x), rw=repairWhy(x), r={o:x,frac:st.frac,why:todoWhy(st)+rw+"."};
+    var st=todoStatus(x), rw=repairWhy(x), r={o:x,frac:st.frac,why:todoWhy(st)+defaultWhy(x,st)+rw+"."};
     /* One that stops an Office item or a fixture stands at that thing's next day,
        whatever its own date says: that day's rank as a daily item, due on it. */
     var sd=stopsDate(x);
@@ -2790,7 +2798,13 @@ function rankWork(pid,focusId){
     front.push({o:q,why:"On the frontier, pressure "+(q.pressure||0)+". Read and answered at the notebook."});
   });
   var asks=[];
-  asksFor(pid).forEach(function(x){ asks.push({o:x,why:askWhy(x)}); });
+  /* An ask with a date is due on it, as a dated TODO item is: past it, the default
+     its owner gave holds (`default`), so it stands in the second tier by the same measure.
+     One without a date waits in canon, oldest first. */
+  asksFor(pid).forEach(function(x){
+    if(x.by && !x.answer){ var st=todoStatus(x); due.push({o:x,frac:st.frac,why:todoWhy(st)+defaultWhy(x,st)+". "+askWhy(x)}); return; }
+    asks.push({o:x,why:askWhy(x)});
+  });
   dictationsFor(pid).forEach(function(x){
     dict.push({o:x,why:"A dictation captured "+String(x.captured||"").slice(0,10)+": run it through the notebook's dictate entry point."});
   });
