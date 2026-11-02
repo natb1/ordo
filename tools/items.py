@@ -35,7 +35,9 @@ writes it, plain text, with `answeredAt` the instant it was written; neither sta
 any other kind, and an owner never writes either. `source`, where given, is {owner, url}: the owner a short id, the url https, and
 on a todo item only, until the periodic card has an owned view. `notes`, where
 given, is plain text, multi-line, shown on the item's card as written and never
-edited there: an owner's place for the detail behind an item. An item with a
+edited there: an owner's place for the detail behind an item. `default`, where given,
+is one line of plain text beside a `by`: what holds if the item is not done by then,
+which the page and tools/next.py say once the date is near or past. An item with a
 source is owned: its owner closes it, it does not age while undated,
 and the page offers only that it is not wanted.
 
@@ -143,6 +145,14 @@ def check(collection, doc, *, projects, default_project, known, today, held=None
                       "carries a source")
     if doc.get("notes") is not None and not isinstance(doc["notes"], str):
         raise Refused(f"{what}: notes is plain text, not {doc['notes']!r}")
+    # What holds if a dated item is not done by its date (the owner's default), so an
+    # item never waits silently: plain text, one line, and only beside a `by`.
+    if doc.get("default") is not None:
+        d = doc["default"]
+        if not (isinstance(d, str) and d.strip() and "\n" not in d):
+            raise Refused(f"{what}: default is one line of plain text, what holds if the item is not done by its date, not {d!r}")
+        if (doc.get("by") if "by" in doc else (held or {}).get("by")) is None:
+            raise Refused(f"{what}: default is what holds past the item's date, and it has no by")
     # What the item is for (hypomnemata › allocation): the end clause or the question
     # it serves, as text; the project's end where it names none, which the page reads.
     if doc.get("for") is not None and not (isinstance(doc["for"], str) and doc["for"].strip()):

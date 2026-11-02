@@ -18,6 +18,8 @@ run python3 -m unittest -q tools/test_gate.py
 run python3 -m unittest -q tools/test_record.py
 # The item contract the record gate and an owner outside this repository both check by.
 run python3 -m unittest -q tools/test_items.py
+# The next actions: every project's TODO items and asks in one order, as the page ranks them.
+run python3 -m unittest -q tools/test_next.py
 # The horizon counts, over the frozen Rule and the frozen record beside it.
 run python3 -m unittest -q tools/test_counts.py
 # The shell: how it measures, opens and listens (behaviour under node, where present).

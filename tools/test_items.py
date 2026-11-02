@@ -127,6 +127,16 @@ class Shape(unittest.TestCase):
         self.assertEqual(items.owner_of({"source": SRC}), "garden")
         self.assertIsNone(items.owner_of({"what": "x"}))
 
+    def test_a_default_is_one_line_beside_a_date(self):
+        d = check("todo", {"id": "i1", "what": "x", "by": "2026-11-01", "default": "keep it as it stands"})
+        self.assertEqual(d["default"], "keep it as it stands")
+        self.assertEqual(check("todo", {"id": "i1", "default": "y"}, held={"id": "i1", "what": "x", "by": "2026-11-01"})["default"], "y")
+        for bad in ({"id": "i1", "what": "x", "default": "no date"},
+                    {"id": "i1", "what": "x", "by": "2026-11-01", "default": "two\nlines"},
+                    {"id": "i1", "what": "x", "by": "2026-11-01", "default": 3}):
+            with self.assertRaises(items.Refused):
+                check("todo", bad)
+
     def test_notes_are_plain_text(self):
         notes = "Compare two quotes.\nDecide by Saturday."
         self.assertEqual(check("todo", {"id": "i1", "what": "x", "notes": notes})["notes"], notes)

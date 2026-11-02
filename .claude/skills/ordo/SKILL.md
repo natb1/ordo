@@ -486,6 +486,17 @@ change changes nothing.
    `synclog/<today>` with the time: `{date, text}`, a second run of the day added
    to the text after a blank line (the record gate's `synclog` fact adds it). Then tick the `sync` item in the store (§"Writing the record"),
    unless the page already has.
+7. **The next actions,** every run, after what changed: the open TODO items and asks
+   of every active project in one order, `python3 tools/next.py <out_dir> --within 14`
+   on an export that holds every `todo` document (`list` it into the same `out_dir`,
+   paging while a `next_cursor` comes back). Print what it prints, as it prints it:
+   each line its item, its project, why it stands there (due, or overdue by so many
+   days, with the owner's `default` once the date is near or past) and the first line
+   of its `notes`. The order is the page's second tier read across the projects
+   (§"The TODO list and dictations"): nothing is re-ranked here, and no item is
+   weighed by what it would move. The same list, whole, when the user asks what is
+   next (`tools/next.py <out_dir>`, `--limit` as they ask). It is a reading, not a
+   proposal: an item is answered, done or let go on the page, or as a fact in a run.
 
 For the days a fixture covers, the Office items and the work sessions fit around
 it, and the page shows them that way once the write lands: an event added to the
@@ -1003,9 +1014,14 @@ project's work is taken in order from **three queues**, three tiers of priority
 2. **Periodic items and TODO items together**, by how far overdue each is as a
    fraction of its cadence. A TODO item with a date is due on it, counted from its
    capture; one without is due fourteen days after it was captured, so it rises as
-   it ages.
+   it ages. An ask with a date (`by`) stands here too, due on it, until it is
+   answered: past it, the owner's `default` holds.
 3. **Canon**: the project's frontier hypomnemata by pressure (§"Sync", step 3), then
-   its asks, oldest first, then its dictations, oldest first.
+   its undated asks, oldest first, then its dictations, oldest first.
+
+The second tier needs no project to compare by, so `tools/next.py` reads it across
+every project at once: the next actions `/ordo` prints (§"Sync", step 7). An owner
+that wants an item sooner gives it an earlier date; nothing else moves it.
 
 A blocker takes the tier and the rank of what it stops and stands just before it.
 There is no scoring by leverage and no rule of one in progress.
@@ -1049,7 +1065,11 @@ and the due rows whose next step is the user's; an answered one becomes a dictat
 the retirement round, as owner `ledger`; and the security project's readings, as
 owner `security` — each under the item contract, which lets an owner write `kind:
 ask` at capture and never change it, and never write the answer. An ask that blocks
-work names it in `blocks` and takes its rank, as any item does.
+work names it in `blocks` and takes its rank, as any item does. An owner may give an item a
+`by` and, beside it, a `default`: one line saying what holds if it is not done or
+answered by then (the item contract). The page and `tools/next.py` say it once the
+date is two weeks off or past, so an item never waits silently; the owner records
+the default and closes the item at its next run after the date.
 
 There is no Saturday reserve. Saturday afternoon is a focus slot like any other, and a
 repair is a TODO item charged to its project.

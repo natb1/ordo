@@ -334,6 +334,7 @@ a list; an event points at the page, or tells you to leave.
 | `tools/notifiers.py` | What the Clock alarms and the Cadence calendar should hold, derived from the Rule. |
 | `tools/record.py` | The record gate: what `/ordo` writes to the record (`days`, `todo`, `periodic`, `synclog`), checked, as a pinned batch. |
 | `tools/items.py` | The item contract: the shape of a `todo` or `periodic` document, which an owner outside this repository checks by too. |
+| `tools/next.py` | The next actions: every project's open TODO items and asks in one order, the page's second tier read across projects, with each owner's default once its date is near. `/ordo` prints it after the sync. |
 | `tools/counts.py` | The horizon counts: what the record says against what was decided, at each stretch. |
 | `tools/fixture/rule/` · `tools/fixture/record/` | An invented Rule and an invented record, for the tests only. Never updated to follow the store, and holding no one's data: `tools/test_fixture_public.py` keeps them to example values. |
 | `tools/sync_assets.py` | Writes the shared files into the pages that declare them, and the derived dark block into `tokens.css`; `--check` fails if a copy is stale. |
